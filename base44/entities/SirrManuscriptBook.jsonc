@@ -1,7 +1,7 @@
 {
   "name": "SirrManuscriptBook",
   "type": "object",
-  "description": "SIRR-MODULE-ISOLATED manuscript book collection. Completely separate from the global ManuscriptBook entity. The SIRR page reads ONLY from this entity. MULTI-PART PERMANENT STORAGE: A single book may be built from multiple uploaded PDF parts (Part 1, Part 2, ... Part N). Every uploaded PDF URL is permanently stored in the pdf_parts array immediately at upload time \u2014 never kept only in conversation state. The background engine (sirrProcessNextChunk) rebuilds exclusively from the stored pdf_parts list, never from chat history. current_part_index tracks which part is being processed; last_processed_page tracks progress within the current part. combined_total_pages is the true total across all parts. ISOLATED \u2014 only the SIRR ingestSirrManuscript backend function, sirrProcessNextChunk, and SIRR-only UI logic may write to this entity.",
+  "description": "SIRR-MODULE-ISOLATED manuscript book collection. Completely separate from the global ManuscriptBook entity. The SIRR page reads ONLY from this entity. MULTI-PART PERMANENT STORAGE: A single book may be built from multiple uploaded PDF parts (Part 1, Part 2, ... Part N). Every uploaded PDF URL is permanently stored in the pdf_parts array immediately at upload time \u2014 never kept only in conversation state. The background engine (sirrProcessNextChunk) rebuilds exclusively from the stored pdf_parts list, never from chat history. current_part_index tracks which part is being processed; last_processed_page tracks progress within the current part. combined_total_pages is the true total across all parts. UPLOAD-THEN-PROCESS FLOW: While the user is still uploading parts, extraction_status stays 'uploading' \u2014 the background engine IGNORES books in this state, so processing NEVER begins until the user explicitly clicks 'Begin Processing', which flips the status to 'pending'. ISOLATED \u2014 only the SIRR ingestSirrManuscript backend function, sirrProcessNextChunk, and SIRR-only UI logic may write to this entity.",
   "properties": {
     "sirr_book_id": {
       "type": "string",
@@ -115,7 +115,7 @@
         ]
       },
       "default": [],
-      "description": "ORDERED LIST of every uploaded PDF part for this book. Part 1, Part 2, ... Part N. Every part's file_url is permanently stored here at upload time. The background engine processes parts in order. Adding a new part appends to this array and resets extraction_status to 'pending'. This is the SOLE source of truth for what to process \u2014 never chat history."
+      "description": "ORDERED LIST of every uploaded PDF part for this book. Part 1, Part 2, ... Part N. Every part's file_url is permanently stored here at upload time. The background engine processes parts in order. Adding a new part appends to this array and keeps extraction_status at 'uploading'. This is the SOLE source of truth for what to process \u2014 never chat history."
     },
     "original_file_url": {
       "type": "string",
@@ -139,6 +139,7 @@
     "extraction_status": {
       "type": "string",
       "enum": [
+        "uploading",
         "pending",
         "processing",
         "completed",
@@ -146,7 +147,7 @@
         "partial"
       ],
       "default": "pending",
-      "description": "Content extraction status. 'pending' = waiting for background processor. 'processing' = a part is being extracted. 'completed' = ALL parts fully processed. 'partial' = interrupted, scheduled automation will resume. Never shown to users."
+      "description": "Content extraction status. 'uploading' = user is still uploading PDF parts; the background engine IGNORES this state so processing never begins until the user clicks 'Begin Processing'. 'pending' = all parts uploaded, waiting for background processor. 'processing' = a part is being extracted. 'completed' = ALL parts fully processed. 'partial' = interrupted, scheduled automation will resume. Never shown to users."
     },
     "extraction_error": {
       "type": "string",

@@ -58,12 +58,12 @@ export default function SirrUploadButton({ onUploaded, language }) {
       if (!file_url) throw new Error("Upload failed");
 
       const now = new Date().toISOString();
+      const stamp = Date.now();
+      const rand = Math.random().toString(36).slice(2, 8);
+      const sirr_book_id = mode === "new" ? `SIRRB-${stamp}-${rand}` : selectedBookId;
 
       if (mode === "new") {
         // 2a. Create a new book with Part 1 permanently stored in pdf_parts.
-        const stamp = Date.now();
-        const rand = Math.random().toString(36).slice(2, 8);
-        const sirr_book_id = `SIRRB-${stamp}-${rand}`;
         await base44.entities.SirrManuscriptBook.create({
           sirr_book_id,
           book_title: file.name,
@@ -71,7 +71,7 @@ export default function SirrUploadButton({ onUploaded, language }) {
           original_file_name: file.name,
           source: "sirr_upload",
           upload_date: now,
-          extraction_status: "pending",
+          extraction_status: "uploading",
           total_pages: 0,
           combined_total_pages: 0,
           total_entries: 0,
@@ -112,14 +112,51 @@ export default function SirrUploadButton({ onUploaded, language }) {
         const bookRecordId = book.id || book._id;
         await base44.entities.SirrManuscriptBook.update(bookRecordId, {
           pdf_parts: newParts,
-          extraction_status: "pending",
+          extraction_status: "uploading",
         });
       }
 
-      // 3. Fire the background processor (fire-and-forget — non-blocking).
-      base44.functions.invoke("sirrProcessNextChunk", {}).catch(() => {});
+      // 3. Read-back verification — confirm the URL is permanently persisted
+      //    in pdf_parts BEFORE reporting this part as uploaded.
+      const verifyBookId = mode === "new" ? sirr_book_id : selectedBookId;
+      const fetched = await base44.entities.SirrManuscriptBook.filter({ sirr_book_id: verifyBookId }, undefined, 1);
+      const savedBook = fetched[0];
+      const savedParts = Array.isArray(savedBook?.pdf_parts) ? savedBook.pdf_parts : [];
+      const partIdx = savedParts.findIndex((p) => p.file_url === file_url);
+      if (partIdx === -1) {
+        const failedPartNumber = mode === "new" ? 1 : (savedParts.length + 1);
+        throw new Error(`Part ${failedPartNumber} upload FAILED — PDF URL was not persisted in pdf_parts (book ${verifyBookId}). Upload stopped. Please retry this part.`);
+      }
 
-      // 4. Refresh the library immediately.
+      // 4. After Part 1 of a new book, switch to append mode and select this
+      //    book so the user can add more parts OR click "Begin Processing".
+      if (mode === "new") {
+        setMode("append");
+        setSelectedBookId(sirr_book_id);
+        loadBooks();
+      }
+
+      // 5. Refresh the library. Do NOT start processing — the user uploads
+      //    all parts first, then clicks "Begin Processing".
+      if (onUploaded) onUploaded();
+    } catch (err) {
+      setError(String(err?.message || err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const selectedBook = books.find((b) => b.sirr_book_id === selectedBookId) || null;
+
+  const handleBeginProcessing = async () => {
+    if (!selectedBook) return;
+    setBusy(true);
+    setError("");
+    try {
+      await base44.entities.SirrManuscriptBook.update(selectedBook.id || selectedBook._id, {
+        extraction_status: "pending",
+      });
+      base44.functions.invoke("sirrProcessNextChunk", {}).catch(() => {});
       if (onUploaded) onUploaded();
     } catch (err) {
       setError(String(err?.message || err));
@@ -193,6 +230,31 @@ export default function SirrUploadButton({ onUploaded, language }) {
             </option>
           ))}
         </select>
+      )}
+
+      {/* Begin Processing — only shown when ALL parts have been uploaded.
+          The engine ignores 'uploading' books, so nothing is processed until
+          the user clicks this. */}
+      {mode === "append" && selectedBook?.extraction_status === "uploading" && (
+        <button
+          onClick={handleBeginProcessing}
+          disabled={busy}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl font-bold text-sm transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+          style={{
+            background: "linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%)",
+            color: "#0d1b2a",
+            boxShadow: "0 0 32px rgba(16,185,129,0.45)",
+          }}
+        >
+          {busy ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              <Layers className="w-4 h-4" />
+              {isMl ? "പ്രോസസ്സിംഗ് ആരംഭിക്കുക" : "Begin Processing"}
+            </>
+          )}
+        </button>
       )}
 
       <input
