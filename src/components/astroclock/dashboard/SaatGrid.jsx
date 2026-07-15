@@ -16,6 +16,7 @@ import { getKashfHourAttributes } from "@/lib/astroClockManuscriptMerger";
 import { getPlanetHourRules } from "@/lib/astroClockPlanetaryHourRules.js";
 import { getSahathQuality } from "@/lib/astroClockSahathQuality.js";
 import { PLANET_AR_ML } from "@/lib/astroClockLabelMap";
+import { formatDecimalHour12h } from "@/lib/astroClockTimeFormat";
 
 // Status badge — independent from quality. Controls badge text + card opacity only.
 const STATUS_BADGE = {
@@ -200,7 +201,7 @@ export default function SaatGrid() {
       {/* Day Hours */}
       <div>
         <p className="font-inter text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: "rgba(212,175,55,0.55)" }}>
-          ☀ {txt("പകൽ 12 ساعة", "Daytime 12 Saat", "Gündüz 12 Saat")} — {txt("സൂര്യോദയം", "Sunrise", "Doğuş")} {d.sunrise.toFixed(1)}h → {txt("അസ്തമയം", "Sunset", "Batış")} {d.sunset.toFixed(1)}h
+          ☀ {txt("പകൽ 12 ساعة", "Daytime 12 Saat", "Gündüz 12 Saat")} — {txt("സൂര്യോദയം", "Sunrise", "Doğuş")} {formatDecimalHour12h(d.sunrise)} → {txt("അസ്തമയം", "Sunset", "Batış")} {formatDecimalHour12h(d.sunset)}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
           {dayHours.map(renderHour)}
@@ -210,7 +211,7 @@ export default function SaatGrid() {
       {/* Night Hours */}
       <div>
         <p className="font-inter text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: "rgba(129,140,248,0.55)" }}>
-          🌙 {txt("രാത്രി 12 ساعة", "Nighttime 12 Saat", "Gece 12 Saat")} — {txt("അസ്തമയം", "Sunset", "Batış")} {d.sunset.toFixed(1)}h → {txt("സൂര്യോദയം", "Sunrise", "Doğuş")} {d.sunrise.toFixed(1)}h
+          🌙 {txt("രാത്രി 12 ساعة", "Nighttime 12 Saat", "Gece 12 Saat")} — {txt("അസ്തമയം", "Sunset", "Batış")} {formatDecimalHour12h(d.sunset)} → {txt("സൂര്യോദയം", "Sunrise", "Doğuş")} {formatDecimalHour12h(d.sunrise)}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
           {nightHours.map(renderHour)}

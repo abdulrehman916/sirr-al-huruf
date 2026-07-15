@@ -28,6 +28,7 @@ const MansionsReference = lazy(() => import("@/components/astroclock/dashboard/M
 const PlanetEncyclopedia = lazy(() => import("@/components/astroclock/dashboard/PlanetEncyclopedia"));
 const ZodiacEncyclopedia = lazy(() => import("@/components/astroclock/dashboard/ZodiacEncyclopedia"));
 const ReferenceLibrary = lazy(() => import("@/components/astroclock/dashboard/ReferenceLibrary"));
+const ImportHistory = lazy(() => import("@/components/astroclock/dashboard/ImportHistory"));
 const EntityKnowledgeReviewQueue = lazy(() => import("@/components/astroclock/dashboard/EntityKnowledgeReviewQueue"));
 
 function LangSelector() {
@@ -259,9 +260,18 @@ function AstroClockContent() {
           </DashboardSection>
         </AstroClockErrorBoundary>
 
+        <AstroClockErrorBoundary label="Import History">
+          <DashboardSection icon="📥" title={txt("ഇറക്കുമതി ചരിത്രം", "Import History", "İçe Aktarma Geçmişi")}
+            subtitle={txt("ഗ്രന്ഥങ്ങൾ, പേജുകൾ, രേഖകൾ, പുരോഗതി, പരിശോധന", "Books, Pages, Records, Progress, Verification", "Kitap, Sayfa, Kayıt, İlerleme, Doğrulama")}>
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <ImportHistory />
+            </Suspense>
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
         <AstroClockErrorBoundary label="References">
           <DashboardSection icon="📖" title={txt("റഫറൻസ് ലൈബ്രറി", "Reference Library", "Kaynak Kitaplığı")}
-            subtitle={txt("ഗ്രന്ഥങ്ങളിലെ എല്ലാ പേജുകളും", "All Manuscript Page References", "Tüm El Yazması Sayfa Referansları")}>
+            subtitle={txt("എല്ലാ ഗ്രന്ഥങ്ങളുടെയും പൂർണ്ണ കാറ്റലോഗ്", "Master Manuscript Catalog", "Ana El Yazması Kataloğu")}>
             <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
               <ReferenceLibrary />
             </Suspense>

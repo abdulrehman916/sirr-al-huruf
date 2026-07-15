@@ -14,6 +14,7 @@ import { getKashfLunarDayInfo, getKashfNahsStatus } from "@/lib/astroClockManusc
 import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
 import { zodiacEnToML, planetArabicMLDisplay, PLANET_AR_ML } from "@/lib/astroClockLabelMap";
 import { Sparkles, AlertTriangle, CheckCircle2, Ban, Moon } from "lucide-react";
+import { formatDecimalHour12h } from "@/lib/astroClockTimeFormat";
 
 const BENEFIC = ["sun", "jupiter", "venus", "moon"];
 const MALEFIC = ["saturn", "mars"];
@@ -115,7 +116,7 @@ export default function TodayDashboard() {
           <span className="font-inter text-[10px] ml-2" style={{ color: "rgba(255,255,255,0.50)" }}>{verdictSub}</span>
         </div>
         <span className="font-inter text-[10px] flex-shrink-0 hidden sm:block" style={{ color: "rgba(255,255,255,0.40)" }}>
-          {txt("സൂര്യോദയം", "Sunrise", "Doğuş")}: {d.sunrise.toFixed(1)}h · {txt("അസ്തമയം", "Sunset", "Batış")}: {d.sunset.toFixed(1)}h
+          {txt("സൂര്യോദയം", "Sunrise", "Doğuş")}: {formatDecimalHour12h(d.sunrise)} · {txt("അസ്തമയം", "Sunset", "Batış")}: {formatDecimalHour12h(d.sunset)}
         </span>
       </div>
 
