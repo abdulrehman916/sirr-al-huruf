@@ -163,7 +163,7 @@ export default function SaatGrid() {
                     </div>
                   ) : null;
                   const order = quality.tier === 1
-                    ? [secWarn, secLess, secCaut, secBest, secSuit, secSpir]
+                    ? [secLess, secWarn, secCaut, secSuit, secSpir, secBest]
                     : [secBest, secSuit, secCaut, secLess, secSpir, secWarn];
                   return <>{order.filter(Boolean)}</>;
                 })()}
