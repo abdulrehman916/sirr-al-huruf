@@ -43,6 +43,10 @@ Deno.serve(async (req) => {
     const page_start = Number(body.page_start) || 1;
     const page_end = Number(body.page_end) || 0; // 0 = process entire PDF
 
+    // Optional manual entry_order offset (for multi-PDF books where PDF 2
+    // continues from PDF 1 but uses its own page numbers)
+    const manual_order_offset = Number(body.order_offset) || 0;
+
     const now = new Date().toISOString();
     const stamp = Date.now();
     const rand = Math.random().toString(36).slice(2, 8);
@@ -58,11 +62,16 @@ Deno.serve(async (req) => {
       bookRecordId = existingBooks[0]?.id || existingBooks[0]?._id || '';
       if (!bookRecordId) return Response.json({ error: 'Book not found: ' + existing_book_id }, { status: 404 });
 
-      if (!isChunked) {
+      if (!isChunked && manual_order_offset === 0) {
         await base44.entities.SirrManuscriptEntry.deleteMany({ sirr_book_id: existing_book_id });
-      } else {
-        const delStart = (page_start - 1) * 100;
-        const delEnd = page_end * 100 + 99;
+      } else if (isChunked) {
+        // Only delete entries within the current chunk's order range
+        const delStart = manual_order_offset > 0
+          ? manual_order_offset + (page_start - 1)
+          : (page_start - 1) * 100;
+        const delEnd = manual_order_offset > 0
+          ? manual_order_offset + page_end + 99
+          : page_end * 100 + 99;
         await base44.entities.SirrManuscriptEntry.deleteMany({
           sirr_book_id: existing_book_id,
           entry_order: { $gte: delStart, $lte: delEnd },
@@ -209,8 +218,11 @@ Return ONLY the JSON object. No commentary.`;
     const records = entries.map((e, i) => {
       const conf = Number(e.ocr_confidence);
       const ocr_confidence = Number.isFinite(conf) ? Math.max(0, Math.min(100, conf)) : 95;
-      // For chunked processing, use page-range-based offset to avoid collisions
-      const orderOffset = isChunked ? (page_start - 1) * 100 : 0;
+      // For chunked processing, use page-range-based offset to avoid collisions.
+      // Manual offset (for multi-PDF books) takes priority when provided.
+      const orderOffset = manual_order_offset > 0
+        ? manual_order_offset + (isChunked ? (page_start - 1) : 0)
+        : (isChunked ? (page_start - 1) * 100 : 0);
       return {
         sirr_entry_id: `SIRRE-${sirr_book_id}-${orderOffset + i + 1}`,
         sirr_book_id,
