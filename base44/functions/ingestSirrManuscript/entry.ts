@@ -39,13 +39,28 @@ Deno.serve(async (req) => {
     const provided_malayalam_name = body.malayalam_book_name || '';
     const existing_book_id = body.existing_book_id || '';
 
+    // Page range for chunked processing (1-based, inclusive)
+    const page_start = Number(body.page_start) || 1;
+    const page_end = Number(body.page_end) || 0; // 0 = process entire PDF
+
     const now = new Date().toISOString();
     const stamp = Date.now();
     const rand = Math.random().toString(36).slice(2, 8);
     const sirr_book_id = existing_book_id || `SIRRB-${stamp}-${rand}`;
 
+    const isChunked = page_end > 0;
+
     if (existing_book_id) {
-      await base44.entities.SirrManuscriptEntry.deleteMany({ sirr_book_id: existing_book_id });
+      if (!isChunked) {
+        // Full re-import: clear all entries
+        await base44.entities.SirrManuscriptEntry.deleteMany({ sirr_book_id: existing_book_id });
+      } else {
+        // Chunked: delete only entries from this page range
+        await base44.entities.SirrManuscriptEntry.deleteMany({
+          sirr_book_id: existing_book_id,
+          entry_order: { $gte: page_start, $lte: page_end },
+        });
+      }
       await base44.entities.SirrManuscriptBook.update(existing_book_id, {
         extraction_status: 'processing', extraction_error: ''
       });
@@ -64,6 +79,10 @@ Deno.serve(async (req) => {
       });
     }
 
+    const pageRangeInstruction = isChunked
+      ? `\n\nPAGE RANGE: Extract ONLY entries that appear on pages ${page_start} through ${page_end} of the PDF. Skip any entry that starts before page ${page_start} or after page ${page_end}. If a section spans across the boundary, include it only if it STARTS within pages ${page_start}-${page_end}. Use entry_order starting from ${page_start} (the first entry found on page ${page_start} gets entry_order ${page_start}, the next gets ${page_start+1}, etc.).`
+      : '';
+
     const prompt = `You are a faithful manuscript archivist. You are given a PDF of an Islamic manuscript.
 
 ABSOLUTE RULES (HIGHEST PRIORITY — never break these):
@@ -73,11 +92,12 @@ ABSOLUTE RULES (HIGHEST PRIORITY — never break these):
 4. Never fabricate introductions, benefits, warnings, or explanations.
 5. Preserve every Arabic letter, every harakah (diacritic), every punctuation mark, every line break.
 6. If OCR confidence is not 100% for any character, set ocr_confidence below 100. Never guess unclear text.
+7. Use the REAL section title printed in the manuscript. Never use generic titles like "Dua 1" or "Section 2".
 
 WHAT TO EXTRACT:
 Extract one entry per named section, wirid, hizb, or prayer in manuscript order.
 Do NOT extract pages — extract SECTIONS (named units). Each section gets one entry.
-Do NOT merge sections. Do NOT split a section unless the manuscript itself separates it.
+Do NOT merge sections. Do NOT split a section unless the manuscript itself separates it.${pageRangeInstruction}
 
 FOR EACH ENTRY:
 - entry_order: sequential number (1, 2, 3...) in manuscript order
@@ -88,12 +108,15 @@ FOR EACH ENTRY:
 - malayalam_meaning: IF the manuscript prints explanatory text (in this book it will be in Indonesian/Malay), translate that explanation faithfully into Malayalam. Do NOT translate the Arabic duas themselves. Do NOT invent explanations. If there is no explanatory text for this section, leave empty "".
 - introduction: if the manuscript prints an introduction for this section, copy it faithfully (translate from Indonesian/Malay to Malayalam if needed). Otherwise "".
 - purpose: if printed in manuscript. Otherwise "".
-- etiquette: if printed. Otherwise "".
-- conditions: if printed. Otherwise "".
-- preparation: if printed. Otherwise "".
+- benefits: virtues/benefits (فضائل/keutamaan) if printed. Otherwise "".
+- etiquette: etiquette/manners (آداب) if printed. Otherwise "".
+- conditions: conditions (شروط) if printed. Otherwise "".
+- preparation: preparation steps if printed. Otherwise "".
+- materials: materials required (الآلات/perlengkapan) if printed. Otherwise "".
 - warnings: if printed. Otherwise "".
 - repetition: if the manuscript specifies how many times to recite (e.g. "500x", "3x"). Otherwise "".
-- timing: if the manuscript specifies time/day. Otherwise "".
+- timing: best time if the manuscript specifies a time. Otherwise "".
+- day: best day if the manuscript specifies a particular day. Otherwise "".
 - notes: any other manuscript notes for this section. Otherwise "".
 - ocr_confidence: 0-100. Use 100 ONLY if every character is completely certain. Lower if any character is unclear.
 
@@ -133,12 +156,15 @@ Return ONLY the JSON object. No commentary.`;
               malayalam_meaning: { type: 'string' },
               introduction: { type: 'string' },
               purpose: { type: 'string' },
+              benefits: { type: 'string' },
               etiquette: { type: 'string' },
               conditions: { type: 'string' },
               preparation: { type: 'string' },
+              materials: { type: 'string' },
               warnings: { type: 'string' },
               repetition: { type: 'string' },
               timing: { type: 'string' },
+              day: { type: 'string' },
               notes: { type: 'string' },
               ocr_confidence: { type: 'integer' },
             },
@@ -173,10 +199,12 @@ Return ONLY the JSON object. No commentary.`;
     const records = entries.map((e, i) => {
       const conf = Number(e.ocr_confidence);
       const ocr_confidence = Number.isFinite(conf) ? Math.max(0, Math.min(100, conf)) : 95;
+      // For chunked processing, use page-range-based offset to avoid collisions
+      const orderOffset = isChunked ? (page_start - 1) * 100 : 0;
       return {
-        sirr_entry_id: `SIRRE-${sirr_book_id}-${i + 1}`,
+        sirr_entry_id: `SIRRE-${sirr_book_id}-${orderOffset + i + 1}`,
         sirr_book_id,
-        entry_order: Number(e.entry_order) || (i + 1),
+        entry_order: orderOffset + (Number(e.entry_order) || (i + 1)),
         heading_title_ml: e.heading_title_ml || '',
         heading_title_ar: e.heading_title_ar || '',
         heading_title: '',
@@ -193,12 +221,15 @@ Return ONLY the JSON object. No commentary.`;
         notes: JSON.stringify({
           introduction: e.introduction || '',
           purpose: e.purpose || '',
+          benefits: e.benefits || '',
           etiquette: e.etiquette || '',
           conditions: e.conditions || '',
           preparation: e.preparation || '',
+          materials: e.materials || '',
           warnings: e.warnings || '',
           repetition: e.repetition || '',
           timing: e.timing || '',
+          day: e.day || '',
           notes: e.notes || '',
         }),
       };
@@ -211,27 +242,44 @@ Return ONLY the JSON object. No commentary.`;
     }
 
     const review_count = records.filter((r) => r.needs_review).length;
+
+    // For chunked processing, count ALL entries for this book
+    let allEntriesCount = records.length;
+    if (isChunked) {
+      const allEntries = await base44.entities.SirrManuscriptEntry.filter({ sirr_book_id });
+      allEntriesCount = allEntries.length;
+    }
+
     const bookUpdate = {
-      total_pages,
-      total_entries: records.length,
-      extraction_status: records.length > 0 ? 'completed' : 'failed',
-      book_title: data.book_title || original_file_name || '',
-      book_title_ar: data.book_title_ar || '',
-      author: data.author || '',
-      language: data.book_language || '',
-      edition: data.edition || '',
-      volume: data.volume || '',
-      publication_year: data.publication_year || '',
+      total_pages: total_pages || (isChunked ? undefined : 0),
+      total_entries: allEntriesCount,
+      extraction_status: allEntriesCount > 0 ? 'completed' : 'failed',
     };
-    if (malayalam_book_name) bookUpdate.malayalam_book_name = malayalam_book_name;
+
+    // Only set book metadata from the first chunk or non-chunked call
+    if (!isChunked || page_start === 1) {
+      bookUpdate.book_title = data.book_title || original_file_name || '';
+      bookUpdate.book_title_ar = data.book_title_ar || '';
+      bookUpdate.author = data.author || '';
+      bookUpdate.language = data.book_language || '';
+      bookUpdate.edition = data.edition || '';
+      bookUpdate.volume = data.volume || '';
+      bookUpdate.publication_year = data.publication_year || '';
+      if (malayalam_book_name) bookUpdate.malayalam_book_name = malayalam_book_name;
+    }
+
+    // Remove undefined values
+    Object.keys(bookUpdate).forEach(k => bookUpdate[k] === undefined && delete bookUpdate[k]);
 
     await base44.entities.SirrManuscriptBook.update(sirr_book_id, bookUpdate);
 
     return Response.json({
       sirr_book_id,
       total_entries: records.length,
+      total_entries_all: allEntriesCount,
       total_pages,
       review_count,
+      page_range: isChunked ? `${page_start}-${page_end}` : 'all',
       status: bookUpdate.extraction_status,
     });
   } catch (error) {

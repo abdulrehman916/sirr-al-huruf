@@ -21,12 +21,15 @@ import SirrUploadButton from "./SirrUploadButton";
 const LABELS = {
   introduction:  { ml: "ആമുഖം",         en: "Introduction" },
   purpose:       { ml: "ഉദ്ദേശ്യം",       en: "Purpose" },
+  benefits:      { ml: "ഗുണങ്ങൾ",        en: "Virtues / Benefits" },
   etiquette:     { ml: "മര്യാദകൾ",       en: "Etiquette" },
   conditions:    { ml: "നിബന്ധനകൾ",     en: "Conditions" },
   preparation:   { ml: "ഒരുക്കം",         en: "Preparation" },
-  warnings:      { ml: "മുന്നറിയിപ്പ്",   en: "Warnings" },
+  materials:     { ml: "സാമഗ്രികൾ",      en: "Materials" },
   repetition:    { ml: "ആവർത്തനം",       en: "Repetitions" },
-  timing:        { ml: "അനുയോജ്യ സമയം", en: "Recommended Time" },
+  timing:        { ml: "അനുയോജ്യ സമയം", en: "Best Time" },
+  day:           { ml: "അനുയോജ്യ ദിവസം", en: "Best Day" },
+  warnings:      { ml: "മുന്നറിയിപ്പ്",   en: "Warnings" },
   notes:         { ml: "കുറിപ്പുകൾ",      en: "Notes" },
 };
 
@@ -46,7 +49,7 @@ function DuaDetail({ entry, book, language, onBack }) {
   const arabic  = entry.arabic_text || '';
   const malayalam = entry.malayalam_meaning || '';
 
-  const PRE_ARABIC = ['introduction','purpose','etiquette','conditions','preparation','warnings','repetition','timing','notes'];
+  const PRE_ARABIC = ['introduction','purpose','benefits','etiquette','conditions','preparation','materials','repetition','timing','day','warnings','notes'];
 
   return (
     <div className="space-y-3">
