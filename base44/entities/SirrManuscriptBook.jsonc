@@ -1,7 +1,7 @@
 {
   "name": "SirrManuscriptBook",
   "type": "object",
-  "description": "SIRR-MODULE-ISOLATED permanent manuscript library. Completely separate from the global ManuscriptBook entity. The SIRR page reads ONLY from this entity. PERMANENT SCALABLE LIBRARY: supports unlimited books for many years. Every book has a permanent sirr_book_id; every uploaded PDF part has a permanent part_id; every extracted card has a permanent sirr_entry_id (in SirrManuscriptEntry). MULTI-PART PERMANENT STORAGE: A single book may be built from multiple uploaded PDF parts (Part 1, Part 2, ... Part N). Every uploaded PDF URL is permanently stored in the pdf_parts array immediately at upload time \u2014 never kept only in conversation state, never deleted unless the book is explicitly deleted. Each pdf_part also stores a permanent SHA-256 file_hash and file_size for corruption detection (requirement: checksum verification). The background engine (sirrProcessNextChunk) rebuilds exclusively from the stored pdf_parts list, never from chat history. current_part_index tracks which part is being processed; last_processed_page tracks progress within the current part. combined_total_pages is the true total across all parts. UPLOAD-THEN-PROCESS FLOW: While the user is still uploading parts, extraction_status stays 'uploading' \u2014 the background engine IGNORES books in this state, so processing NEVER begins until the user explicitly clicks 'Begin Processing', which flips the status to 'pending'. Upload order is preserved permanently by the ordered pdf_parts array. PERMANENT BACKUP TRACKING: last_backup_at / last_backup_uri / last_backup_entry_count record the most recent automatic backup; the full backup history lives in SirrAuditLog (action='backup'). ISOLATED \u2014 only the SIRR ingestSirrManuscript backend function, sirrProcessNextChunk, and SIRR-only UI logic may write to this entity.",
+  "description": "SIRR-MODULE-ISOLATED permanent manuscript library. Completely separate from the global ManuscriptBook entity. The SIRR page reads ONLY from this entity. PERMANENT SCALABLE LIBRARY: supports unlimited books for many years. Every book has a permanent sirr_book_id; every uploaded PDF part has a permanent part_id; every extracted card has a permanent sirr_entry_id (in SirrManuscriptEntry). MULTI-PART PERMANENT STORAGE: A single book may be built from multiple uploaded PDF parts (Part 1, Part 2, ... Part N). Every uploaded PDF URL is permanently stored in the pdf_parts array immediately at upload time \u2014 never kept only in conversation state, never deleted unless the book is explicitly deleted. Each pdf_part also stores a permanent SHA-256 file_hash and file_size for corruption detection. The background engine (sirrProcessNextChunk) rebuilds exclusively from the stored pdf_parts list, never from chat history. current_part_index tracks which part is being processed; last_processed_page tracks progress within the current part. combined_total_pages is the true total across all parts. UPLOAD-THEN-PROCESS FLOW: While the user is still uploading parts, extraction_status stays 'uploading' \u2014 the background engine IGNORES books in this state, so processing NEVER begins until the user explicitly clicks 'Begin Processing'. COMPLETION GATE (RULE 15): The engine NEVER marks a book 'completed'. When all parts are processed it sets 'pending_verification'. A book becomes 'completed' ONLY when sirrVerifyBook returns VERIFIED (every part processed, no missing pages, no OCR issues, no duplicates). Until then it stays 'pending_verification'. PERMANENT VERIFICATION REPORT: the full verification report is persisted in verification_report and timestamped in last_verified_at on every sirrVerifyBook run. PERMANENT BACKUP TRACKING: last_backup_at / last_backup_uri / last_backup_entry_count record the most recent automatic backup; the full backup history lives in SirrAuditLog (action='backup'). ISOLATED \u2014 only the SIRR ingestSirrManuscript backend function, sirrProcessNextChunk, sirrVerifyBook, and SIRR-only UI logic may write to this entity.",
   "properties": {
     "sirr_book_id": {
       "type": "string",
@@ -64,7 +64,7 @@
     "current_part_index": {
       "type": "integer",
       "default": 0,
-      "description": "Index (0-based) into pdf_parts of the part currently being processed. When current_part_index >= pdf_parts.length, all parts are done and extraction_status becomes 'completed'. The processor never depends on chat history \u2014 it reads this field and the pdf_parts array from the database."
+      "description": "Index (0-based) into pdf_parts of the part currently being processed. When current_part_index >= pdf_parts.length, all parts are done and extraction_status becomes 'pending_verification' (NOT 'completed' \u2014 completion requires verification). The processor never depends on chat history \u2014 it reads this field and the pdf_parts array from the database."
     },
     "pdf_parts": {
       "type": "array",
@@ -90,7 +90,7 @@
           "file_hash": {
             "type": "string",
             "default": "",
-            "description": "SHA-256 checksum of the original PDF file bytes, computed at upload time. Permanent corruption-detection baseline. A future integrity check re-fetches the file_url, recomputes the hash, and compares to detect corruption."
+            "description": "SHA-256 checksum of the original PDF file bytes, computed at upload time. Permanent corruption-detection baseline. sirrVerifyFileIntegrity re-fetches the file_url, recomputes the hash, and compares to detect corruption."
           },
           "file_size": {
             "type": "integer",
@@ -188,12 +188,13 @@
         "uploading",
         "pending",
         "processing",
+        "pending_verification",
         "completed",
         "failed",
         "partial"
       ],
       "default": "pending",
-      "description": "Book-level content extraction status. 'uploading' = user is still uploading PDF parts; the background engine IGNORES this state so processing never begins until the user clicks 'Begin Processing'. 'pending' = all parts uploaded, waiting for background processor. 'processing' = a part is being extracted. 'completed' = ALL parts fully processed AND verified. 'partial' = interrupted, scheduled automation will resume. Never shown to users."
+      "description": "Book-level content extraction status. 'uploading' = user is still uploading PDF parts; the background engine IGNORES this state. 'pending' = all parts uploaded, waiting for background processor. 'processing' = a part is being extracted. 'pending_verification' = ALL parts fully processed, awaiting sirrVerifyBook (the engine NEVER sets 'completed' directly \u2014 RULE 15). 'completed' = set ONLY by sirrVerifyBook when the report is VERIFIED. 'partial' = interrupted, scheduled automation will resume. Never shown to users."
     },
     "extraction_error": {
       "type": "string",
@@ -209,6 +210,17 @@
       ],
       "default": "unverified",
       "description": "Book-level verification status from sirrVerifyBook. 'verified' = VERIFIED (every part processed, no missing pages, no OCR issues, no duplicates). Never set to 'verified' until every uploaded PDF part has been processed and verified."
+    },
+    "verification_report": {
+      "type": "object",
+      "additionalProperties": true,
+      "default": {},
+      "description": "PERMANENT full verification report from the most recent sirrVerifyBook run. Persisted on every verify run (RULE 14). Contains: missing_pages, missing_parts, ocr_issues, min_ocr_confidence, avg_ocr_confidence, missing_malayalam_meanings, malayalam_verification_status, duplicate_entries, order_gaps, arabic_verification_status, database_verification_status, final_result, failure_reasons, verification_passed, parts[], total_pdf_parts, total_pages, total_entries."
+    },
+    "last_verified_at": {
+      "type": "string",
+      "default": "",
+      "description": "ISO 8601 timestamp of the most recent sirrVerifyBook run. Empty if never verified."
     },
     "total_entries": {
       "type": "integer",
@@ -289,6 +301,12 @@
       "name": "idx_verification_status",
       "fields": [
         "verification_status"
+      ]
+    },
+    {
+      "name": "idx_last_verified_at",
+      "fields": [
+        "last_verified_at"
       ]
     },
     {

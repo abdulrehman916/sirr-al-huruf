@@ -124,6 +124,7 @@ Do NOT merge sections. Do NOT split a section unless the manuscript itself separ
 FOR EACH ENTRY:
 - entry_order: sequential number (1, 2, 3...) in manuscript order
 - page_number: page number(s) where this section starts
+- category: classify this section into ONE of: dua, dhikr, wird, hizb, amal, ruqyah, talisman, wafq, prayer, instruction, general. Use "general" only if the section gives no clue to classify it.
 - heading_title_ar: the heading EXACTLY as printed in Arabic (with all harakat). Only if a heading is printed. Otherwise "".
 - heading_title_ml: a SHORT Malayalam navigation label for this section (2-6 words). This is ONLY for navigation. Translate the section title into Malayalam. NEVER use generic names like "ദുആ 1" or "Prayer 1". Use the actual section name translated into Malayalam. If the section is "الصلاة العظيمة" the label is "അസ്സ്വലാത്തുൽ അദ്വീമ" or its Malayalam equivalent.
 - arabic_text: the COMPLETE Arabic text of this section, verbatim. Every letter, harakah, punctuation, paragraph break. This is the most important field.
@@ -172,6 +173,7 @@ Return ONLY the JSON object. No commentary.`;
             properties: {
               entry_order: { type: 'integer' },
               page_number: { type: 'string' },
+              category: { type: 'string' },
               heading_title_ar: { type: 'string' },
               heading_title_ml: { type: 'string' },
               arabic_text: { type: 'string' },
@@ -254,6 +256,7 @@ Return ONLY the JSON object. No commentary.`;
         source_part_id,
         source_part_number,
         entry_order: orderOffset + (Number(e.entry_order) || (i + 1)),
+        category: e.category || '',
         heading_title_ml: e.heading_title_ml || '',
         heading_title_ar: e.heading_title_ar || '',
         heading_title: '',
@@ -302,7 +305,7 @@ Return ONLY the JSON object. No commentary.`;
     const isLastChunk = isChunked && total_pages > 0 && page_end >= total_pages;
     let extraction_status;
     if (allEntriesCount === 0) extraction_status = 'failed';
-    else if (!isChunked || isLastChunk) extraction_status = 'completed';
+    else if (!isChunked || isLastChunk) extraction_status = 'pending_verification';
     else extraction_status = 'processing';
 
     const bookUpdate = {

@@ -60,9 +60,9 @@ Deno.serve(async (req) => {
             target = book;
             break;
           }
-          // All parts done but status still non-completed → finalize
+          // All parts done → await verification (RULE 15: never 'completed' until verified)
           await sdk.entities.SirrManuscriptBook.update(book.id || book._id, {
-            extraction_status: 'completed',
+            extraction_status: 'pending_verification',
             combined_total_pages: parts.reduce((s, p) => s + (p.page_count || 0), 0),
           }).catch(() => {});
           continue;
@@ -86,10 +86,10 @@ Deno.serve(async (req) => {
         // ── MULTI-PART PATH ──
         let partIdx = target.current_part_index || 0;
 
-        // Safety: if partIdx is out of range, finalize the book.
+        // Safety: if partIdx is out of range, await verification (RULE 15).
         if (partIdx >= parts.length) {
           await sdk.entities.SirrManuscriptBook.update(bookRecordId, {
-            extraction_status: 'completed',
+            extraction_status: 'pending_verification',
             combined_total_pages: parts.reduce((s, p) => s + (p.page_count || 0), 0),
           }).catch(() => {});
           continue;
@@ -172,6 +172,19 @@ Deno.serve(async (req) => {
                 chunks_processed: chunksProcessed,
               });
             }
+            await sdk.entities.SirrAuditLog.create({
+              audit_id: `SA-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+              sirr_book_id: target.sirr_book_id,
+              part_id: part.part_id || `SIRRP-${target.sirr_book_id}-${partIdx + 1}`,
+              part_number: part.part_number || (partIdx + 1),
+              action: 'retry',
+              user_id: 'system',
+              user_name: 'system',
+              timestamp: new Date().toISOString(),
+              page_range: `${page_start}-${page_end}`,
+              status: 'info',
+              details: `Retry attempt ${attempt + 1}/${MAX_ATTEMPTS} for chunk ${page_start}-${page_end}: ${String(e?.message || e).slice(0, 200)}`,
+            }).catch(() => {});
             await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
           }
         }
@@ -230,7 +243,7 @@ Deno.serve(async (req) => {
             total_pages: returnedTotalPages || (target.total_pages || 0),
             total_entries: allEntriesCount,
             combined_total_pages: combined,
-            extraction_status: bookComplete ? 'completed' : 'processing',
+            extraction_status: bookComplete ? 'pending_verification' : 'processing',
           };
           await sdk.entities.SirrManuscriptBook.update(bookRecordId, bookUpdate).catch(() => {});
         }

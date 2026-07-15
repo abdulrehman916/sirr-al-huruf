@@ -128,25 +128,50 @@ Deno.serve(async (req) => {
       .filter((p) => !p.processed || p.missing_pages > 0 || p.ocr_issues > 0 || p.entries === 0)
       .map((p) => p.part_id || `Part ${p.part_number}`);
 
+    // ── Missing parts (RULE 14): parts not fully processed or with zero entries ──
+    const missing_parts = parts.filter((p) => p.missing_pages > 0 || p.entries === 0).length;
+
+    // ── OCR confidence summary (RULE 14) ──
+    const confidences = entries.map((e) => Number(e.ocr_confidence) || 100);
+    const min_ocr_confidence = confidences.length ? Math.min(...confidences) : 100;
+    const avg_ocr_confidence = confidences.length
+      ? Math.round(confidences.reduce((s, c) => s + c, 0) / confidences.length)
+      : 100;
+
+    // ── Malayalam verification status (RULE 14) ──
+    const malayalam_verification_status =
+      entries.length === 0 ? 'no_entries'
+        : (missing_malayalam_meanings === 0 ? 'verified' : 'needs_review');
+
     // ── Final verdict + exact failure reasons ──
+    // RULE 15: 'completed' is set ONLY by this function on VERIFIED. Before verify,
+    // a fully-processed book sits in 'pending_verification' (never 'completed').
+    const processing_done =
+      book.extraction_status === 'completed' || book.extraction_status === 'pending_verification';
+    const all_parts_processed =
+      total_pdf_parts === 0 ? true : parts.every((p) => p.processed && p.entries > 0);
     const all_pass =
+      processing_done &&
+      all_parts_processed &&
       missing_pages === 0 &&
+      missing_parts === 0 &&
       ocr_issues === 0 &&
       duplicate_entries === 0 &&
       missing_malayalam_meanings === 0 &&
       order_gaps === 0 &&
-      book.extraction_status === 'completed' &&
       entries.length > 0;
 
     const failure_reasons = [];
-    if (book.extraction_status !== 'completed')
-      failure_reasons.push(`extraction_status is '${book.extraction_status}' (not completed)`);
+    if (!processing_done)
+      failure_reasons.push(`extraction_status is '${book.extraction_status}' (processing not finished)`);
     if (entries.length === 0)
       failure_reasons.push('no entries extracted');
     if (total_pdf_parts === 0)
       failure_reasons.push('no pdf_parts stored in the book record (multi-part storage missing)');
     if (missing_pages > 0)
       failure_reasons.push(`${missing_pages} PDF part(s) not fully processed`);
+    if (missing_parts > 0)
+      failure_reasons.push(`${missing_parts} PDF part(s) missing pages or entries`);
     if (ocr_issues > 0)
       failure_reasons.push(`${ocr_issues} entry(ies) with OCR confidence < 100 (flagged for review)`);
     if (duplicate_entries > 0)
@@ -160,14 +185,42 @@ Deno.serve(async (req) => {
 
     let final_result;
     if (all_pass) final_result = 'VERIFIED';
-    else if (book.extraction_status === 'completed') final_result = 'FAILED';
+    else if (processing_done) final_result = 'FAILED';
     else final_result = 'PENDING';
 
     // Persist the book-level verification verdict permanently on the book record.
     const persistedStatus =
-      all_pass ? 'verified' : (book.extraction_status === 'completed' ? 'failed' : 'unverified');
+      all_pass ? 'verified' : (processing_done ? 'failed' : 'unverified');
+    // RULE 15: promote to 'completed' ONLY on VERIFIED; otherwise demote to 'pending_verification'.
+    let newExtractionStatus = book.extraction_status;
+    if (all_pass) newExtractionStatus = 'completed';
+    else if (book.extraction_status === 'completed' || book.extraction_status === 'pending_verification') newExtractionStatus = 'pending_verification';
+    const verification_report = {
+      verified_at: new Date().toISOString(),
+      total_pdf_parts,
+      total_pages,
+      total_entries: entries.length,
+      missing_pages,
+      missing_parts,
+      ocr_issues,
+      min_ocr_confidence,
+      avg_ocr_confidence,
+      missing_malayalam_meanings,
+      malayalam_verification_status,
+      duplicate_entries,
+      order_gaps,
+      arabic_verification_status,
+      database_verification_status,
+      final_result,
+      failure_reasons,
+      verification_passed: all_pass,
+      parts,
+    };
     await sdk.entities.SirrManuscriptBook.update(book.id || book._id, {
       verification_status: persistedStatus,
+      verification_report,
+      last_verified_at: new Date().toISOString(),
+      extraction_status: newExtractionStatus,
     }).catch(() => {});
 
     await sdk.entities.SirrAuditLog.create({
@@ -177,7 +230,7 @@ Deno.serve(async (req) => {
       user_id: user?.id || 'system',
       user_name: user?.full_name || user?.email || 'system',
       timestamp: new Date().toISOString(),
-      status: all_pass ? 'success' : (book.extraction_status === 'completed' ? 'failed' : 'partial'),
+      status: all_pass ? 'success' : (processing_done ? 'failed' : 'partial'),
       details: `Verification ${final_result}. parts=${total_pdf_parts} entries=${entries.length} ocr_issues=${ocr_issues} missing_pages=${missing_pages}`,
       entry_count: entries.length,
       ocr_confidence_min: entries.length > 0
@@ -193,8 +246,12 @@ Deno.serve(async (req) => {
       total_pages,
       total_entries: entries.length,
       missing_pages,
+      missing_parts,
       ocr_issues,
+      min_ocr_confidence,
+      avg_ocr_confidence,
       missing_malayalam_meanings,
+      malayalam_verification_status,
       duplicate_entries,
       order_gaps,
       arabic_verification_status,

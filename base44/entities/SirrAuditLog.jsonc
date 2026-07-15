@@ -1,7 +1,7 @@
 {
   "name": "SirrAuditLog",
   "type": "object",
-  "description": "PERMANENT audit trail for every SIRR archival operation. One record per operation (upload, extract chunk, verify, rebuild, export, backup, integrity check). Scales to millions of records across thousands of books over many years. Every record is immutable once written \u2014 append-only. ISOLATED \u2014 only SIRR functions and the SIRR UI write to this entity. This is the SOLE source of truth for the processing / OCR / verification / backup history of every SIRR book and PDF part.",
+  "description": "PERMANENT audit trail for every SIRR archival operation. One record per operation (upload, extract chunk, OCR retry, verify, rebuild, export, backup, restore, integrity check, error). Scales to millions of records across thousands of books over many years. Every record is immutable once written \u2014 append-only. ISOLATED \u2014 only SIRR functions and the SIRR UI write to this entity. This is the SOLE source of truth for the processing / OCR / verification / backup / error / retry history of every SIRR book and PDF part.",
   "properties": {
     "audit_id": {
       "type": "string",
@@ -28,13 +28,15 @@
         "extract_chunk",
         "extract_complete",
         "extract_failed",
+        "retry",
         "verify",
         "rebuild",
         "export",
         "backup",
+        "restore",
         "integrity_check"
       ],
-      "description": "The archival operation performed. upload = PDF part uploaded. extract_chunk = one page-range chunk extracted. extract_complete = a part fully extracted. extract_failed = extraction error. verify = sirrVerifyBook run. rebuild = part reset for re-extraction. export = book exported to JSON. backup = book backed up to private storage. integrity_check = file checksum verification."
+      "description": "The archival operation performed. upload = PDF part uploaded. extract_chunk = one page-range chunk extracted. extract_complete = a part fully extracted. extract_failed = extraction error. retry = transient error retry attempt by the background engine. verify = sirrVerifyBook run. rebuild = part reset for re-extraction. export = book exported to JSON. backup = book backed up to private storage. restore = book restored from a backup file. integrity_check = file checksum/hash verification."
     },
     "user_id": {
       "type": "string",
@@ -53,7 +55,7 @@
     "page_range": {
       "type": "string",
       "default": "",
-      "description": "Page range affected for extract_chunk, e.g. '11-20'. Empty for non-page-scoped operations."
+      "description": "Page range affected for extract_chunk/retry, e.g. '11-20'. Empty for non-page-scoped operations."
     },
     "status": {
       "type": "string",
@@ -64,17 +66,17 @@
         "info"
       ],
       "default": "success",
-      "description": "Outcome of the operation. success = completed. failed = error. partial = interrupted/resumable. info = informational (e.g. upload recorded)."
+      "description": "Outcome of the operation. success = completed. failed = error. partial = interrupted/resumable. info = informational (e.g. upload/retry recorded)."
     },
     "details": {
       "type": "string",
       "default": "",
-      "description": "Human-readable summary. For export/backup, includes the resulting file_uri. For failures, includes the error message."
+      "description": "Human-readable summary. For export/backup/restore, includes the resulting file_uri. For failures/retries, includes the error message."
     },
     "entry_count": {
       "type": "integer",
       "default": 0,
-      "description": "Number of entries affected/created/verified/exported/backed up."
+      "description": "Number of entries affected/created/verified/exported/backed up/restored."
     },
     "ocr_confidence_min": {
       "type": "number",
@@ -84,7 +86,7 @@
     "file_uri": {
       "type": "string",
       "default": "",
-      "description": "Resulting permanent file URI for export/backup operations. Empty otherwise."
+      "description": "Resulting permanent file URI for export/backup/restore operations. Empty otherwise."
     }
   },
   "required": [
