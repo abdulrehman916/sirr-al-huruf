@@ -1,7 +1,7 @@
 {
   "name": "SirrManuscriptBook",
   "type": "object",
-  "description": "SIRR-MODULE-ISOLATED manuscript book collection. Completely separate from the global ManuscriptBook entity used by Astro Clock, Reference Library, and Import History. The SIRR page reads ONLY from this entity \u2014 it never connects to ManuscriptBook. Starts empty. A book appears here ONLY when a PDF is uploaded specifically for the SIRR module via the SIRR upload button. No records are shared, copied, or synced from any other module's manuscript store. ISOLATED \u2014 only the SIRR ingestSirrManuscript backend function and SIRR-only UI logic may write to this entity. BACKGROUND ENGINE: After upload, extraction_status='pending' and last_processed_page=0. The sirrProcessNextChunk background processor and scheduled automation read last_processed_page to resume automatically \u2014 never requires manual restart.",
+  "description": "SIRR-MODULE-ISOLATED manuscript book collection. Completely separate from the global ManuscriptBook entity. The SIRR page reads ONLY from this entity. MULTI-PART PERMANENT STORAGE: A single book may be built from multiple uploaded PDF parts (Part 1, Part 2, ... Part N). Every uploaded PDF URL is permanently stored in the pdf_parts array immediately at upload time \u2014 never kept only in conversation state. The background engine (sirrProcessNextChunk) rebuilds exclusively from the stored pdf_parts list, never from chat history. current_part_index tracks which part is being processed; last_processed_page tracks progress within the current part. combined_total_pages is the true total across all parts. ISOLATED \u2014 only the SIRR ingestSirrManuscript backend function, sirrProcessNextChunk, and SIRR-only UI logic may write to this entity.",
   "properties": {
     "sirr_book_id": {
       "type": "string",
@@ -10,7 +10,7 @@
     "malayalam_book_name": {
       "type": "string",
       "default": "",
-      "description": "Malayalam display name for the book. Editable by the user from the SIRR library. Shown as the primary book title in the SIRR UI. If the manuscript has no Malayalam title, only the title is translated into Malayalam (nothing else)."
+      "description": "Malayalam display name for the book. Editable by the user from the SIRR library. Shown as the primary book title in the SIRR UI."
     },
     "book_title": {
       "type": "string",
@@ -34,12 +34,12 @@
     "edition": {
       "type": "string",
       "default": "",
-      "description": "Edition of the manuscript if available. Shown in the reference footer."
+      "description": "Edition of the manuscript if available."
     },
     "volume": {
       "type": "string",
       "default": "",
-      "description": "Volume of the manuscript if available. Shown in the reference footer."
+      "description": "Volume of the manuscript if available."
     },
     "publication_year": {
       "type": "string",
@@ -49,31 +49,92 @@
     "total_pages": {
       "type": "integer",
       "default": 0,
-      "description": "Total number of pages in the source PDF. 0 until the first chunk determines it from the LLM. Used by the background processor to know when extraction is complete."
+      "description": "Page count of the CURRENT part being processed (informational). The true combined total is combined_total_pages."
+    },
+    "combined_total_pages": {
+      "type": "integer",
+      "default": 0,
+      "description": "TRUE combined page count across ALL uploaded PDF parts. Sum of every pdf_parts[].page_count. Set by sirrProcessNextChunk as parts are processed. This is the authoritative total \u2014 never overwritten by a single part's count."
     },
     "last_processed_page": {
       "type": "integer",
       "default": 0,
-      "description": "Last page successfully processed during chunked background ingestion. 0 = not started. The sirrProcessNextChunk background processor resumes from last_processed_page+1 automatically. When last_processed_page >= total_pages, extraction is complete."
+      "description": "Last page successfully processed WITHIN the current part (1-based). The background processor resumes from last_processed_page+1 within the current part. When the current part is fully processed, current_part_index advances and this resets to 0."
+    },
+    "current_part_index": {
+      "type": "integer",
+      "default": 0,
+      "description": "Index (0-based) into pdf_parts of the part currently being processed. When current_part_index >= pdf_parts.length, all parts are done and extraction_status becomes 'completed'. The processor never depends on chat history \u2014 it reads this field and the pdf_parts array from the database."
+    },
+    "pdf_parts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "part_number": {
+            "type": "integer",
+            "description": "1-based part sequence number (Part 1, Part 2, ...)."
+          },
+          "file_url": {
+            "type": "string",
+            "description": "PERMANENT URL to this PDF part. Saved immediately at upload time. Never lost."
+          },
+          "file_name": {
+            "type": "string",
+            "description": "Original file name of this PDF part."
+          },
+          "page_start": {
+            "type": "integer",
+            "default": 1,
+            "description": "First page of this part within the part's own numbering (always 1)."
+          },
+          "page_end": {
+            "type": "integer",
+            "default": 0,
+            "description": "Last page processed so far in this part. Equals page_count when the part is fully processed."
+          },
+          "page_count": {
+            "type": "integer",
+            "default": 0,
+            "description": "Total page count of this PDF part, determined by the LLM during first chunk extraction. 0 until the first chunk runs."
+          },
+          "uploaded_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp when this part was uploaded."
+          },
+          "processed": {
+            "type": "boolean",
+            "default": false,
+            "description": "True when this part is fully processed (page_end >= page_count)."
+          }
+        },
+        "required": [
+          "part_number",
+          "file_url",
+          "file_name"
+        ]
+      },
+      "default": [],
+      "description": "ORDERED LIST of every uploaded PDF part for this book. Part 1, Part 2, ... Part N. Every part's file_url is permanently stored here at upload time. The background engine processes parts in order. Adding a new part appends to this array and resets extraction_status to 'pending'. This is the SOLE source of truth for what to process \u2014 never chat history."
     },
     "original_file_url": {
       "type": "string",
       "default": "",
-      "description": "Permanent URL to the original PDF file. The original PDF remains the master source and is stored permanently in SIRR storage."
+      "description": "LEGACY: URL of the first PDF part. Kept for backward compatibility. New uploads populate pdf_parts[0].file_url instead."
     },
     "original_file_name": {
       "type": "string",
       "default": "",
-      "description": "Original file name of the uploaded PDF. Shown as the Source in the reference footer."
+      "description": "LEGACY: Original file name of the first PDF part. Kept for backward compatibility."
     },
     "source": {
       "type": "string",
       "default": "sirr_upload",
-      "description": "How this book entered the SIRR store. Always SIRR-specific (never onedrive-global or shared)."
+      "description": "How this book entered the SIRR store. Always SIRR-specific."
     },
     "upload_date": {
       "type": "string",
-      "description": "ISO 8601 date when this book was uploaded into the SIRR module."
+      "description": "ISO 8601 date when this book was first uploaded into the SIRR module."
     },
     "extraction_status": {
       "type": "string",
@@ -85,7 +146,7 @@
         "partial"
       ],
       "default": "pending",
-      "description": "Content extraction status for this SIRR book. 'pending' = uploaded, waiting for background processor. 'processing' = background engine is extracting pages. 'completed' = all pages processed. 'partial' = interrupted, scheduled automation will resume. Never shown to users."
+      "description": "Content extraction status. 'pending' = waiting for background processor. 'processing' = a part is being extracted. 'completed' = ALL parts fully processed. 'partial' = interrupted, scheduled automation will resume. Never shown to users."
     },
     "extraction_error": {
       "type": "string",
@@ -95,7 +156,7 @@
     "total_entries": {
       "type": "integer",
       "default": 0,
-      "description": "Total number of SirrManuscriptEntry records extracted from this book."
+      "description": "Total number of SirrManuscriptEntry records extracted from this book (across all parts)."
     },
     "notes": {
       "type": "string",
@@ -144,6 +205,12 @@
       "name": "idx_last_processed_page",
       "fields": [
         "last_processed_page"
+      ]
+    },
+    {
+      "name": "idx_current_part_index",
+      "fields": [
+        "current_part_index"
       ]
     }
   ],
