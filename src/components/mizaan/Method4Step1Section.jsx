@@ -831,7 +831,7 @@ export default function Method4Step1Section({ nineMizanTotal, dominant = "fire",
         </Card>
 
         {/* ESMA-I KASEM WAFQ (KALAM) — FERD→B5, ZEVC→B4 of the Kasem letters, same buildVefk engine */}
-        <Method4VefkCard step="21v" title="Esma-i Kasem Wafq" sourceLabel={`Vefk Source (B${kasemVefkBastLevel} Total)`} sourceNumber={kasemVefkSource} vefk={kasemVefk} dominant={dominant} sourceLetters={kasemLetters} bastLevel={kasemVefkBastLevel} />
+        <Method4VefkCard step="21v" title="Esma-i Kasem Wafq" sourceLabel={`Vefk Source (B${kasemVefkBastLevel} Total)`} sourceNumber={kasemVefkSource} vefk={kasemVefk} dominant={dominant} sourceLetters={kasemLetters} bastLevel={kasemVefkBastLevel} useMcBorder />
 
         <OrnamentalDivider />
 

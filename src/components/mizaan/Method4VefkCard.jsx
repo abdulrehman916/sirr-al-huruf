@@ -7,7 +7,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { getBastLevel as getBastLevelDefault } from "../../lib/mizaanPostEngine";
+import { getBastLevel as getBastLevelDefault, istintak } from "../../lib/mizaanPostEngine";
 
 const G = {
   gold:         "#F5D060",
@@ -116,7 +116,7 @@ function SourceSection({ letters, sourceTotal, elementColor }) {
   );
 }
 
-export default function Method4VefkCard({ step, title, sourceNumber, sourceLabel, vefk, dominant = "fire", sourceLetters = [], bastLevel = 1 }) {
+export default function Method4VefkCard({ step, title, sourceNumber, sourceLabel, vefk, dominant = "fire", sourceLetters = [], bastLevel = 1, useMcBorder = false }) {
   if (!vefk) return null;
   const elementMeta = ELEMENT_META[dominant] || ELEMENT_META.fire;
   const g = vefk.grid;
@@ -126,7 +126,9 @@ export default function Method4VefkCard({ step, title, sourceNumber, sourceLabel
   const d1 = g.reduce((s, r, i) => s + r[i], 0);
   const d2 = g.reduce((s, r, i) => s + r[3 - i], 0);
   const allOk = rowSums.every(x => x === mc) && colSums.every(x => x === mc) && d1 === mc && d2 === mc;
-  const guardianName = vefk.guardianName || "";
+  // Border letters: default = element-based guardian name (Kitabet/A'van unchanged).
+  // When useMcBorder=true (Method 4 Asmaul Qasam only), derive from this square's own MC: istintak(MC).
+  const guardianName = useMcBorder ? istintak(mc).join("") : (vefk.guardianName || "");
   const guardianLetters = [...guardianName];
 
   return (
