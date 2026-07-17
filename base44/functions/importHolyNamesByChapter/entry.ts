@@ -343,94 +343,103 @@ ${batch.map((t: any, i: number) => `--- Item index ${i} ---\n${String(t.arabic_t
       return pageBounds.length ? pageBounds[pageBounds.length - 1].page_number : 0;
     };
 
-    // ── 3. Normalize headings + locate each in body IN ORDER ──
-    type Located = { kind: "name" | "sep"; headingOrig: string; core: string; nameStartRaw: number; contentStartRaw: number; page: number };
-    const located: Located[] = [];
-    let cursorNorm = 0; // advance past each found heading
-    for (const h of chapter_headings) {
-      const hStr = String(h || "").trim();
-      if (!hStr) continue;
-      const isS = isSurahLabel(hStr);
-      const isI = isIntro(hStr);
-      if (isS || isI) {
-        // separator — locate it to act as a boundary, but no card
-        const probe = isS ? stripHarakat(hStr).replace(/\s+/g, " ").trim() : "مقدمة";
-        const probe2 = isS ? (stripHarakat(hStr).replace(/\s+/g, " ").trim().replace(/^سورة|^سوره/, "سورة")) : "مقدمة";
-        let found = -1;
-        for (const pr of [probe, probe2, stripHarakat(hStr).trim()]) {
-          found = bodyNorm.indexOf(pr, cursorNorm);
-          if (found !== -1) break;
-        }
-        if (found !== -1) {
-          const endNorm = found + (isS ? stripHarakat(hStr).trim().length : 7);
-          const contentStart = endNorm < normToRaw.length ? normToRaw[Math.min(endNorm, normToRaw.length - 1)] : bodyRaw.length;
-          located.push({ kind: "sep", headingOrig: hStr, core: "", nameStartRaw: normToRaw[found], contentStartRaw: contentStart, page: pageOf(normToRaw[found]) });
-          cursorNorm = endNorm;
-        }
-        continue;
+    // ── 2b. TOC-skip: the book's first pages are a Table of Contents that
+    //   lists every "اسمه X" name packed close together (gaps < ~100 chars).
+    //   Binding to TOC entries produces tiny fake "chapters". The first real
+    //   chapter heading is the first "اسمه" whose gap to the NEXT "اسمه" is
+    //   >= MIN_CHAPTER_GAP (real chapters span hundreds+ chars). Start the
+    //   cursor there so every heading binds to its real chapter, not the TOC.
+    const MIN_CHAPTER_GAP = 200;
+    let contentStartNorm = 0;
+    {
+      const positions: number[] = [];
+      let from = 0;
+      while (true) {
+        const i = bodyNorm.indexOf("اسمه", from);
+        if (i === -1) break;
+        positions.push(i);
+        from = i + 4;
       }
-      // "اسمه X" name heading
-      const core = coreOfHeading(hStr);
-      if (!core || core.length < 2) continue;
-      const probe = "اسمه " + core;
-      let found = bodyNorm.indexOf(probe, cursorNorm);
-      if (found === -1) {
-        // try without اسمه (some headings may omit it)
-        found = bodyNorm.indexOf(core, cursorNorm);
-        if (found === -1) continue;
+      for (let k = 0; k < positions.length - 1; k++) {
+        if (positions[k + 1] - positions[k] >= MIN_CHAPTER_GAP) { contentStartNorm = positions[k]; break; }
       }
-      const nameStartNorm = found;
-      // content start = after "اسمه " + core + honorific tokens
-      let afterNorm = found + probe.length;
-      // skip spaces then honorific tokens
-      let j = afterNorm;
-      while (j < bodyNorm.length && (bodyNorm[j] === " " )) j++;
-      // tokenize forward, skipping honorifics
-      let token = "";
-      let tokenStart = j;
-      while (j < bodyNorm.length) {
-        const c = bodyNorm[j];
-        if (c === " " || c === "\n") {
-          if (token) {
-            if (HONORIFIC.has(token)) { afterNorm = j + 1; token = ""; tokenStart = j + 1; }
-            else break;
-          }
-          j++;
-          if (token === "") tokenStart = j;
-          continue;
-        }
-        token += c;
-        j++;
-      }
-      const contentStartNorm = afterNorm;
-      const contentStartRaw = contentStartNorm < normToRaw.length ? normToRaw[Math.min(contentStartNorm, normToRaw.length - 1)] : bodyRaw.length;
-      located.push({ kind: "name", headingOrig: hStr, core, nameStartRaw: normToRaw[nameStartNorm], contentStartRaw, page: pageOf(normToRaw[nameStartNorm]) });
-      cursorNorm = nameStartNorm + probe.length; // advance past this heading so the next search starts after it
     }
 
-    // ── 4. Build chapters: content from this name heading's contentStart until the next located heading's start ──
-    const nameHeadings = located.filter((l) => l.kind === "name");
-    const allStarts = located; // ordered
+    // ── 3. Body-driven heading detection (robust, no ordered search) ──
+    // Scan the body (after TOC-skip) for actual "اسمه X" HEADING LINES and
+    // separator lines (سورة / مقدمة). A line is a heading only if "اسمه"
+    // sits at the START of a line (preceded by a newline), never mid-sentence
+    // — so a Name mentioned in prose is never mistaken for a chapter start.
+    // Each اسمه heading → one chapter; content runs from just after the
+    // heading line until the NEXT heading/separator line. This binds to real
+    // chapter headings in the body with no fragile ordered search.
+    type Pos = { kind: "name" | "sep"; normPos: number; headingOrig: string; core: string; contentStartRaw: number; page: number };
+    const positions: Pos[] = [];
+    const atLineStart = (rawStart: number): boolean => {
+      if (rawStart === 0) return true;
+      let p = rawStart - 1;
+      while (p >= 0 && (bodyRaw[p] === " " || bodyRaw[p] === "\t")) p--;
+      return p < 0 || bodyRaw[p] === "\n";
+    };
+    // 3a. All "اسمه" heading lines after contentStart
+    {
+      let from = contentStartNorm;
+      while (true) {
+        const i = bodyNorm.indexOf("اسمه", from);
+        if (i === -1) break;
+        from = i + 4;
+        const rawStart = normToRaw[i] ?? 0;
+        if (!atLineStart(rawStart)) continue; // mid-sentence mention → not a heading
+        let nl = bodyRaw.indexOf("\n", rawStart);
+        if (nl === -1) nl = bodyRaw.length;
+        const headingLine = bodyRaw.slice(rawStart, nl).trim();
+        const core = coreOfHeading(headingLine);
+        if (!core || core.length < 2) continue;
+        positions.push({ kind: "name", normPos: i, headingOrig: headingLine, core, contentStartRaw: nl + 1 <= bodyRaw.length ? nl + 1 : bodyRaw.length, page: pageOf(rawStart) });
+      }
+    }
+    // 3b. Separator lines (سورة X / مقدمة) after contentStart
+    {
+      let from = contentStartNorm;
+      while (true) {
+        const s = bodyNorm.indexOf("سورة", from);
+        if (s === -1) break;
+        from = s + 5;
+        const rawStart = normToRaw[s] ?? 0;
+        if (!atLineStart(rawStart)) continue;
+        let nl = bodyRaw.indexOf("\n", rawStart);
+        if (nl === -1) nl = bodyRaw.length;
+        const line = bodyRaw.slice(rawStart, nl).trim();
+        if (isSurahLabel(line)) positions.push({ kind: "sep", normPos: s, headingOrig: line, core: "", contentStartRaw: nl + 1, page: pageOf(rawStart) });
+      }
+      let from2 = contentStartNorm;
+      while (true) {
+        const m = bodyNorm.indexOf("مقدمة", from2);
+        if (m === -1) break;
+        from2 = m + 5;
+        const rawStart = normToRaw[m] ?? 0;
+        if (!atLineStart(rawStart)) continue;
+        positions.push({ kind: "sep", normPos: m, headingOrig: "مقدمة", core: "", contentStartRaw: rawStart, page: pageOf(rawStart) });
+      }
+    }
+    positions.sort((a, b) => a.normPos - b.normPos);
+    const nameHeadings = positions.filter((p) => p.kind === "name");
+    const allStarts = positions;
 
-    // For each name heading, find the NEXT located heading (name or sep) by raw position
-    const chapters: { headingOrig: string; core: string; contentStartRaw: number; contentEndRaw: number; startPage: number; endPage: number }[] = [];
+    // ── 4. Build chapters: content from this heading's contentStart until the next heading/separator ──
+    const chapters: { headingOrig: string; core: string; contentStartRaw: number; contentEndRaw: number; startPage: number; endPage: number; truncated: boolean }[] = [];
     for (let i = 0; i < nameHeadings.length; i++) {
       const cur = nameHeadings[i];
-      // next located heading whose nameStartRaw > cur.contentStartRaw
       let endRaw = bodyRaw.length;
       let endPage = pageOf(bodyRaw.length - 1);
       for (const l of allStarts) {
         if (l === cur) continue;
-        if (l.nameStartRaw > cur.contentStartRaw) {
-          if (l.nameStartRaw < endRaw) { endRaw = l.nameStartRaw; endPage = l.page; }
+        if (l.normPos > cur.normPos) {
+          const lRaw = normToRaw[l.normPos] ?? bodyRaw.length;
+          if (lRaw < endRaw) { endRaw = lRaw; endPage = l.page; }
         }
       }
-      // guard: ensure endRaw > contentStartRaw
       if (endRaw <= cur.contentStartRaw) endRaw = cur.contentStartRaw + 1;
-      // A chapter whose end reaches the end of the extracted text had no next
-      // heading within this range → it is TRUNCATED. Skip storing it unless
-      // this is the final range; the overlapping next range will capture it
-      // fully (its heading + its next heading both fall inside the overlap).
       const truncated = endRaw >= bodyRaw.length - 1;
       chapters.push({ headingOrig: cur.headingOrig, core: cur.core, contentStartRaw: cur.contentStartRaw, contentEndRaw: endRaw, startPage: cur.page, endPage, truncated });
     }
