@@ -45,6 +45,32 @@ function detectLang(text: string): string {
   if (hasAr) return "ar";
   return "en";
 }
+// Split a verbatim block into its Arabic-script and Malayalam-script portions.
+// Non-script lines (Latin/numbers) are left out of BOTH — they remain only in
+// text_content (the original book content). Malayalam stays EMPTY when the PDF
+// does not print Malayalam for this section (never auto-generated).
+function splitScripts(text: string): { arabic: string; malayalam: string } {
+  const lines = String(text || "").split(/\n+/);
+  let arabic = "";
+  let malayalam = "";
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t) continue;
+    const hasAr = /[\u0600-\u06FF]/.test(t);
+    const hasMl = /[\u0D00-\u0D7F]/.test(t);
+    if (hasAr && hasMl) {
+      const arRuns = (t.match(/[\u0600-\u06FF\u0640\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\s.,،؛:!؟"'()\-]+/g) || []).join(" ").trim();
+      const mlRuns = (t.match(/[\u0D00-\u0D7F\s.,:!?'"\-]+/g) || []).join(" ").trim();
+      if (arRuns) arabic += (arabic ? "\n" : "") + arRuns;
+      if (mlRuns) malayalam += (malayalam ? "\n" : "") + mlRuns;
+    } else if (hasMl) {
+      malayalam += (malayalam ? "\n" : "") + t;
+    } else if (hasAr) {
+      arabic += (arabic ? "\n" : "") + t;
+    }
+  }
+  return { arabic, malayalam };
+}
 async function sha256(s: string): Promise<string> {
   const data = new TextEncoder().encode(s);
   const hash = await crypto.subtle.digest("SHA-256", data);
@@ -64,6 +90,7 @@ Deno.serve(async (req) => {
     const import_batch = String(body?.import_batch || "HNK-" + Date.now());
     const source_pdf_file = String(body?.source_pdf_file || "");
     const source_pdf_url = String(body?.source_pdf_url || "");
+    const now = new Date().toISOString();
     let pages: any[] = Array.isArray(body?.pages) ? body.pages : [];
     let extraction_method = "raw";
 
@@ -117,20 +144,47 @@ Deno.serve(async (req) => {
       const rawText = String(page?.text || "");
       if (!rawText.trim()) continue;
       pagesProcessed++;
-      const normPage = normalizeArabic(rawText);
       const paras = rawText.split(/\n+/).map((p) => p.trim()).filter(Boolean);
 
-      for (const m of matchers) {
-        const hit = (m.full && normPage.includes(m.full)) || (m.noAl && normPage.includes(m.noAl));
-        if (!hit) continue;
-        foundRecordIds[m.name_id] = m.recordId;
+      // Per-page ordered pass:
+      //   1. Each paragraph containing a Holy Name is attributed to that name.
+      //   2. A Malayalam-only paragraph (a translation gloss with no Arabic name
+      //      of its own) is attached to the NEAREST PRECEDING paragraph that
+      //      contained exactly ONE name — so the gloss follows its name without
+      //      ever merging translations across unrelated names. If the preceding
+      //      name-bearing paragraph held multiple names, the gloss is ambiguous
+      //      and is left out of the structured fields (it still lives verbatim
+      //      in text_content of nothing here — simply not attached).
+      const nameParas: Record<string, string[]> = {};
+      const nameHit: Record<string, boolean> = {};
+      for (const m of matchers) nameParas[m.name_id] = [];
 
-        // Collect verbatim paragraphs containing the name.
-        const related = paras.filter((p) => {
-          const pn = normalizeArabic(p);
-          return (m.full && pn.includes(m.full)) || (m.noAl && pn.includes(m.noAl));
-        });
-        const text = (related.length > 0 ? related.join("\n") : rawText).trim();
+      let lastNameId = "";
+      for (const p of paras) {
+        const pn = normalizeArabic(p);
+        const hasAr = /[\u0600-\u06FF]/.test(p);
+        const hasMl = /[\u0D00-\u0D7F]/.test(p);
+        const contained = matchers
+          .filter((m) => (m.full && pn.includes(m.full)) || (m.noAl && pn.includes(m.noAl)))
+          .map((m) => m.name_id);
+
+        if (contained.length === 1) {
+          lastNameId = contained[0];
+          nameHit[lastNameId] = true;
+          nameParas[lastNameId].push(p);
+        } else if (contained.length > 1) {
+          lastNameId = ""; // ambiguous — do not attach following gloss to any
+          for (const nid of contained) { nameHit[nid] = true; nameParas[nid].push(p); }
+        } else if (contained.length === 0 && hasMl && !hasAr && lastNameId) {
+          // Malayalam translation gloss for the nearest preceding single name.
+          nameParas[lastNameId].push(p);
+        }
+      }
+
+      for (const m of matchers) {
+        if (!nameHit[m.name_id]) continue;
+        foundRecordIds[m.name_id] = m.recordId;
+        const text = (nameParas[m.name_id] || []).join("\n").trim();
         if (!text) continue;
 
         const hash = await sha256(m.name_id + "|" + normalizeArabic(text));
@@ -141,15 +195,19 @@ Deno.serve(async (req) => {
         const exist = await base44.asServiceRole.entities.HolyNameImportedSection.filter({ content_hash: hash }, null, 1);
         if (exist && exist.length > 0) { duplicates++; continue; }
 
+        const { arabic, malayalam } = splitScripts(text);
         toCreate.push({
           section_id: "HNIS-" + hash.slice(0, 24),
           name_id: m.name_id,
           section_type: "other",
           text_content: text,
+          arabic_text: arabic,
+          malayalam_translation: malayalam,
           language: detectLang(text),
           source_pdf_file,
           source_pdf_url,
           source_pdf_page: Number(page?.page_number) || 0,
+          import_date: now,
           content_hash: hash,
           import_batch,
         });
@@ -163,7 +221,6 @@ Deno.serve(async (req) => {
     }
 
     // ── Refresh denormalized section_count + last_imported_at for found names ──
-    const now = new Date().toISOString();
     for (const name_id of Object.keys(foundRecordIds)) {
       try {
         const secs = await base44.asServiceRole.entities.HolyNameImportedSection.filter({ name_id }, null, 1000);

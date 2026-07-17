@@ -75,8 +75,15 @@ export default function HolyNameKnowledgeTab() {
     setOpenId(id);
     if (!sectionsCache[id]) {
       try {
-        const secs = await base44.entities.HolyNameImportedSection.filter({ name_id: id }, "source_pdf_page", 200);
-        setSectionsCache((s) => ({ ...s, [id]: secs || [] }));
+        const raw = await base44.entities.HolyNameImportedSection.filter({ name_id: id }, "source_pdf_page", 200);
+        // Order: by source PDF file, then page — so each PDF's child records stay
+        // together in manuscript page order when multiple PDFs contribute.
+        const secs = (raw || []).slice().sort((a, b) => {
+          const fa = (a.source_pdf_file || "").localeCompare(b.source_pdf_file || "");
+          if (fa !== 0) return fa;
+          return (a.source_pdf_page || 0) - (b.source_pdf_page || 0);
+        });
+        setSectionsCache((s) => ({ ...s, [id]: secs }));
       } catch {
         setSectionsCache((s) => ({ ...s, [id]: [] }));
       }
@@ -238,14 +245,40 @@ export default function HolyNameKnowledgeTab() {
                                   {LANG_LABELS[s.language] || s.language}
                                 </span>
                               </div>
-                              <p className="font-amiri text-base leading-loose whitespace-pre-wrap selectable" style={{ color: "rgba(255,255,255,0.88)" }} dir="auto">
-                                {s.text_content}
-                              </p>
-                              <div className="flex items-center gap-1.5 pt-1 border-t" style={{ borderColor: "rgba(212,175,55,0.12)" }}>
-                                <FileText className="w-3 h-3" style={{ color: "rgba(212,175,55,0.40)" }} />
+                              {s.arabic_text && (
+                                <div className="space-y-1">
+                                  <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>Original Arabic text</span>
+                                  <p className="font-amiri text-lg leading-loose whitespace-pre-wrap selectable" style={{ color: "rgba(255,255,255,0.92)" }} dir="rtl">
+                                    {s.arabic_text}
+                                  </p>
+                                </div>
+                              )}
+                              {s.malayalam_translation && (
+                                <div className="space-y-1 pt-1 border-t" style={{ borderColor: "rgba(212,175,55,0.10)" }}>
+                                  <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>Malayalam translation</span>
+                                  <p className="font-malayalam text-sm leading-relaxed whitespace-pre-wrap selectable" style={{ color: "rgba(255,255,255,0.80)" }} dir="auto">
+                                    {s.malayalam_translation}
+                                  </p>
+                                </div>
+                              )}
+                              {s.text_content && (
+                                <details className="pt-1 border-t" style={{ borderColor: "rgba(212,175,55,0.10)" }}>
+                                  <summary className="cursor-pointer font-inter text-[7px] uppercase tracking-widest py-1" style={{ color: "rgba(212,175,55,0.50)" }}>Original book content</summary>
+                                  <p className="font-amiri text-sm leading-loose whitespace-pre-wrap selectable mt-1" style={{ color: "rgba(255,255,255,0.70)" }} dir="auto">
+                                    {s.text_content}
+                                  </p>
+                                </details>
+                              )}
+                              <div className="flex items-center gap-1.5 pt-1 border-t flex-wrap" style={{ borderColor: "rgba(212,175,55,0.12)" }}>
+                                <FileText className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(212,175,55,0.40)" }} />
                                 <span className="font-inter text-[8px] truncate" style={{ color: "rgba(255,255,255,0.40)" }}>
                                   {s.source_pdf_file || "PDF"} • Page {s.source_pdf_page || "?"}
                                 </span>
+                                {s.import_date && (
+                                  <span className="font-inter text-[8px] truncate" style={{ color: "rgba(255,255,255,0.30)" }}>
+                                    • {new Date(s.import_date).toLocaleDateString()}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           ))
