@@ -97,9 +97,15 @@ export default function HolyNameImportedSections({ sourceSection, sourceNameKey,
       if (!map[cat]) map[cat] = [];
       map[cat].push(s);
     }
-    return CATEGORY_ORDER
-      .filter((cat) => map[cat] && map[cat].length > 0)
-      .map((cat) => ({ category: cat, label: SECTION_LABELS[cat] || cat, items: map[cat] }));
+    // Known types shown first in preferred order; new/future types appended alphabetically.
+    const allCats = Object.keys(map);
+    const known = CATEGORY_ORDER.filter((cat) => map[cat]);
+    const unknown = allCats.filter((cat) => !CATEGORY_ORDER.includes(cat)).sort();
+    return [...known, ...unknown].map((cat) => ({
+      category: cat,
+      label: SECTION_LABELS[cat] || cat.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+      items: map[cat],
+    }));
   }, [sections]);
 
   if (loading) {

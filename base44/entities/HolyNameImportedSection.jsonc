@@ -1,7 +1,7 @@
 {
   "name": "HolyNameImportedSection",
   "type": "object",
-  "description": "Child entity for the Holy Names PDF Knowledge Import System. ONE independent record per imported information block, linked to its Holy Name via source_section + source_name_key. source_section='section_a' links to the Section A static HOLY_NAMES array (source_name_key = String(name.id)); source_section='section_b' links to the HolyOnePDFName entity (source_name_key = pdf_name_id). Multiple PDFs can contribute multiple child records to the SAME Holy Name \u2014 they are never merged into one record; each stays independent. Every child record permanently remembers: source PDF file name, source PDF page number, the Holy Name it belongs to (source_section + source_name_key), the Original Arabic text (arabic_text \u2014 Arabic-script runs only), the Malayalam translation (malayalam_translation \u2014 Malayalam-script runs ONLY when the PDF actually prints Malayalam; EMPTY otherwise, never auto-generated), the Original book content (text_content \u2014 the full verbatim text exactly as printed, Arabic and Malayalam preserved), the import date (import_date), the auto-classified category (section_type \u2014 assigned by LLM classifier, NEVER modifies the verbatim text), and any visual content images (images \u2014 rendered page images for pages containing wafq/table/diagram/symbol/numeric content). Append-only: existing records are NEVER deleted or overwritten; duplicates are skipped by content_hash. ISOLATED \u2014 only importHolyNamesPDF writes this entity; only the Holy Names page (Section A cards + Section B detail page) reads it. No other module, engine, or page touches it. Designed for UNLIMITED future growth \u2014 the user uploads books little by little over months/years and the database keeps enriching the same Holy Names forever.",
+  "description": "Child entity for the Holy Names PDF Knowledge Import System. ONE independent record per imported information block, linked to its Holy Name via source_section + source_name_key. source_section='section_a' links to the Section A static HOLY_NAMES array (source_name_key = String(name.id)); source_section='section_b' links to the HolyOnePDFName entity (source_name_key = pdf_name_id). Multiple PDFs can contribute multiple child records to the SAME Holy Name \u2014 they are never merged into one record; each stays independent. Every child record permanently remembers: source PDF file name, source PDF page number, the Holy Name it belongs to (source_section + source_name_key), the Original Arabic text (arabic_text \u2014 Arabic-script runs only), the Malayalam translation (malayalam_translation \u2014 Malayalam-script runs ONLY when the PDF actually prints Malayalam; EMPTY otherwise, never auto-generated), the Original book content (text_content \u2014 the full verbatim text exactly as printed, Arabic and Malayalam preserved), the import date (import_date), the section type (section_type \u2014 a FREE-FORM snake_case label assigned by the LLM labeler, NOT a fixed enum; new section types are created automatically when a PDF introduces content that doesn't fit existing labels), and any visual content images (images \u2014 rendered page images for pages containing wafq/table/diagram/symbol/numeric content). Append-only: existing records are NEVER deleted or overwritten; duplicates are skipped by content_hash. ISOLATED \u2014 only importHolyNamesPDF writes this entity; only the Holy Names page (Section A cards + Section B detail page) reads it. No other module, engine, or page touches it. Designed for UNLIMITED future growth \u2014 the user uploads books little by little over months/years and the database keeps enriching the same Holy Names forever.",
   "properties": {
     "section_id": {
       "type": "string",
@@ -14,7 +14,7 @@
         "section_b"
       ],
       "default": "section_a",
-      "description": "Which Holy Names section this child record enriches. 'section_a' = the static HOLY_NAMES array (source_name_key = String(name.id)); 'section_b' = the HolyOnePDFName entity (source_name_key = pdf_name_id)."
+      "description": "Which Holy Names section this child record enriches. 'section_a' = the static HOLY_NAMES array (source_name_key = String(HOLY_NAMES id)); 'section_b' = the HolyOnePDFName entity (source_name_key = pdf_name_id)."
     },
     "source_name_key": {
       "type": "string",
@@ -26,27 +26,8 @@
     },
     "section_type": {
       "type": "string",
-      "enum": [
-        "arabic_name",
-        "malayalam_meaning",
-        "description",
-        "benefits",
-        "usage",
-        "method",
-        "recitations",
-        "conditions",
-        "warnings",
-        "related_duas",
-        "references",
-        "notes",
-        "wafq_diagram",
-        "table",
-        "symbol",
-        "numeric_layout",
-        "other"
-      ],
       "default": "other",
-      "description": "Auto-classified category of this information block. Assigned by the LLM CLASSIFIER ONLY \u2014 the LLM NEVER modifies, translates, or generates the verbatim text; it only reads it and returns a single category label. 'arabic_name' = the Holy Name itself in Arabic. 'malayalam_meaning' = Malayalam translation printed in the PDF. 'description' = general explanation. 'benefits' = spiritual/physical benefits. 'usage' = how to use. 'method' = procedure/practice. 'recitations' = repetition count/number. 'conditions' = prerequisites. 'warnings' = cautions. 'related_duas' = associated prayers. 'references' = citations. 'notes' = miscellaneous. 'wafq_diagram' = magic square / wafq. 'table' = tabular data. 'symbol' = symbolic content. 'numeric_layout' = number arrangement. 'other' = cannot classify. Defaults to 'other' when the classifier is unavailable or uncertain \u2014 never guessed."
+      "description": "FREE-FORM section type label (snake_case, lowercase) describing what kind of information this block contains. NOT a fixed enum \u2014 the LLM labeler assigns any label that fits the manuscript's own section structure, and NEW labels are created automatically when a PDF introduces content that doesn't fit existing labels. Common labels include: arabic_name, malayalam_meaning, description, benefits, usage, method, recitations, conditions, warnings, related_duas, references, notes, wafq_diagram, table, symbol, numeric_layout. But ANY new label (e.g. khawas, tawassul, adab, ijazat, asma) can appear when a future PDF uses headings the system hasn't seen before. The LLM NEVER modifies, translates, or generates the verbatim text; it only reads it and returns a single section_type label. Defaults to 'other' when the labeler is unavailable or truly uncertain."
     },
     "text_content": {
       "type": "string",

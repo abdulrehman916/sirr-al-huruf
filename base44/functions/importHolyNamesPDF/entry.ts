@@ -268,35 +268,36 @@ Deno.serve(async (req) => {
     // ── LLM classification (CLASSIFIER ONLY — never modifies the verbatim text) ──
     if (classifyItems.length > 0) {
       try {
-        const validCats = ["arabic_name","malayalam_meaning","description","benefits","usage","method","recitations","conditions","warnings","related_duas","references","notes","wafq_diagram","table","symbol","numeric_layout","other"];
         const classifyRes: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
-          prompt: `You are a STRICT CLASSIFIER for Islamic occult manuscript sections about Holy Names (Asma ul-Husna and related divine names). For EACH text section below, return ONLY a single category label from this exact list:
+          prompt: `You are a SECTION LABELER for Islamic occult manuscript sections about Holy Names (Asma ul-Husna and related divine names). For EACH text section below, read the content and output a short normalized section_type label (snake_case, lowercase) that describes what kind of section this is.
 
-arabic_name — the Holy Name itself in Arabic
-malayalam_meaning — Malayalam translation of the name or its meaning
-description — general explanation or commentary
-benefits — spiritual, physical, or worldly benefits
-usage — how to use or apply the name
-method — procedure, practice, or ritual steps
-recitations — repetition count, number of times, or adad
-conditions — prerequisites, requirements, or timing conditions
-warnings — cautions, prohibitions, or restrictions
-related_duas — associated prayers, Quranic verses, or supplications
-references — citations, sources, or book references
-notes — miscellaneous notes or asides
-wafq_diagram — magic square, wafq, or grid of letters/numbers
-table — tabular data or chart
-symbol — symbolic content or sigil
-numeric_layout — number arrangement or numerical calculation
-other — cannot classify from the text
+Use these common labels WHEN they clearly apply:
+- arabic_name — the Holy Name itself in Arabic
+- malayalam_meaning — Malayalam translation or meaning of the name
+- description — general explanation or commentary
+- benefits — spiritual, physical, or worldly benefits (فوائد، خواص)
+- usage — how to use or apply the name (طريقة الاستخدام)
+- method — procedure, practice, or ritual steps (طريقة، العمل)
+- recitations — repetition count, number of times, or adad (عدد المرات، العدد)
+- conditions — prerequisites, requirements, or timing conditions (شرط، شروط)
+- warnings — cautions, prohibitions, or restrictions (تحذير، احتياط)
+- related_duas — associated prayers, Quranic verses, or supplications (دعاء، أدعية)
+- references — citations, sources, or book references (المراجع)
+- notes — miscellaneous notes or asides (ملاحظات)
+- wafq_diagram — magic square, wafq, or grid of letters/numbers (وفق)
+- table — tabular data or chart (جدول)
+- symbol — symbolic content or sigil
+- numeric_layout — number arrangement or numerical calculation
 
 CRITICAL RULES:
-- You are a CLASSIFIER ONLY. NEVER modify, translate, summarize, or generate any text.
-- Return ONLY a JSON object: {"classifications": [{"index": <number>, "category": "<label>"}]}
+- You are a LABELER ONLY. NEVER modify, translate, summarize, or generate any text.
+- If the section has a heading or content that does NOT fit any common label above, CREATE a new snake_case label (e.g. "khawas" for خواص/properties, "tawassul" for توسل/intercession, "adab" for آداب/etiquette, "ijazat" for إجازة/permission, "asma" for أسماء/names listing, "ruqyah" for رقية).
+- New labels are WELCOME — this is a FLEXIBLE system that grows with every new book. Do NOT force content into an existing label if it doesn't fit.
+- Return ONLY a JSON object: {"classifications": [{"index": <number>, "section_type": "<label>"}]}
 - Use the exact index numbers provided for each section.
-- If unsure, return "other".
+- If truly unsure, return "other".
 
-Text sections to classify:
+Text sections to label:
 ${classifyItems.map((c) => `--- Section index ${c.idx} ---\n${c.text.slice(0, 800)}`).join("\n\n")}`,
           response_json_schema: {
             type: "object",
@@ -307,7 +308,7 @@ ${classifyItems.map((c) => `--- Section index ${c.idx} ---\n${c.text.slice(0, 80
                   type: "object",
                   properties: {
                     index: { type: "integer" },
-                    category: { type: "string" },
+                    section_type: { type: "string" },
                   },
                 },
               },
@@ -315,12 +316,12 @@ ${classifyItems.map((c) => `--- Section index ${c.idx} ---\n${c.text.slice(0, 80
           },
         });
         for (const c of (classifyRes?.classifications || [])) {
-          const cat = String(c?.category || "").toLowerCase().trim();
-          if (validCats.includes(cat) && toCreate[Number(c?.index)]) {
+          const cat = String(c?.section_type || "").toLowerCase().trim().replace(/\s+/g, "_");
+          if (cat && toCreate[Number(c?.index)]) {
             toCreate[Number(c.index)].section_type = cat;
           }
         }
-      } catch { /* classification unavailable — keep "other" */ }
+      } catch { /* labeling unavailable — keep "other" */ }
     }
 
     let sections_added = 0;
