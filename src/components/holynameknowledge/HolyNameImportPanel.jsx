@@ -2,10 +2,6 @@ import { useState, useRef } from "react";
 import { UploadCloud, Loader2, CheckCircle2, AlertTriangle, FileText, Lock } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import * as pdfjsLib from "pdfjs-dist";
-import workerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
 
 const P = {
   border: "rgba(212,175,55,0.30)",
@@ -44,6 +40,11 @@ export default function HolyNameImportPanel({ onImported }) {
     const pages = [];
     let totalLen = 0;
     try {
+      const pdfjsLib = await import("pdfjs-dist");
+      try {
+        const workerModule = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
+        pdfjsLib.GlobalWorkerOptions.workerSrc = workerModule.default;
+      } catch { /* worker setup optional — getDocument still works */ }
       const task = pdfjsLib.getDocument({ url: file_url });
       const pdf = await task.promise;
       for (let i = 1; i <= pdf.numPages; i++) {
