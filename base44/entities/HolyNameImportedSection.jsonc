@@ -1,7 +1,7 @@
 {
   "name": "HolyNameImportedSection",
   "type": "object",
-  "description": "Child entity for the Holy Names PDF Knowledge Import System. ONE independent record per imported information block, linked to its Holy Name via source_section + source_name_key. source_section='section_a' links to the Section A static HOLY_NAMES array (source_name_key = String(name.id)); source_section='section_b' links to the HolyOnePDFName entity (source_name_key = pdf_name_id). Multiple PDFs can contribute multiple child records to the SAME Holy Name \u2014 they are never merged into one record; each stays independent. Every child record permanently remembers: source PDF file name, source PDF page number, the Holy Name it belongs to (source_section + source_name_key), the Original Arabic text (arabic_text \u2014 Arabic-script runs only), the Malayalam translation (malayalam_translation \u2014 Malayalam-script runs ONLY when the PDF actually prints Malayalam; EMPTY otherwise, never auto-generated), the Original book content (text_content \u2014 the full verbatim text exactly as printed, Arabic and Malayalam preserved), the import date (import_date), the section type (section_type \u2014 a FREE-FORM snake_case label assigned by the LLM labeler, NOT a fixed enum; new section types are created automatically when a PDF introduces content that doesn't fit existing labels), and any visual content images (images \u2014 rendered page images for pages containing wafq/table/diagram/symbol/numeric content). Append-only: existing records are NEVER deleted or overwritten; duplicates are skipped by content_hash. ISOLATED \u2014 only importHolyNamesPDF writes this entity; only the Holy Names page (Section A cards + Section B detail page) reads it. No other module, engine, or page touches it. Designed for UNLIMITED future growth \u2014 the user uploads books little by little over months/years and the database keeps enriching the same Holy Names forever.",
+  "description": "Child entity for the Holy Names PDF Knowledge Import System. ONE independent record per imported information block, linked to its Holy Name via source_section + source_name_key. source_section='section_a' links to the Section A static HOLY_NAMES array (source_name_key = String(name.id)); source_section='section_b' links to the HolyOnePDFName entity (source_name_key = pdf_name_id). Multiple PDFs can contribute multiple child records to the SAME Holy Name \u2014 they are never merged into one record; each stays independent. Every child record permanently remembers: source PDF file name, source PDF page number, the Holy Name it belongs to (source_section + source_name_key), the Original Arabic text (arabic_text \u2014 Arabic-script runs only), the Malayalam translation (malayalam_translation \u2014 Malayalam-script runs ONLY when the PDF actually prints Malayalam; EMPTY otherwise, never auto-generated), the Original book content (text_content \u2014 the full verbatim text exactly as printed, Arabic and Malayalam preserved), the import date (import_date), the section type (section_type \u2014 a FREE-FORM snake_case label assigned by the LLM labeler, NOT a fixed enum; new section types are created automatically when a PDF introduces content that doesn't fit existing labels), the match confidence (match_confidence \u2014 0-100 score that this section was correctly matched to its Holy Name), and the review flag (needs_review \u2014 true when match_confidence < 80, meaning the association is uncertain and must be admin-verified before it is trusted), and any visual content images (images \u2014 rendered page images for pages containing wafq/table/diagram/symbol/numeric content). Append-only: existing records are NEVER deleted or overwritten; duplicates are skipped by content_hash. ISOLATED \u2014 only importHolyNamesPDF writes this entity; only the Holy Names page (Section A cards + Section B detail page) reads it. No other module, engine, or page touches it. Designed for UNLIMITED future growth \u2014 the user uploads books little by little over months/years and the database keeps enriching the same Holy Names forever.",
   "properties": {
     "section_id": {
       "type": "string",
@@ -66,6 +66,16 @@
       "type": "boolean",
       "default": false,
       "description": "True if this section's source page contains visual content (wafq, table, diagram, symbol, numeric layout). The images array is populated when this is true."
+    },
+    "match_confidence": {
+      "type": "integer",
+      "default": 100,
+      "description": "Confidence score (0-100) that this section was correctly matched to its Holy Name. 100=exact normalized Arabic or exact alias match. 90=hamza-normalized match (\u0623/\u0625/\u0622\u2192\u0627, safe). 75=letter-form normalized match (\u0649\u2192\u064a, \u0629\u2192\u0647, may occasionally be ambiguous). Below 80 the record is flagged needs_review=true for manual verification \u2014 accuracy is prioritized over automation."
+    },
+    "needs_review": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when match_confidence < 80, meaning the Holy Name association is uncertain (e.g., letter-form or OCR-tolerant match). The content is preserved but NOT silently attached \u2014 an admin must verify the link before it is trusted. Displayed with a 'PENDING REVIEW' badge until verified."
     },
     "source_pdf_file": {
       "type": "string",
@@ -188,6 +198,12 @@
       "name": "idx_has_visual",
       "fields": [
         "has_visual"
+      ]
+    },
+    {
+      "name": "idx_needs_review",
+      "fields": [
+        "needs_review"
       ]
     }
   ],

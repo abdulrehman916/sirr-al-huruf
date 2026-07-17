@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, Loader2, BookOpen, ImageIcon } from "lucide-react";
+import { FileText, Loader2, BookOpen, ImageIcon, AlertTriangle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 const P = {
@@ -158,9 +158,19 @@ export default function HolyNameImportedSections({ sourceSection, sourceNameKey,
                   style={{ background: "rgba(8,16,38,0.6)", borderColor: P.border }}
                 >
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="font-inter text-[8px]" style={{ color: P.dim }}>
-                      {LANG_LABELS[s.language] || s.language}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-inter text-[8px]" style={{ color: P.dim }}>
+                        {LANG_LABELS[s.language] || s.language}
+                      </span>
+                      <span className="font-inter text-[8px]" style={{ color: "rgba(212,175,55,0.45)" }}>
+                        · {s.match_confidence ?? 100}%
+                      </span>
+                    </div>
+                    {s.needs_review && (
+                      <span className="flex items-center gap-1 px-1.5 py-0.5 rounded font-inter text-[7px] uppercase tracking-widest font-bold" style={{ color: "#fbbf24", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.35)" }}>
+                        <AlertTriangle className="w-2.5 h-2.5" /> Pending Review
+                      </span>
+                    )}
                     {s.has_visual && (
                       <span className="flex items-center gap-1 font-inter text-[8px] uppercase tracking-widest" style={{ color: P.text }}>
                         <ImageIcon className="w-3 h-3" /> Visual

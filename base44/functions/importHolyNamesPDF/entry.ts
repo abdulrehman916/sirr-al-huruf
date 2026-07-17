@@ -41,6 +41,27 @@ function normalizeArabic(s: string): string {
     .replace(/\s+/g, " ")
     .trim();
 }
+// Level 1 — Hamza normalization (extremely common in Arabic; safe to match).
+// Unifies all hamza-bearing forms and standalone hamza so that a Holy Name
+// is found whether the PDF prints it with or without hamza (أ ↔ ا, إ ↔ ا,
+// آ ↔ ا, ء removed, ؤ ↔ و, ئ ↔ ي). Confidence 90 — attaches directly.
+function normalizeHamza(s: string): string {
+  if (!s) return "";
+  return s
+    .replace(/[\u0622\u0623\u0625]/g, "\u0627") // آ أ إ → ا
+    .replace(/\u0621/g, "")                     // ء removed
+    .replace(/\u0624/g, "\u0648")               // ؤ → و
+    .replace(/\u0626/g, "\u064A");              // ئ → ي
+}
+// Level 2 — Letter-form normalization (common but occasionally ambiguous, so
+// matches at this level are FLAGGED for manual review — confidence 75 < 80).
+// Unifies alef-maqsura ↔ yaa (ى ↔ ي) and taa-marbuta ↔ haa (ة ↔ ه).
+function normalizeLetterForms(s: string): string {
+  if (!s) return "";
+  return s
+    .replace(/\u0649/g, "\u064A") // ى → ي
+    .replace(/\u0629/g, "\u0647"); // ة → ه
+}
 function detectLang(text: string): string {
   const hasAr = /[\u0600-\u06FF]/.test(text);
   const hasMl = /[\u0D00-\u0D7F]/.test(text);
@@ -155,7 +176,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Build matchers from Section A (sent from frontend) + Section B (DB) ──
-    type Matcher = { source_section: "section_a" | "section_b"; source_name_key: string; norm: string; script: "ar" | "en" | "ml" };
+    type Matcher = { source_section: "section_a" | "section_b"; source_name_key: string; norm: string; norm1: string; norm2: string; script: "ar" | "en" | "ml" };
     const matchers: Matcher[] = [];
 
     // Section A: static HOLY_NAMES sent from the frontend
@@ -163,9 +184,9 @@ Deno.serve(async (req) => {
     for (const n of sectionA) {
       const key = String(n.id);
       const arNorm = normalizeArabic(n?.arabicPlain || n?.arabicName || "");
-      if (arNorm.length >= 3) matchers.push({ source_section: "section_a", source_name_key: key, norm: arNorm, script: "ar" });
+      if (arNorm.length >= 3) matchers.push({ source_section: "section_a", source_name_key: key, norm: arNorm, norm1: normalizeHamza(arNorm), norm2: normalizeLetterForms(normalizeHamza(arNorm)), script: "ar" });
       const enNorm = String(n?.englishName || "").toLowerCase().trim();
-      if (enNorm.length >= 3) matchers.push({ source_section: "section_a", source_name_key: key, norm: enNorm, script: "en" });
+      if (enNorm.length >= 3) matchers.push({ source_section: "section_a", source_name_key: key, norm: enNorm, norm1: enNorm, norm2: enNorm, script: "en" });
     }
 
     // Section B: HolyOnePDFName records from the database
@@ -175,11 +196,11 @@ Deno.serve(async (req) => {
         if (!n?.pdf_name_id) continue;
         const key = String(n.pdf_name_id);
         const arNorm = normalizeArabic(n?.arabic_name || "");
-        if (arNorm.length >= 3) matchers.push({ source_section: "section_b", source_name_key: key, norm: arNorm, script: "ar" });
+        if (arNorm.length >= 3) matchers.push({ source_section: "section_b", source_name_key: key, norm: arNorm, norm1: normalizeHamza(arNorm), norm2: normalizeLetterForms(normalizeHamza(arNorm)), script: "ar" });
         const enNorm = String(n?.arabic_transliteration || "").toLowerCase().trim();
-        if (enNorm.length >= 3) matchers.push({ source_section: "section_b", source_name_key: key, norm: enNorm, script: "en" });
+        if (enNorm.length >= 3) matchers.push({ source_section: "section_b", source_name_key: key, norm: enNorm, norm1: enNorm, norm2: enNorm, script: "en" });
         const mlNorm = String(n?.malayalam_pronunciation || "").trim();
-        if (mlNorm.length >= 3) matchers.push({ source_section: "section_b", source_name_key: key, norm: mlNorm, script: "ml" });
+        if (mlNorm.length >= 3) matchers.push({ source_section: "section_b", source_name_key: key, norm: mlNorm, norm1: mlNorm, norm2: mlNorm, script: "ml" });
       }
     } catch { /* Section B unavailable — continue with Section A only */ }
 
@@ -207,26 +228,37 @@ Deno.serve(async (req) => {
       //   unit becomes ONE section per name it mentions, so multi-topic pages
       //   produce multiple independently-categorized sections (benefits, usage,
       //   conditions, warnings, etc.) instead of one merged block.
-      const units: { keys: string[]; text: string }[] = [];
-      let currentUnit: { keys: string[]; text: string } | null = null;
+      // Confidence levels (Arabic): 100=exact normalized, 90=hamza normalized,
+      // 75=letter-form normalized. ≥80 attaches directly; <80 flags for review.
+      // ACCURACY > AUTOMATION: low-confidence matches are never silently
+      // attached — they are created with needs_review=true for admin review.
+      const units: { keys: string[]; confidences: Record<string, number>; text: string }[] = [];
+      let currentUnit: { keys: string[]; confidences: Record<string, number>; text: string } | null = null;
 
       for (const p of paras) {
         const pAr = normalizeArabic(p);
+        const pAr1 = normalizeHamza(pAr);
+        const pAr2 = normalizeLetterForms(pAr1);
         const pEn = p.toLowerCase();
         const hasAr = /[\u0600-\u06FF]/.test(p);
         const hasMl = /[\u0D00-\u0D7F]/.test(p);
-        const contained = [...new Set(
-          matchers
-            .filter((m) => {
-              const text = m.script === "ar" ? pAr : m.script === "en" ? pEn : p;
-              return containsAlias(text, m.norm, m.script);
-            })
-            .map((m) => m.source_section + "|" + m.source_name_key)
-        )];
+        const matched = new Map<string, number>(); // key -> best confidence
+        for (const m of matchers) {
+          const k = m.source_section + "|" + m.source_name_key;
+          let conf = 0;
+          const t0 = m.script === "ar" ? pAr : m.script === "en" ? pEn : p;
+          if (containsAlias(t0, m.norm, m.script)) conf = 100;
+          if (conf === 0 && m.script === "ar" && containsAlias(pAr1, m.norm1, "ar")) conf = 90;
+          if (conf === 0 && m.script === "ar" && containsAlias(pAr2, m.norm2, "ar")) conf = 75;
+          if (conf > 0) { const prev = matched.get(k) || 0; if (conf > prev) matched.set(k, conf); }
+        }
+        const contained = [...matched.keys()];
 
         if (contained.length >= 1) {
           if (currentUnit) units.push(currentUnit);
-          currentUnit = { keys: contained, text: p };
+          const confs: Record<string, number> = {};
+          for (const k of contained) confs[k] = matched.get(k)!;
+          currentUnit = { keys: contained, confidences: confs, text: p };
         } else if (hasMl && !hasAr && currentUnit) {
           currentUnit.text += "\n" + p;
         } else {
@@ -241,6 +273,7 @@ Deno.serve(async (req) => {
         for (const k of unit.keys) {
           const m = matchers.find((mm) => mm.source_section + "|" + mm.source_name_key === k);
           if (!m) continue;
+          const confidence = unit.confidences[k] || 100;
           foundKeys.add(k);
 
           const hash = await sha256(m.source_section + "|" + m.source_name_key + "|" + normalizeArabic(text));
@@ -269,6 +302,8 @@ Deno.serve(async (req) => {
             language: detectLang(text),
             images: pImg ? [pImg.image_url] : [],
             has_visual: !!(pImg && pImg.has_visual),
+            match_confidence: confidence,
+            needs_review: confidence < 80,
             source_pdf_file,
             source_pdf_url,
             source_pdf_page: pageNum,
