@@ -13,6 +13,7 @@ import FeatureLockedCard from "@/components/FeatureLockedCard";
 import { checkFeatureAccess } from "@/lib/featurePermission";
 import { getFeatures } from "@/lib/featureRegistry";
 import HolyNameImportPanel from "@/components/holynameknowledge/HolyNameImportPanel";
+import HolyNameContentsSeedPanel from "@/components/holynameknowledge/HolyNameContentsSeedPanel";
 import HolyNameImportedSections from "@/components/holynameknowledge/HolyNameImportedSections";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -382,7 +383,7 @@ function SectionB() {
       <div className="flex gap-4 text-sm text-gray-400">
         <div className="flex items-center gap-2">
           <Book className="w-4 h-4" />
-          <span>{filteredNames.length} names from PDFs (143 total)</span>
+          <span>{filteredNames.length} of {names.length} names from PDFs</span>
         </div>
       </div>
 
@@ -417,32 +418,38 @@ function SectionB() {
                   }}>
                     {name.arabic_name}
                   </h3>
-                  <p className="text-[10px] text-gray-400 mt-2 tracking-widest uppercase">{name.arabic_transliteration}</p>
+                  {name.arabic_transliteration && (
+                    <p className="text-[10px] text-gray-400 mt-2 tracking-widest uppercase">{name.arabic_transliteration}</p>
+                  )}
                 </div>
                 
                 {/* Malayalam Pronunciation */}
-                <div className="text-center">
-                  <p className="font-malayalam text-base" style={{ color: "rgba(255,255,255,0.85)" }}>
-                    {name.malayalam_pronunciation}
-                  </p>
-                </div>
+                {name.malayalam_pronunciation && (
+                  <div className="text-center">
+                    <p className="font-malayalam text-base" style={{ color: "rgba(255,255,255,0.85)" }}>
+                      {name.malayalam_pronunciation}
+                    </p>
+                  </div>
+                )}
                 
                 {/* Meaning - Highlighted, Immediate Identification */}
-                <div className="rounded-xl p-4 text-center" style={{
-                  background: "rgba(212,175,55,0.10)",
-                  border: "1px solid rgba(212,175,55,0.40)",
-                  boxShadow: "0 0 20px rgba(212,175,55,0.12)"
-                }}>
-                  <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: "rgba(245,208,96,0.55)" }}>
-                    അർത്ഥം / Meaning
-                  </p>
-                  <p className="font-malayalam font-semibold leading-relaxed" style={{
-                    fontSize: "clamp(0.95rem, 2.2vw, 1.1rem)",
-                    color: "#F5D060"
+                {name.meaning_malayalam && (
+                  <div className="rounded-xl p-4 text-center" style={{
+                    background: "rgba(212,175,55,0.10)",
+                    border: "1px solid rgba(212,175,55,0.40)",
+                    boxShadow: "0 0 20px rgba(212,175,55,0.12)"
                   }}>
-                    {name.meaning_malayalam}
-                  </p>
-                </div>
+                    <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: "rgba(245,208,96,0.55)" }}>
+                      അർത്ഥം / Meaning
+                    </p>
+                    <p className="font-malayalam font-semibold leading-relaxed" style={{
+                      fontSize: "clamp(0.95rem, 2.2vw, 1.1rem)",
+                      color: "#F5D060"
+                    }}>
+                      {name.meaning_malayalam}
+                    </p>
+                  </div>
+                )}
                 
                 {/* Source Reference */}
                 <div className="flex justify-between items-center text-xs pt-2 border-t" style={{
@@ -550,6 +557,9 @@ export default function MagicalHolyNamesPage() {
 
           {isAdmin && (
             <HolyNameImportPanel onImported={() => setImportRefreshKey((k) => k + 1)} />
+          )}
+          {isAdmin && (
+            <HolyNameContentsSeedPanel onSeeded={() => setImportRefreshKey((k) => k + 1)} />
           )}
 
           <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
