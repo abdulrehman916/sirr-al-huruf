@@ -427,7 +427,12 @@ ${batch.map((t: any, i: number) => `--- Item index ${i} ---\n${String(t.arabic_t
       }
       // guard: ensure endRaw > contentStartRaw
       if (endRaw <= cur.contentStartRaw) endRaw = cur.contentStartRaw + 1;
-      chapters.push({ headingOrig: cur.headingOrig, core: cur.core, contentStartRaw: cur.contentStartRaw, contentEndRaw: endRaw, startPage: cur.page, endPage });
+      // A chapter whose end reaches the end of the extracted text had no next
+      // heading within this range → it is TRUNCATED. Skip storing it unless
+      // this is the final range; the overlapping next range will capture it
+      // fully (its heading + its next heading both fall inside the overlap).
+      const truncated = endRaw >= bodyRaw.length - 1;
+      chapters.push({ headingOrig: cur.headingOrig, core: cur.core, contentStartRaw: cur.contentStartRaw, contentEndRaw: endRaw, startPage: cur.page, endPage, truncated });
     }
 
     // ── 5. Resolve each chapter to a card (match existing or create new) ──
@@ -472,7 +477,16 @@ ${batch.map((t: any, i: number) => `--- Item index ${i} ---\n${String(t.arabic_t
       return { card: nc, isNew: true };
     };
 
+    let truncatedSkipped = 0;
     for (const ch of slice) {
+      // Truncated by range boundary (no next heading in this range) → skip;
+      // the overlapping next range captures it whole. The final range is
+      // allowed to store its last chapter (is_last_range=true).
+      if (ch.truncated && !body?.is_last_range) {
+        truncatedSkipped++;
+        perChapter.push({ heading: ch.headingOrig, core: ch.core, status: "truncated_range", char_count: bodyRaw.slice(ch.contentStartRaw, ch.contentEndRaw).length, page_start: ch.startPage, page_end: ch.endPage });
+        continue;
+      }
       const rawChapter = bodyRaw.slice(ch.contentStartRaw, ch.contentEndRaw).trim();
       if (!rawChapter) { emptyChapters++; perChapter.push({ heading: ch.headingOrig, core: ch.core, status: "empty", char_count: 0 }); continue; }
       const { card, isNew } = resolveCard(ch.core, ch.headingOrig, ch.startPage);
@@ -548,6 +562,7 @@ ${batch.map((t: any, i: number) => `--- Item index ${i} ---\n${String(t.arabic_t
       sections_added: sectionsAdded,
       duplicates_skipped: duplicates,
       empty_chapters: emptyChapters,
+      truncated_skipped: truncatedSkipped,
       per_chapter: perChapter,
     });
   } catch (error) {
