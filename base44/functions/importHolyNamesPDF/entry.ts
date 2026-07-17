@@ -210,7 +210,6 @@ Deno.serve(async (req) => {
 
     // ── Match + collect verbatim sections ──
     const toCreate: any[] = [];
-    const classifyItems: { idx: number; text: string }[] = [];
     const foundKeys = new Set<string>();   // "section|key"
     let pagesProcessed = 0;
     let duplicates = 0;
@@ -232,10 +231,19 @@ Deno.serve(async (req) => {
       // 75=letter-form normalized. ≥80 attaches directly; <80 flags for review.
       // ACCURACY > AUTOMATION: low-confidence matches are never silently
       // attached — they are created with needs_review=true for admin review.
-      const units: { keys: string[]; confidences: Record<string, number>; text: string }[] = [];
-      let currentUnit: { keys: string[]; confidences: Record<string, number>; text: string } | null = null;
+      //
+      // NO INVENTED CATEGORIES: section_type is always "other". A short
+      // standalone line preceding a matched paragraph is captured VERBATIM as
+      // source_heading (the PDF's own heading), never an AI-invented label.
+      // paragraph_order preserves the original PDF paragraph order.
+      type Unit = { keys: string[]; confidences: Record<string, number>; text: string; heading: string; paraOrder: number };
+      const units: Unit[] = [];
+      let currentUnit: Unit | null = null;
+      let pendingHeading: string | null = null;
+      let paraIdx = 0;
 
       for (const p of paras) {
+        paraIdx++;
         const pAr = normalizeArabic(p);
         const pAr1 = normalizeHamza(pAr);
         const pAr2 = normalizeLetterForms(pAr1);
@@ -258,11 +266,29 @@ Deno.serve(async (req) => {
           if (currentUnit) units.push(currentUnit);
           const confs: Record<string, number> = {};
           for (const k of contained) confs[k] = matched.get(k)!;
-          currentUnit = { keys: contained, confidences: confs, text: p };
-        } else if (hasMl && !hasAr && currentUnit) {
-          currentUnit.text += "\n" + p;
+          const heading = pendingHeading || "";
+          pendingHeading = null;
+          currentUnit = { keys: contained, confidences: confs, text: p, heading, paraOrder: paraIdx };
         } else {
-          if (currentUnit) { units.push(currentUnit); currentUnit = null; }
+          // No Holy Name in this paragraph. Decide: gloss vs heading vs break.
+          if (hasMl && !hasAr) {
+            // Malayalam-only paragraph = gloss for the current unit (or orphan).
+            if (currentUnit) currentUnit.text += "\n" + p;
+          } else {
+            // Arabic/English non-matching paragraph. A short standalone line
+            // with no terminal punctuation is a candidate heading — captured
+            // VERBATIM from the PDF (never AI-invented). Attached to the next
+            // matched paragraph; discarded if not followed by a match.
+            const trimmed = p.trim();
+            const isHeading = trimmed.length > 0 && trimmed.length <= 40 && trimmed.split(/\s+/).length <= 5 && !/[.؟!،:؛]$/.test(trimmed);
+            if (isHeading) {
+              if (currentUnit) { units.push(currentUnit); currentUnit = null; }
+              pendingHeading = trimmed;
+            } else {
+              if (currentUnit) { units.push(currentUnit); currentUnit = null; }
+              pendingHeading = null;
+            }
+          }
         }
       }
       if (currentUnit) units.push(currentUnit);
@@ -304,6 +330,8 @@ Deno.serve(async (req) => {
             has_visual: !!(pImg && pImg.has_visual),
             match_confidence: confidence,
             needs_review: confidence < 80,
+            source_heading: unit.heading,
+            paragraph_order: unit.paraOrder,
             source_pdf_file,
             source_pdf_url,
             source_pdf_page: pageNum,
@@ -311,68 +339,67 @@ Deno.serve(async (req) => {
             content_hash: hash,
             import_batch,
           });
-          classifyItems.push({ idx: toCreate.length - 1, text });
         }
       }
     }
 
-    // ── LLM classification (CLASSIFIER ONLY — never modifies the verbatim text) ──
-    if (classifyItems.length > 0) {
-      try {
-        const classifyRes: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
-          prompt: `You are a SECTION LABELER for Islamic occult manuscript sections about Holy Names (Asma ul-Husna and related divine names). For EACH text section below, read the content and output a short normalized section_type label (snake_case, lowercase) that describes what kind of section this is.
+    // ── Malayalam translation generation (the ONLY generation step) ──
+    // For paragraphs with Arabic text but no Malayalam from the PDF, generate
+    // a FAITHFUL Malayalam translation of the exact Arabic text. Never
+    // summarizes, adds, invents, or categorizes — translates verbatim meaning.
+    // The PDF's own Malayalam (already in malayalam_translation) is preserved.
+    let translations_generated = 0;
+    const translateItems: { idx: number; arabic: string }[] = [];
+    for (let i = 0; i < toCreate.length; i++) {
+      const rec = toCreate[i];
+      const ar = String(rec.arabic_text || "").trim();
+      const ml = String(rec.malayalam_translation || "").trim();
+      if (ar && !ml) translateItems.push({ idx: i, arabic: ar });
+    }
+    if (translateItems.length > 0) {
+      const BATCH = 25;
+      for (let b = 0; b < translateItems.length; b += BATCH) {
+        const batch = translateItems.slice(b, b + BATCH);
+        try {
+          const trRes: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
+            prompt: `You are a FAITHFUL Arabic-to-Malayalam translator. For EACH Arabic text below, output a faithful, literal Malayalam translation that preserves the EXACT meaning of the Arabic — nothing more, nothing less.
 
-Use these common labels WHEN they clearly apply:
-- arabic_name — the Holy Name itself in Arabic
-- malayalam_meaning — Malayalam translation or meaning of the name
-- description — general explanation or commentary
-- benefits — spiritual, physical, or worldly benefits (فوائد، خواص)
-- usage — how to use or apply the name (طريقة الاستخدام)
-- method — procedure, practice, or ritual steps (طريقة، العمل)
-- recitations — repetition count, number of times, or adad (عدد المرات، العدد)
-- conditions — prerequisites, requirements, or timing conditions (شرط، شروط)
-- warnings — cautions, prohibitions, or restrictions (تحذير، احتياط)
-- related_duas — associated prayers, Quranic verses, or supplications (دعاء، أدعية)
-- references — citations, sources, or book references (المراجع)
-- notes — miscellaneous notes or asides (ملاحظات)
-- wafq_diagram — magic square, wafq, or grid of letters/numbers (وفق)
-- table — tabular data or chart (جدول)
-- symbol — symbolic content or sigil
-- numeric_layout — number arrangement or numerical calculation
+STRICT RULES:
+- Translate ONLY the Arabic text provided for each item.
+- Output ONLY the Malayalam translation in Malayalam script.
+- Do NOT summarize, paraphrase, explain, add commentary, or skip any part.
+- Do NOT add titles, labels, headings, or category names.
+- Preserve the exact meaning, including any repetition counts, names of God/angels/prophets, or ritual instructions.
+- Transliterate names of God, angels, and prophets faithfully into Malayalam.
+- Return ONLY a JSON object: {"translations": [{"index": <number>, "malayalam": "<malayalam text>"}]}
 
-CRITICAL RULES:
-- You are a LABELER ONLY. NEVER modify, translate, summarize, or generate any text.
-- If the section has a heading or content that does NOT fit any common label above, CREATE a new snake_case label (e.g. "khawas" for خواص/properties, "tawassul" for توسل/intercession, "adab" for آداب/etiquette, "ijazat" for إجازة/permission, "asma" for أسماء/names listing, "ruqyah" for رقية).
-- New labels are WELCOME — this is a FLEXIBLE system that grows with every new book. Do NOT force content into an existing label if it doesn't fit.
-- Return ONLY a JSON object: {"classifications": [{"index": <number>, "section_type": "<label>"}]}
-- Use the exact index numbers provided for each section.
-- If truly unsure, return "other".
-
-Text sections to label:
-${classifyItems.map((c) => `--- Section index ${c.idx} ---\n${c.text.slice(0, 800)}`).join("\n\n")}`,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              classifications: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    index: { type: "integer" },
-                    section_type: { type: "string" },
+Arabic texts to translate:
+${batch.map((t) => `--- Item index ${t.idx} ---\n${t.arabic.slice(0, 1200)}`).join("\n\n")}`,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                translations: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      index: { type: "integer" },
+                      malayalam: { type: "string" },
+                    },
                   },
                 },
               },
             },
-          },
-        });
-        for (const c of (classifyRes?.classifications || [])) {
-          const cat = String(c?.section_type || "").toLowerCase().trim().replace(/\s+/g, "_");
-          if (cat && toCreate[Number(c?.index)]) {
-            toCreate[Number(c.index)].section_type = cat;
+          });
+          for (const t of (trRes?.translations || [])) {
+            const ml = String(t?.malayalam || "").trim();
+            if (ml && toCreate[Number(t?.index)]) {
+              toCreate[Number(t.index)].malayalam_translation = ml;
+              translations_generated++;
+            }
           }
-        }
-      } catch { /* labeling unavailable — keep "other" */ }
+        } catch { /* translation unavailable — keep empty Malayalam */ }
+      }
     }
 
     let sections_added = 0;
@@ -388,6 +415,7 @@ ${classifyItems.map((c) => `--- Section index ${c.idx} ---\n${c.text.slice(0, 80
       names_found: foundKeys.size,
       sections_added,
       duplicates_skipped: duplicates,
+      translations_generated,
       matchers: matchers.length,
     });
   } catch (error) {
