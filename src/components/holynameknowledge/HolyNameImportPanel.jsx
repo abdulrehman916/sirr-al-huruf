@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { UploadCloud, Loader2, CheckCircle2, AlertTriangle, FileText, Lock } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { HOLY_NAMES } from "@/lib/magicalHolyNamesData";
 
 const P = {
   border: "rgba(212,175,55,0.30)",
@@ -35,6 +36,13 @@ export default function HolyNameImportPanel({ onImported }) {
   }
 
   const addLog = (line) => setLog((l) => [...l, line]);
+
+  // Section A names sent to the backend for matching (id + arabicPlain + englishName).
+  const section_a_names = HOLY_NAMES.map((n) => ({
+    id: n.id,
+    arabicPlain: n.arabicPlain || n.arabicName,
+    englishName: n.englishName,
+  }));
 
   const extractRaw = async (file_url) => {
     const pages = [];
@@ -75,7 +83,7 @@ export default function HolyNameImportPanel({ onImported }) {
         addLog(`Extracting text from "${file.name}"…`);
         const { pages, ok } = await extractRaw(file_url);
 
-        let payload = { import_batch, source_pdf_file: file.name, source_pdf_url: file_url };
+        let payload = { import_batch, source_pdf_file: file.name, source_pdf_url: file_url, section_a_names };
         if (ok) {
           payload.pages = pages;
           addLog(`Raw text layer found (${pages.length} pages). Matching names…`);
@@ -86,7 +94,7 @@ export default function HolyNameImportPanel({ onImported }) {
         const res = await base44.functions.invoke("importHolyNamesPDF", payload);
         const d = res?.data || {};
         addLog(
-          `✓ "${file.name}": ${d.names_found || 0} names • ${d.sections_added || 0} sections added • ${d.duplicates_skipped || 0} duplicates skipped (${d.extraction_method || "raw"})`
+          `✓ "${file.name}": ${d.names_found || 0} names · ${d.sections_added || 0} sections added · ${d.duplicates_skipped || 0} duplicates skipped (${d.extraction_method || "raw"})`
         );
       } catch (e) {
         addLog(`✗ "${file.name}": ${e?.message || "error"}`);
@@ -130,7 +138,7 @@ export default function HolyNameImportPanel({ onImported }) {
 
       {log.length === 0 ? (
         <p className="font-inter text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
-          Select one or more PDF books. The system extracts the text, finds Holy Names already in the database, and appends only the information printed in the PDF — with the source file and page number recorded on every section. Existing information is never overwritten; duplicate paragraphs are skipped.
+          Select one or more PDF books. The system extracts the text, finds the matching Holy Names already in Section A and Section B, and appends only the information printed in the PDF — with the source file and page number recorded on every section. Existing information is never overwritten; duplicate paragraphs are skipped. Future uploads keep enriching the same Holy Names.
         </p>
       ) : (
         <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">

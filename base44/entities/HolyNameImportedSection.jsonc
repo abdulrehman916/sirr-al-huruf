@@ -1,15 +1,28 @@
 {
   "name": "HolyNameImportedSection",
   "type": "object",
-  "description": "Child entity for the Holy Names PDF Knowledge Import System. ONE independent record per imported information block, linked to its HolyNameKnowledge name via name_id. Multiple PDFs can contribute multiple child records to the SAME Holy Name \u2014 they are never merged into one record; each stays independent. Every child record permanently remembers: source PDF file name, source PDF page number, the Holy Name it belongs to (name_id), the Original Arabic text (arabic_text \u2014 Arabic-script runs only), the Malayalam translation (malayalam_translation \u2014 Malayalam-script runs ONLY when the PDF actually prints Malayalam; EMPTY otherwise, never auto-generated), the Original book content (text_content \u2014 the full verbatim text exactly as printed, Arabic and Malayalam preserved), and the import date (import_date). Append-only: existing records are NEVER deleted or overwritten; duplicates are skipped by content_hash. ISOLATED \u2014 only importHolyNamesPDF writes this entity; only the Holy Names page PDF Knowledge tab reads it. No other module, engine, or page touches it.",
+  "description": "Child entity for the Holy Names PDF Knowledge Import System. ONE independent record per imported information block, linked to its Holy Name via source_section + source_name_key. source_section='section_a' links to the Section A static HOLY_NAMES array (source_name_key = String(name.id)); source_section='section_b' links to the HolyOnePDFName entity (source_name_key = pdf_name_id). Multiple PDFs can contribute multiple child records to the SAME Holy Name \u2014 they are never merged into one record; each stays independent. Every child record permanently remembers: source PDF file name, source PDF page number, the Holy Name it belongs to (source_section + source_name_key), the Original Arabic text (arabic_text \u2014 Arabic-script runs only), the Malayalam translation (malayalam_translation \u2014 Malayalam-script runs ONLY when the PDF actually prints Malayalam; EMPTY otherwise, never auto-generated), the Original book content (text_content \u2014 the full verbatim text exactly as printed, Arabic and Malayalam preserved), and the import date (import_date). Append-only: existing records are NEVER deleted or overwritten; duplicates are skipped by content_hash. ISOLATED \u2014 only importHolyNamesPDF writes this entity; only the Holy Names page (Section A cards + Section B detail page) reads it. No other module, engine, or page touches it.",
   "properties": {
     "section_id": {
       "type": "string",
       "description": "Permanent unique identifier, e.g. HNIS-<hash>. Never changes."
     },
+    "source_section": {
+      "type": "string",
+      "enum": [
+        "section_a",
+        "section_b"
+      ],
+      "default": "section_a",
+      "description": "Which Holy Names section this child record enriches. 'section_a' = the static HOLY_NAMES array (source_name_key = String(name.id)); 'section_b' = the HolyOnePDFName entity (source_name_key = pdf_name_id)."
+    },
+    "source_name_key": {
+      "type": "string",
+      "description": "The key of the Holy Name within its section. For section_a: String(HOLY_NAMES id). For section_b: HolyOnePDFName.pdf_name_id. Multiple child records may share the same (source_section, source_name_key) \u2014 one per PDF page/section."
+    },
     "name_id": {
       "type": "string",
-      "description": "FK to HolyNameKnowledge.name_id. The Holy Name this child record belongs to. Many child records may share the same name_id (one per PDF page/section)."
+      "description": "LEGACY compat alias of source_name_key. Kept so existing indexes keep working. Equals source_name_key. No longer a FK to HolyNameKnowledge."
     },
     "section_type": {
       "type": "string",
@@ -75,7 +88,7 @@
     },
     "content_hash": {
       "type": "string",
-      "description": "SHA-256 of (name_id + '|' + normalized text). Used to skip duplicate paragraphs on re-import \u2014 a record with the same hash already exists and is ignored, so identical content is never duplicated."
+      "description": "SHA-256 of (source_section + '|' + source_name_key + '|' + normalized text). Used to skip duplicate paragraphs on re-import \u2014 a record with the same hash already exists and is ignored, so identical content is never duplicated."
     },
     "import_batch": {
       "type": "string",
@@ -85,7 +98,8 @@
   },
   "required": [
     "section_id",
-    "name_id",
+    "source_section",
+    "source_name_key",
     "text_content",
     "content_hash"
   ],
@@ -94,6 +108,25 @@
       "name": "idx_section_id",
       "fields": [
         "section_id"
+      ]
+    },
+    {
+      "name": "idx_source_section",
+      "fields": [
+        "source_section"
+      ]
+    },
+    {
+      "name": "idx_source_name_key",
+      "fields": [
+        "source_name_key"
+      ]
+    },
+    {
+      "name": "idx_section_key",
+      "fields": [
+        "source_section",
+        "source_name_key"
       ]
     },
     {
@@ -109,24 +142,18 @@
       ]
     },
     {
-      "name": "idx_name_hash",
+      "name": "idx_section_key_hash",
       "fields": [
-        "name_id",
+        "source_section",
+        "source_name_key",
         "content_hash"
       ]
     },
     {
-      "name": "idx_name_page",
+      "name": "idx_section_key_page",
       "fields": [
-        "name_id",
-        "source_pdf_page"
-      ]
-    },
-    {
-      "name": "idx_name_file_page",
-      "fields": [
-        "name_id",
-        "source_pdf_file",
+        "source_section",
+        "source_name_key",
         "source_pdf_page"
       ]
     },

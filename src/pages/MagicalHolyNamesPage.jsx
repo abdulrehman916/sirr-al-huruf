@@ -12,13 +12,15 @@ import { Lock } from "lucide-react";
 import FeatureLockedCard from "@/components/FeatureLockedCard";
 import { checkFeatureAccess } from "@/lib/featurePermission";
 import { getFeatures } from "@/lib/featureRegistry";
-import HolyNameKnowledgeTab from "@/components/holynameknowledge/HolyNameKnowledgeTab";
+import HolyNameImportPanel from "@/components/holynameknowledge/HolyNameImportPanel";
+import HolyNameImportedSections from "@/components/holynameknowledge/HolyNameImportedSections";
+import { useAuth } from "@/lib/AuthContext";
 
 const PAGE_PATH = "/holy-names";
 const FEATURES = getFeatures(PAGE_PATH);
 
 // ── SECTION A COMPONENT ──────────────────────────────────────────
-function SectionA() {
+function SectionA({ importRefreshKey }) {
   const { getPageState, setPageState, clearPageState } = usePageState();
   const listKey = "magical-holy-names-section-a";
   const initial = getPageState(listKey, { query: "", category: "all", sortIdx: 0, openId: null, scrollTop: 0 });
@@ -242,6 +244,7 @@ function SectionA() {
                             <p className="font-amiri text-[1.8rem] font-bold" style={{ color: P.text }}>{name.letterCount}</p>
                           </div>
                         </div>
+                        <HolyNameImportedSections sourceSection="section_a" sourceNameKey={String(name.id)} refreshKey={importRefreshKey} />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -472,7 +475,6 @@ function TabSwitcher({ activeTab, onTabChange }) {
   const TABS = [
     { id: "section-a", label: "Current Holy Names", arabic: "الأسماء أ", subtitle: "Section A" },
     { id: "section-b", label: "PDF Holy Names", arabic: "الأسماء ب", subtitle: "Section B" },
-    { id: "section-c", label: "PDF Knowledge", arabic: "المعرفة", subtitle: "Section C" },
   ];
 
   return (
@@ -507,10 +509,13 @@ function TabSwitcher({ activeTab, onTabChange }) {
 // ── MAIN PAGE ────────────────────────────────────────────────────
 export default function MagicalHolyNamesPage() {
   const { getPageState, setPageState } = usePageState();
+  const { role } = useAuth();
+  const isAdmin = role === "admin" || role === "owner";
   const pageKey = "magical-holy-names-page";
   const initial = getPageState(pageKey, { activeTab: "section-a" });
   const [activeTab, setActiveTab] = useState(initial.activeTab || "section-a");
   const [lockedFeature, setLockedFeature] = useState(null);
+  const [importRefreshKey, setImportRefreshKey] = useState(0);
 
   // Save active tab on change
   useEffect(() => {
@@ -543,6 +548,10 @@ export default function MagicalHolyNamesPage() {
             icon="✦"
           />
 
+          {isAdmin && (
+            <HolyNameImportPanel onImported={() => setImportRefreshKey((k) => k + 1)} />
+          )}
+
           <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
 
           {lockedFeature ? (
@@ -562,7 +571,7 @@ export default function MagicalHolyNamesPage() {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.15 }}
               >
-                {activeTab === "section-a" ? <SectionA /> : activeTab === "section-b" ? <SectionB /> : <HolyNameKnowledgeTab />}
+                {activeTab === "section-a" ? <SectionA importRefreshKey={importRefreshKey} /> : <SectionB />}
               </motion.div>
             </AnimatePresence>
           )}

@@ -3,27 +3,34 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.38";
 // ═══════════════════════════════════════════════════════════════
 // importHolyNamesPDF — Holy Names PDF Knowledge Import (admin-only)
 // ═══════════════════════════════════════════════════════════════
+// Enriches the EXISTING Holy Name records shown on the Holy Names page:
+//   • Section A — the static HOLY_NAMES array. The frontend sends
+//     section_a_names:[{id, arabicPlain, englishName}]. Matched by
+//     arabicPlain (normalized). Stored with source_section="section_a",
+//     source_name_key=String(id).
+//   • Section B — the HolyOnePDFName entity. Queried server-side. Matched
+//     by normalized arabic_name. Stored with source_section="section_b",
+//     source_name_key=pdf_name_id.
+//
 // Hybrid extraction:
 //   • RAW path (primary): frontend extracts the PDF text layer with
 //     pdfjs and sends pages:[{page_number,text}]. The backend matches
-//     each page text against HolyNameKnowledge names (normalized,
-//     with/without leading "ال"), collects the verbatim paragraph(s)
-//     containing each found name, and stores them as
-//     HolyNameImportedSection records. NO LLM, NO generation.
-//   • LLM fallback: if no pages are sent (or raw extraction failed
-//     client-side for a scanned PDF), the backend calls
-//     ExtractDataFromUploadedFile with a STRICT verbatim prompt —
-//     "transcribe exactly as printed, never paraphrase/generate" —
-//     then matches the transcribed text the same way.
+//     each page text against Section A + Section B names, collects the
+//     verbatim paragraph(s) containing each found name, and stores them
+//     as HolyNameImportedSection records. NO LLM, NO generation.
+//   • LLM fallback: if no pages are sent (scanned PDF), the backend calls
+//     ExtractDataFromUploadedFile with a STRICT verbatim prompt, then
+//     matches the transcribed text the same way.
 //
 // Rules enforced:
 //   • Append-only: existing sections are NEVER deleted/overwritten.
-//   • Duplicates skipped by content_hash (name_id + normalized text).
+//   • Duplicates skipped by content_hash (source_section|source_name_key|text).
 //   • Every section records source_pdf_file + source_pdf_page.
 //   • Never attaches info to the wrong name (substring match on the
-//     name's own normalized form).
+//     name's own normalized form; very short forms (<3 chars) skipped
+//     to avoid false positives).
 //   • Arabic + Malayalam preserved verbatim.
-// Affects ONLY the Holy Names page entities. Admin-only.
+// Affects ONLY the Holy Names page. Admin-only.
 // ═══════════════════════════════════════════════════════════════
 
 function normalizeArabic(s: string): string {
@@ -34,9 +41,6 @@ function normalizeArabic(s: string): string {
     .replace(/\s+/g, " ")
     .trim();
 }
-function stripAl(s: string): string {
-  return normalizeArabic(s).replace(/^ال/, "").trim();
-}
 function detectLang(text: string): string {
   const hasAr = /[\u0600-\u06FF]/.test(text);
   const hasMl = /[\u0D00-\u0D7F]/.test(text);
@@ -45,10 +49,6 @@ function detectLang(text: string): string {
   if (hasAr) return "ar";
   return "en";
 }
-// Split a verbatim block into its Arabic-script and Malayalam-script portions.
-// Non-script lines (Latin/numbers) are left out of BOTH — they remain only in
-// text_content (the original book content). Malayalam stays EMPTY when the PDF
-// does not print Malayalam for this section (never auto-generated).
 function splitScripts(text: string): { arabic: string; malayalam: string } {
   const lines = String(text || "").split(/\n+/);
   let arabic = "";
@@ -70,6 +70,23 @@ function splitScripts(text: string): { arabic: string; malayalam: string } {
     }
   }
   return { arabic, malayalam };
+}
+// Boundary-aware token match: the name must appear as a standalone token
+// (surrounded by non-Arabic-letter characters), never as a substring inside
+// a longer Arabic word. Prevents attaching info to the wrong Holy Name.
+function isArabicLetter(c: string): boolean {
+  return /[\u0600-\u06FF]/.test(c);
+}
+function containsAsToken(text: string, name: string): boolean {
+  if (!name) return false;
+  let idx = text.indexOf(name);
+  while (idx !== -1) {
+    const before = idx > 0 ? text[idx - 1] : " ";
+    const after = idx + name.length < text.length ? text[idx + name.length] : " ";
+    if (!isArabicLetter(before) && !isArabicLetter(after)) return true;
+    idx = text.indexOf(name, idx + 1);
+  }
+  return false;
 }
 async function sha256(s: string): Promise<string> {
   const data = new TextEncoder().encode(s);
@@ -125,17 +142,37 @@ Deno.serve(async (req) => {
       return Response.json({ error: "No extractable text found in this PDF." }, { status: 400 });
     }
 
-    // ── Load matching targets (active Holy Names) ──
-    const allNames = await base44.asServiceRole.entities.HolyNameKnowledge.filter({ is_active: true }, null, 500);
-    const matchers = (allNames || []).map((n: any) => {
-      const full = normalizeArabic(n.arabic_name);
-      const noAl = stripAl(n.arabic_name);
-      return { recordId: n.id, name_id: n.name_id, full, noAl: noAl.length > 1 ? noAl : "" };
-    });
+    // ── Build matchers from Section A (sent from frontend) + Section B (DB) ──
+    type Matcher = { source_section: "section_a" | "section_b"; source_name_key: string; norm: string };
+    const matchers: Matcher[] = [];
+
+    // Section A: static HOLY_NAMES sent from the frontend
+    const sectionA: any[] = Array.isArray(body?.section_a_names) ? body.section_a_names : [];
+    for (const n of sectionA) {
+      const norm = normalizeArabic(n?.arabicPlain || n?.arabicName || "");
+      if (norm.length >= 3) {
+        matchers.push({ source_section: "section_a", source_name_key: String(n.id), norm });
+      }
+    }
+
+    // Section B: HolyOnePDFName records from the database
+    try {
+      const bNames = await base44.asServiceRole.entities.HolyOnePDFName.list(null, 1000);
+      for (const n of bNames || []) {
+        const norm = normalizeArabic(n?.arabic_name || "");
+        if (norm.length >= 3 && n?.pdf_name_id) {
+          matchers.push({ source_section: "section_b", source_name_key: String(n.pdf_name_id), norm });
+        }
+      }
+    } catch { /* Section B unavailable — continue with Section A only */ }
+
+    if (matchers.length === 0) {
+      return Response.json({ error: "No Holy Names available to match against. Ensure Section A names loaded or Section B has records." }, { status: 400 });
+    }
 
     // ── Match + collect verbatim sections ──
     const toCreate: any[] = [];
-    const foundRecordIds: Record<string, string> = {};   // name_id -> record id
+    const foundKeys = new Set<string>();   // "section|key"
     let pagesProcessed = 0;
     let duplicates = 0;
     const hashesSeenThisRun = new Set<string>();
@@ -150,55 +187,59 @@ Deno.serve(async (req) => {
       //   1. Each paragraph containing a Holy Name is attributed to that name.
       //   2. A Malayalam-only paragraph (a translation gloss with no Arabic name
       //      of its own) is attached to the NEAREST PRECEDING paragraph that
-      //      contained exactly ONE name — so the gloss follows its name without
-      //      ever merging translations across unrelated names. If the preceding
-      //      name-bearing paragraph held multiple names, the gloss is ambiguous
-      //      and is left out of the structured fields (it still lives verbatim
-      //      in text_content of nothing here — simply not attached).
+      //      contained exactly ONE name.
       const nameParas: Record<string, string[]> = {};
       const nameHit: Record<string, boolean> = {};
-      for (const m of matchers) nameParas[m.name_id] = [];
+      for (const m of matchers) {
+        const k = m.source_section + "|" + m.source_name_key;
+        nameParas[k] = [];
+      }
 
-      let lastNameId = "";
+      let lastKey = "";
       for (const p of paras) {
         const pn = normalizeArabic(p);
         const hasAr = /[\u0600-\u06FF]/.test(p);
         const hasMl = /[\u0D00-\u0D7F]/.test(p);
         const contained = matchers
-          .filter((m) => (m.full && pn.includes(m.full)) || (m.noAl && pn.includes(m.noAl)))
-          .map((m) => m.name_id);
+          .filter((m) => m.norm && containsAsToken(pn, m.norm))
+          .map((m) => m.source_section + "|" + m.source_name_key);
 
         if (contained.length === 1) {
-          lastNameId = contained[0];
-          nameHit[lastNameId] = true;
-          nameParas[lastNameId].push(p);
+          lastKey = contained[0];
+          nameHit[lastKey] = true;
+          nameParas[lastKey].push(p);
         } else if (contained.length > 1) {
-          lastNameId = ""; // ambiguous — do not attach following gloss to any
-          for (const nid of contained) { nameHit[nid] = true; nameParas[nid].push(p); }
-        } else if (contained.length === 0 && hasMl && !hasAr && lastNameId) {
-          // Malayalam translation gloss for the nearest preceding single name.
-          nameParas[lastNameId].push(p);
+          lastKey = "";
+          for (const k of contained) { nameHit[k] = true; nameParas[k].push(p); }
+        } else if (contained.length === 0 && hasMl && !hasAr && lastKey) {
+          nameParas[lastKey].push(p);
         }
       }
 
       for (const m of matchers) {
-        if (!nameHit[m.name_id]) continue;
-        foundRecordIds[m.name_id] = m.recordId;
-        const text = (nameParas[m.name_id] || []).join("\n").trim();
+        const k = m.source_section + "|" + m.source_name_key;
+        if (!nameHit[k]) continue;
+        foundKeys.add(k);
+        const text = (nameParas[k] || []).join("\n").trim();
         if (!text) continue;
 
-        const hash = await sha256(m.name_id + "|" + normalizeArabic(text));
+        const hash = await sha256(m.source_section + "|" + m.source_name_key + "|" + normalizeArabic(text));
         if (hashesSeenThisRun.has(hash)) { duplicates++; continue; }
         hashesSeenThisRun.add(hash);
 
-        // Cross-check against already-stored sections (dedup across imports).
-        const exist = await base44.asServiceRole.entities.HolyNameImportedSection.filter({ content_hash: hash }, null, 1);
+        const exist = await base44.asServiceRole.entities.HolyNameImportedSection.filter(
+          { source_section: m.source_section, source_name_key: m.source_name_key, content_hash: hash },
+          null,
+          1
+        );
         if (exist && exist.length > 0) { duplicates++; continue; }
 
         const { arabic, malayalam } = splitScripts(text);
         toCreate.push({
           section_id: "HNIS-" + hash.slice(0, 24),
-          name_id: m.name_id,
+          source_section: m.source_section,
+          source_name_key: m.source_name_key,
+          name_id: m.source_name_key,
           section_type: "other",
           text_content: text,
           arabic_text: arabic,
@@ -220,24 +261,14 @@ Deno.serve(async (req) => {
       sections_added = Array.isArray(res) ? res.length : (res?.length || 0);
     }
 
-    // ── Refresh denormalized section_count + last_imported_at for found names ──
-    for (const name_id of Object.keys(foundRecordIds)) {
-      try {
-        const secs = await base44.asServiceRole.entities.HolyNameImportedSection.filter({ name_id }, null, 1000);
-        await base44.asServiceRole.entities.HolyNameKnowledge.update(foundRecordIds[name_id], {
-          section_count: (secs || []).length,
-          last_imported_at: now,
-        });
-      } catch { /* best-effort */ }
-    }
-
     return Response.json({
       status: "ok",
       extraction_method,
       pages_processed: pagesProcessed,
-      names_found: Object.keys(foundRecordIds).length,
+      names_found: foundKeys.size,
       sections_added,
       duplicates_skipped: duplicates,
+      matchers: matchers.length,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

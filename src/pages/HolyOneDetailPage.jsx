@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { ABJAD_VALUES } from "@/lib/abjadValues";
 import { usePageState } from "@/context/PageStateContext";
+import HolyNameImportedSections from "@/components/holynameknowledge/HolyNameImportedSections";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -334,6 +335,14 @@ export default function HolyOneDetailPage() {
             )}
           </div>
 
+        </div>
+
+        {/* Imported PDF Knowledge — enriches this Holy Name's existing card */}
+        <div className="mt-6">
+          <HolyNameImportedSections
+            sourceSection={source === "B" ? "section_b" : "section_a"}
+            sourceNameKey={source === "B" ? (name.pdf_name_id || nameId) : nameId}
+          />
         </div>
 
       </motion.div>
