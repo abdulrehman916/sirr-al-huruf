@@ -71,20 +71,25 @@ function splitScripts(text: string): { arabic: string; malayalam: string } {
   }
   return { arabic, malayalam };
 }
-// Boundary-aware token match: the name must appear as a standalone token
-// (surrounded by non-Arabic-letter characters), never as a substring inside
-// a longer Arabic word. Prevents attaching info to the wrong Holy Name.
-function isArabicLetter(c: string): boolean {
-  return /[\u0600-\u06FF]/.test(c);
+// Boundary-aware ALIAS match across scripts (Arabic, English, Malayalam).
+// The alias must appear as a standalone token — surrounded by characters
+// that are NOT word-characters of the same script — so it is never matched
+// as a substring inside a longer word. This lets a Holy Name be found whether
+// the PDF prints it in Arabic, English transliteration, or Malayalam, and all
+// aliases point to the SAME Holy Name record (never creating duplicates).
+function isWordChar(c: string, script: "ar" | "en" | "ml"): boolean {
+  if (script === "ar") return /[\u0600-\u06FF]/.test(c);
+  if (script === "ml") return /[\u0D00-\u0D7F]/.test(c);
+  return /[a-zA-Z0-9]/.test(c); // en
 }
-function containsAsToken(text: string, name: string): boolean {
-  if (!name) return false;
-  let idx = text.indexOf(name);
+function containsAlias(normText: string, normAlias: string, script: "ar" | "en" | "ml"): boolean {
+  if (!normAlias || normAlias.length < 3) return false;
+  let idx = normText.indexOf(normAlias);
   while (idx !== -1) {
-    const before = idx > 0 ? text[idx - 1] : " ";
-    const after = idx + name.length < text.length ? text[idx + name.length] : " ";
-    if (!isArabicLetter(before) && !isArabicLetter(after)) return true;
-    idx = text.indexOf(name, idx + 1);
+    const before = idx > 0 ? normText[idx - 1] : " ";
+    const after = idx + normAlias.length < normText.length ? normText[idx + normAlias.length] : " ";
+    if (!isWordChar(before, script) && !isWordChar(after, script)) return true;
+    idx = normText.indexOf(normAlias, idx + 1);
   }
   return false;
 }
@@ -150,26 +155,31 @@ Deno.serve(async (req) => {
     }
 
     // ── Build matchers from Section A (sent from frontend) + Section B (DB) ──
-    type Matcher = { source_section: "section_a" | "section_b"; source_name_key: string; norm: string };
+    type Matcher = { source_section: "section_a" | "section_b"; source_name_key: string; norm: string; script: "ar" | "en" | "ml" };
     const matchers: Matcher[] = [];
 
     // Section A: static HOLY_NAMES sent from the frontend
     const sectionA: any[] = Array.isArray(body?.section_a_names) ? body.section_a_names : [];
     for (const n of sectionA) {
-      const norm = normalizeArabic(n?.arabicPlain || n?.arabicName || "");
-      if (norm.length >= 3) {
-        matchers.push({ source_section: "section_a", source_name_key: String(n.id), norm });
-      }
+      const key = String(n.id);
+      const arNorm = normalizeArabic(n?.arabicPlain || n?.arabicName || "");
+      if (arNorm.length >= 3) matchers.push({ source_section: "section_a", source_name_key: key, norm: arNorm, script: "ar" });
+      const enNorm = String(n?.englishName || "").toLowerCase().trim();
+      if (enNorm.length >= 3) matchers.push({ source_section: "section_a", source_name_key: key, norm: enNorm, script: "en" });
     }
 
     // Section B: HolyOnePDFName records from the database
     try {
       const bNames = await base44.asServiceRole.entities.HolyOnePDFName.list(null, 1000);
       for (const n of bNames || []) {
-        const norm = normalizeArabic(n?.arabic_name || "");
-        if (norm.length >= 3 && n?.pdf_name_id) {
-          matchers.push({ source_section: "section_b", source_name_key: String(n.pdf_name_id), norm });
-        }
+        if (!n?.pdf_name_id) continue;
+        const key = String(n.pdf_name_id);
+        const arNorm = normalizeArabic(n?.arabic_name || "");
+        if (arNorm.length >= 3) matchers.push({ source_section: "section_b", source_name_key: key, norm: arNorm, script: "ar" });
+        const enNorm = String(n?.arabic_transliteration || "").toLowerCase().trim();
+        if (enNorm.length >= 3) matchers.push({ source_section: "section_b", source_name_key: key, norm: enNorm, script: "en" });
+        const mlNorm = String(n?.malayalam_pronunciation || "").trim();
+        if (mlNorm.length >= 3) matchers.push({ source_section: "section_b", source_name_key: key, norm: mlNorm, script: "ml" });
       }
     } catch { /* Section B unavailable — continue with Section A only */ }
 
@@ -201,12 +211,18 @@ Deno.serve(async (req) => {
       let currentUnit: { keys: string[]; text: string } | null = null;
 
       for (const p of paras) {
-        const pn = normalizeArabic(p);
+        const pAr = normalizeArabic(p);
+        const pEn = p.toLowerCase();
         const hasAr = /[\u0600-\u06FF]/.test(p);
         const hasMl = /[\u0D00-\u0D7F]/.test(p);
-        const contained = matchers
-          .filter((m) => m.norm && containsAsToken(pn, m.norm))
-          .map((m) => m.source_section + "|" + m.source_name_key);
+        const contained = [...new Set(
+          matchers
+            .filter((m) => {
+              const text = m.script === "ar" ? pAr : m.script === "en" ? pEn : p;
+              return containsAlias(text, m.norm, m.script);
+            })
+            .map((m) => m.source_section + "|" + m.source_name_key)
+        )];
 
         if (contained.length >= 1) {
           if (currentUnit) units.push(currentUnit);
