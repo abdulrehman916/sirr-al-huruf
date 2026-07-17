@@ -1,7 +1,7 @@
 {
   "name": "HolyNameImportedSection",
   "type": "object",
-  "description": "Child entity for the Holy Names PDF Knowledge Import System. ONE independent record per imported information block, linked to its Holy Name via source_section + source_name_key. source_section='section_a' links to the Section A static HOLY_NAMES array (source_name_key = String(name.id)); source_section='section_b' links to the HolyOnePDFName entity (source_name_key = pdf_name_id). Multiple PDFs can contribute multiple child records to the SAME Holy Name \u2014 they are never merged into one record; each stays independent. Every child record permanently remembers: source PDF file name, source PDF page number, the Holy Name it belongs to (source_section + source_name_key), the Original Arabic text (arabic_text \u2014 Arabic-script runs only), the Malayalam translation (malayalam_translation \u2014 Malayalam-script runs ONLY when the PDF actually prints Malayalam; EMPTY otherwise, never auto-generated), the Original book content (text_content \u2014 the full verbatim text exactly as printed, Arabic and Malayalam preserved), and the import date (import_date). Append-only: existing records are NEVER deleted or overwritten; duplicates are skipped by content_hash. ISOLATED \u2014 only importHolyNamesPDF writes this entity; only the Holy Names page (Section A cards + Section B detail page) reads it. No other module, engine, or page touches it.",
+  "description": "Child entity for the Holy Names PDF Knowledge Import System. ONE independent record per imported information block, linked to its Holy Name via source_section + source_name_key. source_section='section_a' links to the Section A static HOLY_NAMES array (source_name_key = String(name.id)); source_section='section_b' links to the HolyOnePDFName entity (source_name_key = pdf_name_id). Multiple PDFs can contribute multiple child records to the SAME Holy Name \u2014 they are never merged into one record; each stays independent. Every child record permanently remembers: source PDF file name, source PDF page number, the Holy Name it belongs to (source_section + source_name_key), the Original Arabic text (arabic_text \u2014 Arabic-script runs only), the Malayalam translation (malayalam_translation \u2014 Malayalam-script runs ONLY when the PDF actually prints Malayalam; EMPTY otherwise, never auto-generated), the Original book content (text_content \u2014 the full verbatim text exactly as printed, Arabic and Malayalam preserved), the import date (import_date), the auto-classified category (section_type \u2014 assigned by LLM classifier, NEVER modifies the verbatim text), and any visual content images (images \u2014 rendered page images for pages containing wafq/table/diagram/symbol/numeric content). Append-only: existing records are NEVER deleted or overwritten; duplicates are skipped by content_hash. ISOLATED \u2014 only importHolyNamesPDF writes this entity; only the Holy Names page (Section A cards + Section B detail page) reads it. No other module, engine, or page touches it. Designed for UNLIMITED future growth \u2014 the user uploads books little by little over months/years and the database keeps enriching the same Holy Names forever.",
   "properties": {
     "section_id": {
       "type": "string",
@@ -33,13 +33,20 @@
         "benefits",
         "usage",
         "method",
+        "recitations",
+        "conditions",
         "warnings",
+        "related_duas",
         "references",
         "notes",
+        "wafq_diagram",
+        "table",
+        "symbol",
+        "numeric_layout",
         "other"
       ],
       "default": "other",
-      "description": "Category of this information block. Raw extraction uses 'other' (cannot classify without LLM); the LLM fallback may assign a more specific type when the PDF clearly labels it. Defaults to 'other' when unknown \u2014 never guessed."
+      "description": "Auto-classified category of this information block. Assigned by the LLM CLASSIFIER ONLY \u2014 the LLM NEVER modifies, translates, or generates the verbatim text; it only reads it and returns a single category label. 'arabic_name' = the Holy Name itself in Arabic. 'malayalam_meaning' = Malayalam translation printed in the PDF. 'description' = general explanation. 'benefits' = spiritual/physical benefits. 'usage' = how to use. 'method' = procedure/practice. 'recitations' = repetition count/number. 'conditions' = prerequisites. 'warnings' = cautions. 'related_duas' = associated prayers. 'references' = citations. 'notes' = miscellaneous. 'wafq_diagram' = magic square / wafq. 'table' = tabular data. 'symbol' = symbolic content. 'numeric_layout' = number arrangement. 'other' = cannot classify. Defaults to 'other' when the classifier is unavailable or uncertain \u2014 never guessed."
     },
     "text_content": {
       "type": "string",
@@ -65,6 +72,19 @@
       ],
       "default": "ar",
       "description": "Detected script of text_content: ar=Arabic, ml=Malayalam, en=English, mixed=both Arabic+Malayalam."
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Rendered page image URLs for pages containing visual content (wafq/magic square, table, diagram, symbol, numeric layout, special drawing). The full PDF page is rendered to a canvas image, uploaded, and the URL stored here so the visual content is permanently preserved alongside the correct Holy Name. Empty for text-only pages."
+    },
+    "has_visual": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if this section's source page contains visual content (wafq, table, diagram, symbol, numeric layout). The images array is populated when this is true."
     },
     "source_pdf_file": {
       "type": "string",
@@ -173,6 +193,20 @@
       "name": "idx_import_date",
       "fields": [
         "import_date"
+      ]
+    },
+    {
+      "name": "idx_section_key_type",
+      "fields": [
+        "source_section",
+        "source_name_key",
+        "section_type"
+      ]
+    },
+    {
+      "name": "idx_has_visual",
+      "fields": [
+        "has_visual"
       ]
     }
   ],

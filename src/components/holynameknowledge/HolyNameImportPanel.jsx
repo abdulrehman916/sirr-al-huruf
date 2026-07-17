@@ -47,6 +47,7 @@ export default function HolyNameImportPanel({ onImported }) {
   const extractRaw = async (file_url) => {
     const pages = [];
     let totalLen = 0;
+    let pdf = null;
     try {
       const pdfjsLib = await import("pdfjs-dist");
       try {
@@ -54,7 +55,7 @@ export default function HolyNameImportPanel({ onImported }) {
         pdfjsLib.GlobalWorkerOptions.workerSrc = workerModule.default;
       } catch { /* worker setup optional — getDocument still works */ }
       const task = pdfjsLib.getDocument({ url: file_url });
-      const pdf = await task.promise;
+      pdf = await task.promise;
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const tc = await page.getTextContent();
@@ -63,9 +64,42 @@ export default function HolyNameImportPanel({ onImported }) {
         totalLen += (text || "").length;
       }
     } catch (e) {
-      return { pages: [], ok: false };
+      return { pages: [], ok: false, pdf: null };
     }
-    return { pages, ok: totalLen >= RAW_MIN_CHARS };
+    return { pages, ok: totalLen >= RAW_MIN_CHARS, pdf };
+  };
+
+  // ── Visual content detection (wafq, tables, diagrams, numeric layouts) ──
+  const VISUAL_KEYWORDS = /وفق|مربع|شكل|جدول|ضرب|vefk|wafq|square|table|diagram|grid|magic/i;
+  const hasVisualContent = (text) => {
+    if (!text) return false;
+    if (VISUAL_KEYWORDS.test(text)) return true;
+    // Detect grid-like numeric patterns: 3+ lines each containing 2+ numbers
+    const lines = text.split(/\n+/);
+    let numericLines = 0;
+    for (const line of lines) {
+      const nums = line.match(/\d+/g);
+      if (nums && nums.length >= 2) numericLines++;
+    }
+    return numericLines >= 3;
+  };
+
+  // ── Render a PDF page to a canvas image and upload it ──
+  const renderPageToImage = async (pdf, pageNum) => {
+    try {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 2 });
+      const canvas = document.createElement("canvas");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext("2d");
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const blob = await new Promise((r) => canvas.toBlob(r, "image/jpeg", 0.82));
+      if (!blob) return null;
+      const file = new File([blob], `page-${pageNum}.jpg`, { type: "image/jpeg" });
+      const up = await base44.integrations.Core.UploadFile({ file });
+      return up?.file_url || null;
+    } catch { return null; }
   };
 
   const handleFiles = async (files) => {
@@ -81,12 +115,23 @@ export default function HolyNameImportPanel({ onImported }) {
         if (!file_url) { addLog(`✗ Upload failed for "${file.name}"`); continue; }
 
         addLog(`Extracting text from "${file.name}"…`);
-        const { pages, ok } = await extractRaw(file_url);
+        const { pages, ok, pdf } = await extractRaw(file_url);
 
         let payload = { import_batch, source_pdf_file: file.name, source_pdf_url: file_url, section_a_names };
         if (ok) {
           payload.pages = pages;
-          addLog(`Raw text layer found (${pages.length} pages). Matching names…`);
+          // Detect + render pages with visual content (wafq, tables, diagrams)
+          const visualPages = pages.filter((p) => hasVisualContent(p.text || ""));
+          if (visualPages.length > 0 && pdf) {
+            addLog(`Rendering ${visualPages.length} page(s) with visual content…`);
+            const page_images = [];
+            for (const vp of visualPages) {
+              const imgUrl = await renderPageToImage(pdf, vp.page_number);
+              if (imgUrl) page_images.push({ page_number: vp.page_number, image_url: imgUrl, has_visual: true });
+            }
+            if (page_images.length > 0) payload.page_images = page_images;
+          }
+          addLog(`Raw text layer found (${pages.length} pages). Matching + categorizing…`);
         } else {
           addLog(`No usable text layer. Using verbatim LLM fallback…`);
         }

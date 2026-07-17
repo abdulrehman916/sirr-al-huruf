@@ -111,6 +111,13 @@ Deno.serve(async (req) => {
     let pages: any[] = Array.isArray(body?.pages) ? body.pages : [];
     let extraction_method = "raw";
 
+    // ── Page images map (rendered by frontend for pages with visual content) ──
+    const pageImagesMap = new Map<number, { image_url: string; has_visual: boolean }>();
+    for (const pi of Array.isArray(body?.page_images) ? body.page_images : []) {
+      const pn = Number(pi?.page_number) || 0;
+      if (pn && pi?.image_url) pageImagesMap.set(pn, { image_url: String(pi.image_url), has_visual: pi?.has_visual !== false });
+    }
+
     // ── LLM verbatim fallback when no raw text was provided ──
     if (pages.length === 0 && source_pdf_url) {
       extraction_method = "llm_verbatim";
@@ -172,6 +179,7 @@ Deno.serve(async (req) => {
 
     // ── Match + collect verbatim sections ──
     const toCreate: any[] = [];
+    const classifyItems: { idx: number; text: string }[] = [];
     const foundKeys = new Set<string>();   // "section|key"
     let pagesProcessed = 0;
     let duplicates = 0;
@@ -183,19 +191,15 @@ Deno.serve(async (req) => {
       pagesProcessed++;
       const paras = rawText.split(/\n+/).map((p) => p.trim()).filter(Boolean);
 
-      // Per-page ordered pass:
-      //   1. Each paragraph containing a Holy Name is attributed to that name.
-      //   2. A Malayalam-only paragraph (a translation gloss with no Arabic name
-      //      of its own) is attached to the NEAREST PRECEDING paragraph that
-      //      contained exactly ONE name.
-      const nameParas: Record<string, string[]> = {};
-      const nameHit: Record<string, boolean> = {};
-      for (const m of matchers) {
-        const k = m.source_section + "|" + m.source_name_key;
-        nameParas[k] = [];
-      }
+      // Per-page ordered pass — build UNITS (one per name-paragraph + its glosses):
+      //   Each paragraph containing a Holy Name starts a new unit. Following
+      //   Malayalam-only gloss paragraphs attach to the current unit. Each
+      //   unit becomes ONE section per name it mentions, so multi-topic pages
+      //   produce multiple independently-categorized sections (benefits, usage,
+      //   conditions, warnings, etc.) instead of one merged block.
+      const units: { keys: string[]; text: string }[] = [];
+      let currentUnit: { keys: string[]; text: string } | null = null;
 
-      let lastKey = "";
       for (const p of paras) {
         const pn = normalizeArabic(p);
         const hasAr = /[\u0600-\u06FF]/.test(p);
@@ -204,55 +208,119 @@ Deno.serve(async (req) => {
           .filter((m) => m.norm && containsAsToken(pn, m.norm))
           .map((m) => m.source_section + "|" + m.source_name_key);
 
-        if (contained.length === 1) {
-          lastKey = contained[0];
-          nameHit[lastKey] = true;
-          nameParas[lastKey].push(p);
-        } else if (contained.length > 1) {
-          lastKey = "";
-          for (const k of contained) { nameHit[k] = true; nameParas[k].push(p); }
-        } else if (contained.length === 0 && hasMl && !hasAr && lastKey) {
-          nameParas[lastKey].push(p);
+        if (contained.length >= 1) {
+          if (currentUnit) units.push(currentUnit);
+          currentUnit = { keys: contained, text: p };
+        } else if (hasMl && !hasAr && currentUnit) {
+          currentUnit.text += "\n" + p;
+        } else {
+          if (currentUnit) { units.push(currentUnit); currentUnit = null; }
         }
       }
+      if (currentUnit) units.push(currentUnit);
 
-      for (const m of matchers) {
-        const k = m.source_section + "|" + m.source_name_key;
-        if (!nameHit[k]) continue;
-        foundKeys.add(k);
-        const text = (nameParas[k] || []).join("\n").trim();
+      for (const unit of units) {
+        const text = unit.text.trim();
         if (!text) continue;
+        for (const k of unit.keys) {
+          const m = matchers.find((mm) => mm.source_section + "|" + mm.source_name_key === k);
+          if (!m) continue;
+          foundKeys.add(k);
 
-        const hash = await sha256(m.source_section + "|" + m.source_name_key + "|" + normalizeArabic(text));
-        if (hashesSeenThisRun.has(hash)) { duplicates++; continue; }
-        hashesSeenThisRun.add(hash);
+          const hash = await sha256(m.source_section + "|" + m.source_name_key + "|" + normalizeArabic(text));
+          if (hashesSeenThisRun.has(hash)) { duplicates++; continue; }
+          hashesSeenThisRun.add(hash);
 
-        const exist = await base44.asServiceRole.entities.HolyNameImportedSection.filter(
-          { source_section: m.source_section, source_name_key: m.source_name_key, content_hash: hash },
-          null,
-          1
-        );
-        if (exist && exist.length > 0) { duplicates++; continue; }
+          const exist = await base44.asServiceRole.entities.HolyNameImportedSection.filter(
+            { source_section: m.source_section, source_name_key: m.source_name_key, content_hash: hash },
+            null,
+            1
+          );
+          if (exist && exist.length > 0) { duplicates++; continue; }
 
-        const { arabic, malayalam } = splitScripts(text);
-        toCreate.push({
-          section_id: "HNIS-" + hash.slice(0, 24),
-          source_section: m.source_section,
-          source_name_key: m.source_name_key,
-          name_id: m.source_name_key,
-          section_type: "other",
-          text_content: text,
-          arabic_text: arabic,
-          malayalam_translation: malayalam,
-          language: detectLang(text),
-          source_pdf_file,
-          source_pdf_url,
-          source_pdf_page: Number(page?.page_number) || 0,
-          import_date: now,
-          content_hash: hash,
-          import_batch,
-        });
+          const { arabic, malayalam } = splitScripts(text);
+          const pageNum = Number(page?.page_number) || 0;
+          const pImg = pageImagesMap.get(pageNum);
+          toCreate.push({
+            section_id: "HNIS-" + hash.slice(0, 24),
+            source_section: m.source_section,
+            source_name_key: m.source_name_key,
+            name_id: m.source_name_key,
+            section_type: "other",
+            text_content: text,
+            arabic_text: arabic,
+            malayalam_translation: malayalam,
+            language: detectLang(text),
+            images: pImg ? [pImg.image_url] : [],
+            has_visual: !!(pImg && pImg.has_visual),
+            source_pdf_file,
+            source_pdf_url,
+            source_pdf_page: pageNum,
+            import_date: now,
+            content_hash: hash,
+            import_batch,
+          });
+          classifyItems.push({ idx: toCreate.length - 1, text });
+        }
       }
+    }
+
+    // ── LLM classification (CLASSIFIER ONLY — never modifies the verbatim text) ──
+    if (classifyItems.length > 0) {
+      try {
+        const validCats = ["arabic_name","malayalam_meaning","description","benefits","usage","method","recitations","conditions","warnings","related_duas","references","notes","wafq_diagram","table","symbol","numeric_layout","other"];
+        const classifyRes: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
+          prompt: `You are a STRICT CLASSIFIER for Islamic occult manuscript sections about Holy Names (Asma ul-Husna and related divine names). For EACH text section below, return ONLY a single category label from this exact list:
+
+arabic_name — the Holy Name itself in Arabic
+malayalam_meaning — Malayalam translation of the name or its meaning
+description — general explanation or commentary
+benefits — spiritual, physical, or worldly benefits
+usage — how to use or apply the name
+method — procedure, practice, or ritual steps
+recitations — repetition count, number of times, or adad
+conditions — prerequisites, requirements, or timing conditions
+warnings — cautions, prohibitions, or restrictions
+related_duas — associated prayers, Quranic verses, or supplications
+references — citations, sources, or book references
+notes — miscellaneous notes or asides
+wafq_diagram — magic square, wafq, or grid of letters/numbers
+table — tabular data or chart
+symbol — symbolic content or sigil
+numeric_layout — number arrangement or numerical calculation
+other — cannot classify from the text
+
+CRITICAL RULES:
+- You are a CLASSIFIER ONLY. NEVER modify, translate, summarize, or generate any text.
+- Return ONLY a JSON object: {"classifications": [{"index": <number>, "category": "<label>"}]}
+- Use the exact index numbers provided for each section.
+- If unsure, return "other".
+
+Text sections to classify:
+${classifyItems.map((c) => `--- Section index ${c.idx} ---\n${c.text.slice(0, 800)}`).join("\n\n")}`,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              classifications: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    index: { type: "integer" },
+                    category: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+        });
+        for (const c of (classifyRes?.classifications || [])) {
+          const cat = String(c?.category || "").toLowerCase().trim();
+          if (validCats.includes(cat) && toCreate[Number(c?.index)]) {
+            toCreate[Number(c.index)].section_type = cat;
+          }
+        }
+      } catch { /* classification unavailable — keep "other" */ }
     }
 
     let sections_added = 0;
