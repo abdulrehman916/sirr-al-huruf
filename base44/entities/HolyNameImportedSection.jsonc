@@ -1,0 +1,141 @@
+{
+  "name": "HolyNameImportedSection",
+  "type": "object",
+  "description": "Child entity for the Holy Names PDF Knowledge Import System. ONE record per imported information block, linked to a HolyNameKnowledge name. Every section stores VERBATIM text extracted from an uploaded PDF (raw text-layer extraction first; LLM verbatim transcription ONLY as fallback for scanned pages). No AI-generated, paraphrased, or expanded content. Each section permanently remembers which PDF file and which page it came from. Append-only: existing sections are never deleted or overwritten; duplicates are skipped by content_hash. ISOLATED \u2014 only importHolyNamesPDF writes this entity; only the Holy Names page PDF Knowledge tab reads it.",
+  "properties": {
+    "section_id": {
+      "type": "string",
+      "description": "Permanent unique identifier, e.g. HNIS-<hash>. Never changes."
+    },
+    "name_id": {
+      "type": "string",
+      "description": "FK to HolyNameKnowledge.name_id. The Holy Name this section belongs to."
+    },
+    "section_type": {
+      "type": "string",
+      "enum": [
+        "arabic_name",
+        "malayalam_meaning",
+        "description",
+        "benefits",
+        "usage",
+        "method",
+        "warnings",
+        "references",
+        "notes",
+        "other"
+      ],
+      "default": "other",
+      "description": "Category of this information block. Raw extraction uses 'other' (cannot classify without LLM); the LLM fallback may assign a more specific type when the PDF clearly labels it. Defaults to 'other' when unknown \u2014 never guessed."
+    },
+    "text_content": {
+      "type": "string",
+      "description": "VERBATIM text from the PDF. Arabic and Malayalam preserved exactly as printed. Never rewritten or summarized."
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "ar",
+        "ml",
+        "en",
+        "mixed"
+      ],
+      "default": "ar",
+      "description": "Detected script of text_content: ar=Arabic, ml=Malayalam, en=English, mixed=both Arabic+Malayalam."
+    },
+    "source_pdf_file": {
+      "type": "string",
+      "default": "",
+      "description": "Original file name of the source PDF."
+    },
+    "source_pdf_url": {
+      "type": "string",
+      "default": "",
+      "description": "Permanent URL of the source PDF (from UploadFile)."
+    },
+    "source_pdf_page": {
+      "type": "integer",
+      "default": 0,
+      "description": "Page number in the source PDF where this section's text appears."
+    },
+    "content_hash": {
+      "type": "string",
+      "description": "SHA-256 of (name_id + '|' + normalized text). Used to skip duplicate paragraphs on re-import \u2014 a section with the same hash already exists and is ignored."
+    },
+    "import_batch": {
+      "type": "string",
+      "default": "",
+      "description": "Import session identifier (HNK-<timestamp>) grouping all sections from one upload action."
+    }
+  },
+  "required": [
+    "section_id",
+    "name_id",
+    "text_content",
+    "content_hash"
+  ],
+  "indexes": [
+    {
+      "name": "idx_section_id",
+      "fields": [
+        "section_id"
+      ]
+    },
+    {
+      "name": "idx_name_id",
+      "fields": [
+        "name_id"
+      ]
+    },
+    {
+      "name": "idx_content_hash",
+      "fields": [
+        "content_hash"
+      ]
+    },
+    {
+      "name": "idx_name_hash",
+      "fields": [
+        "name_id",
+        "content_hash"
+      ]
+    },
+    {
+      "name": "idx_name_page",
+      "fields": [
+        "name_id",
+        "source_pdf_page"
+      ]
+    },
+    {
+      "name": "idx_section_type",
+      "fields": [
+        "section_type"
+      ]
+    },
+    {
+      "name": "idx_import_batch",
+      "fields": [
+        "import_batch"
+      ]
+    }
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": true,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

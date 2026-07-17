@@ -1,0 +1,114 @@
+{
+  "name": "HolyNameKnowledge",
+  "type": "object",
+  "description": "INDEPENDENT Holy Names Knowledge database for the PDF Knowledge Import System on the Holy Names page ONLY. Completely separate from Section A's static magicalHolyNamesData array and from Section B's HolyOnePDFName entity. This entity holds the canonical Holy Name records (matching targets). Seeded once with the 99 Names of Allah (reference keys); ALL descriptive content (Malayalam meaning, description, benefits, usage, method, warnings, references, notes) comes ONLY from uploaded PDFs and is stored as HolyNameImportedSection child records \u2014 never AI-generated. Matching during import is done on arabic_normalized (harakat-stripped). ISOLATED \u2014 only seedHolyNameKnowledge and importHolyNamesPDF backend functions, and the Holy Names page PDF Knowledge tab, read/write this entity. Never used by any other module, engine, or page.",
+  "properties": {
+    "name_id": {
+      "type": "string",
+      "description": "Permanent unique identifier, e.g. HNK-001. Used as FK in HolyNameImportedSection.name_id. Never changes."
+    },
+    "arabic_name": {
+      "type": "string",
+      "description": "Arabic Holy Name with harakat preserved verbatim. The display + matching source."
+    },
+    "arabic_normalized": {
+      "type": "string",
+      "default": "",
+      "description": "Arabic name WITHOUT harakat/tatweel, leading '\u0627\u0644' kept, normalized for indexed matching/search. Populated by the seeding/import functions."
+    },
+    "transliteration": {
+      "type": "string",
+      "default": "",
+      "description": "Latin transliteration of the name (reference only)."
+    },
+    "malayalam_name": {
+      "type": "string",
+      "default": "",
+      "description": "Malayalam rendering of the name if found in a PDF. Empty until imported from a PDF."
+    },
+    "meaning_en": {
+      "type": "string",
+      "default": "",
+      "description": "English meaning (reference only for the canonical seed names)."
+    },
+    "order_index": {
+      "type": "integer",
+      "default": 0,
+      "description": "Display order (canonical order for seeded names)."
+    },
+    "section_count": {
+      "type": "integer",
+      "default": 0,
+      "description": "Denormalized count of HolyNameImportedSection records linked to this name. Updated by importHolyNamesPDF after each import."
+    },
+    "last_imported_at": {
+      "type": "string",
+      "default": "",
+      "description": "ISO 8601 timestamp of the most recent PDF import that added sections to this name."
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Inactive names are excluded from matching and display."
+    },
+    "seeded": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if this name came from the canonical 99-Names seed; false if discovered from a PDF (reserved for future use)."
+    }
+  },
+  "required": [
+    "name_id",
+    "arabic_name"
+  ],
+  "indexes": [
+    {
+      "name": "idx_name_id",
+      "fields": [
+        "name_id"
+      ]
+    },
+    {
+      "name": "idx_arabic_normalized",
+      "fields": [
+        "arabic_normalized"
+      ]
+    },
+    {
+      "name": "idx_is_active",
+      "fields": [
+        "is_active"
+      ]
+    },
+    {
+      "name": "idx_order_index",
+      "fields": [
+        "order_index"
+      ]
+    },
+    {
+      "name": "idx_seeded",
+      "fields": [
+        "seeded"
+      ]
+    }
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": true,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

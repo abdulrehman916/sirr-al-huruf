@@ -12,6 +12,7 @@ import { Lock } from "lucide-react";
 import FeatureLockedCard from "@/components/FeatureLockedCard";
 import { checkFeatureAccess } from "@/lib/featurePermission";
 import { getFeatures } from "@/lib/featureRegistry";
+import HolyNameKnowledgeTab from "@/components/holynameknowledge/HolyNameKnowledgeTab";
 
 const PAGE_PATH = "/holy-names";
 const FEATURES = getFeatures(PAGE_PATH);
@@ -471,6 +472,7 @@ function TabSwitcher({ activeTab, onTabChange }) {
   const TABS = [
     { id: "section-a", label: "Current Holy Names", arabic: "الأسماء أ", subtitle: "Section A" },
     { id: "section-b", label: "PDF Holy Names", arabic: "الأسماء ب", subtitle: "Section B" },
+    { id: "section-c", label: "PDF Knowledge", arabic: "المعرفة", subtitle: "Section C" },
   ];
 
   return (
@@ -560,7 +562,7 @@ export default function MagicalHolyNamesPage() {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.15 }}
               >
-                {activeTab === "section-a" ? <SectionA /> : <SectionB />}
+                {activeTab === "section-a" ? <SectionA /> : activeTab === "section-b" ? <SectionB /> : <HolyNameKnowledgeTab />}
               </motion.div>
             </AnimatePresence>
           )}
