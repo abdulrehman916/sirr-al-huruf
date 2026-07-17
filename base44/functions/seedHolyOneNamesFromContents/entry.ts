@@ -43,6 +43,42 @@ function parsePageNumber(s: any): number {
   return isNaN(n) ? 0 : n;
 }
 
+function normalizeArabic(s: string): string {
+  if (!s) return "";
+  return String(s)
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, "")
+    .replace(/[\u200B-\u200F\u202A-\u202E\uFEFF]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Honorific phrases that follow the core divine name (e.g. "تبارك وتعالى",
+// "سبحانه", "جلّ وعلا"). The first token after the core name that is one of
+// these marks where the core ends — used to extract the CORE Holy Name for
+// master-database dedup, so the same Name from different PDFs (printed with
+// different honorifics) maps to ONE card.
+const HONORIFIC_STARTERS = new Set([
+  "تبارك", "سبحانه", "سبحان", "سبحانة", "جل", "عز", "تعالى", "تعالي",
+  "عمت", "عم", "شمل", "شملت", "دام", "اليه", "تقدس", "عزت", "جلت", "به",
+]);
+
+function coreKeyOf(arabic_name: string): string {
+  let s = normalizeArabic(arabic_name);
+  // Unify hamza forms for dedup (أ/إ/آ → ا, ء removed, ؤ → و, ئ → ي)
+  s = s.replace(/[\u0622\u0623\u0625]/g, "\u0627").replace(/\u0621/g, "").replace(/\u0624/g, "\u0648").replace(/\u0626/g, "\u064A");
+  // Strip the leading "اسمه"/"اسم" prefix (the framing, not the name)
+  s = s.replace(/^اسمه\s+/, "").replace(/^اسم\s+/, "");
+  const tokens = s.split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return "";
+  // "ذو X" names are two-word cores (ذو الفضل, ذو الجلال, ذو المعارج, ذو الطول, ذو العرش)
+  if (tokens[0] === "ذو" && tokens.length >= 2) return "ذو " + tokens[1];
+  // If the 2nd token is an honorific starter, the core is just the 1st token
+  if (tokens.length >= 2 && HONORIFIC_STARTERS.has(tokens[1])) return tokens[0];
+  // Otherwise the core is the first two tokens (الشديد العذاب, الإله الواحد, السريع الحساب)
+  if (tokens.length >= 2) return tokens[0] + " " + tokens[1];
+  return tokens[0];
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -102,10 +138,15 @@ STRICT RULES:
 
     // ── Dedup against existing Section B names + compute next global_order ──
     const existing = await base44.asServiceRole.entities.HolyOnePDFName.list(null, 1000);
+    // Master dedup key: the CORE Holy Name (prefix stripped, harakat + hamza
+    // insensitive, honorifics ignored) across ALL PDFs. A Holy Name is a
+    // permanent master record — re-appearing in a new PDF's Contents (even
+    // with different honorifics like "تبارك وتعالى" vs "سبحانه") does NOT
+    // create a new card; the new PDF's content appends to the existing card.
     const existKeys = new Set<string>();
     let maxOrder = 0;
     for (const r of existing || []) {
-      existKeys.add(String(r.arabic_name || "") + "|" + String(r.source_pdf_file || ""));
+      existKeys.add(coreKeyOf(String(r.arabic_name || "")));
       const o = Number(r.global_order || 0);
       if (o > maxOrder) maxOrder = o;
     }
@@ -116,9 +157,9 @@ STRICT RULES:
     for (const n of extracted) {
       const arabic_name = String(n?.arabic_name || "").trim();
       if (!arabic_name) continue;
-      const key = arabic_name + "|" + source_pdf_file;
-      if (existKeys.has(key)) { skipped++; continue; }
-      existKeys.add(key);
+      const normKey = coreKeyOf(arabic_name);
+      if (normKey && existKeys.has(normKey)) { skipped++; continue; } // exists — content will append to the existing card
+      if (normKey) existKeys.add(normKey);
       order += 1;
       toCreate.push({
         pdf_name_id: "PDF-HN-" + String(order).padStart(4, "0"),
