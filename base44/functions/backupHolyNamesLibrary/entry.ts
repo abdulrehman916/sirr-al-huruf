@@ -27,22 +27,26 @@ Deno.serve(async (req) => {
     const cards = await base44.asServiceRole.entities.HolyOnePDFName.list(null, 1000);
     const sections = await base44.asServiceRole.entities.HolyNameImportedSection.list(null, 5000);
     const cache = await base44.asServiceRole.entities.HolyNameTranscriptionCache.list(null, 2000);
+    const knowledge = await base44.asServiceRole.entities.HolyNameKnowledge.list(null, 2000);
 
     const cards_hash = await sha256Hex(JSON.stringify((cards || []).map((c: any) => c.id).sort()));
     const sections_hash = await sha256Hex(JSON.stringify((sections || []).map((s: any) => s.id).sort()));
+    const knowledge_hash = await sha256Hex(JSON.stringify((knowledge || []).map((k: any) => k.name_id).sort()));
     const content_hashes = (sections || []).map((s: any) => s.content_hash).sort();
 
     const snapshot: any = {
       backup_id: "HNL-BACKUP-" + Date.now(),
       exported_at: new Date().toISOString(),
       reason: "Pre-Phase-1 canonicalization safety backup",
-      counts: { cards: (cards || []).length, sections: (sections || []).length, cache: (cache || []).length },
+      counts: { cards: (cards || []).length, sections: (sections || []).length, cache: (cache || []).length, knowledge: (knowledge || []).length },
       cards_hash,
       sections_hash,
+      knowledge_hash,
       content_hashes,
       cards: cards || [],
       sections: sections || [],
       cache: cache || [],
+      knowledge: knowledge || [],
     };
 
     const json = JSON.stringify(snapshot);
@@ -67,14 +71,17 @@ Deno.serve(async (req) => {
       const r = await fetch(surl);
       const txt = await r.text();
       const parsed = JSON.parse(txt);
-      vCounts = { cards: parsed.cards?.length, sections: parsed.sections?.length, cache: parsed.cache?.length };
+      vCounts = { cards: parsed.cards?.length, sections: parsed.sections?.length, cache: parsed.cache?.length, knowledge: parsed.knowledge?.length };
       const vCardsHash = await sha256Hex(JSON.stringify((parsed.cards || []).map((c: any) => c.id).sort()));
       const vSecHash = await sha256Hex(JSON.stringify((parsed.sections || []).map((s: any) => s.id).sort()));
+      const vKnowHash = await sha256Hex(JSON.stringify((parsed.knowledge || []).map((k: any) => k.name_id).sort()));
       verified = vCounts.cards === snapshot.counts.cards
         && vCounts.sections === snapshot.counts.sections
         && vCounts.cache === snapshot.counts.cache
+        && vCounts.knowledge === snapshot.counts.knowledge
         && vCardsHash === cards_hash
-        && vSecHash === sections_hash;
+        && vSecHash === sections_hash
+        && vKnowHash === knowledge_hash;
     } catch (e: any) { vErr = String(e?.message || e); }
 
     return Response.json({

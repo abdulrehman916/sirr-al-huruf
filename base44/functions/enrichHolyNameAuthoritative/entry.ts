@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
       if ((Date.now() - startedAt) >= TIME_BUDGET_MS) break;
       try {
         const llm: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
-          model: "gemini_3_flash",
+          model: "gemini_3_1_pro",
           add_context_from_internet: true,
           prompt: `You are an expert in classical Arabic linguistics, Semitic philology (Hebrew/Syriac/Aramaic), Islamic theology, and the occult manuscript tradition. You are auditing ONE name from the "Book of Deadly Names - Appendix of Magical Names" (a classical occult manuscript that transliterates many Divine/angelic names of Hebrew/Syriac origin into Arabic).
 
