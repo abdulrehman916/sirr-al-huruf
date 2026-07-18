@@ -155,43 +155,50 @@ Deno.serve(async (req) => {
       const need = (recs || []).filter((r: any) => r.arabic_text && r.arabic_text.trim() && !(r.malayalam_translation || "").trim());
       let translated = 0;
       let idx = 0;
-      const BATCH = 5;
+      const CHUNK = 1800;
+      // split a long Arabic chapter into <=CHUNK pieces at newline boundaries,
+      // translate each chunk faithfully, then merge all chunks back into the
+      // SAME card record — nothing truncated, nothing lost.
+      const chunkText = (s: string): string[] => {
+        const parts: string[] = [];
+        let cur = "";
+        for (const ln of String(s || "").split("\n")) {
+          if ((cur ? cur + "\n" + ln : ln).length > CHUNK && cur) { parts.push(cur); cur = ln; }
+          else cur = cur ? cur + "\n" + ln : ln;
+        }
+        if (cur) parts.push(cur);
+        return parts;
+      };
       while (idx < need.length && translated < limit && (Date.now() - startedAt) < timeBudgetMs) {
-        const batch = need.slice(idx, idx + BATCH);
-        idx += batch.length;
-        try {
-          const trRes: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
-            prompt: `You are a FAITHFUL Arabic-to-Malayalam translator. For EACH Arabic chapter text below, output a faithful, literal Malayalam translation that preserves the EXACT meaning — nothing more, nothing less.
+        const rec = need[idx]; idx++;
+        const chunks = chunkText(String(rec.arabic_text || ""));
+        let mlFull = "";
+        let allOk = true;
+        for (let ci = 0; ci < chunks.length; ci++) {
+          if ((Date.now() - startedAt) >= timeBudgetMs) { allOk = false; break; }
+          try {
+            const trRes: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
+              prompt: `You are a FAITHFUL Arabic-to-Malayalam translator. Translate the Arabic text below into faithful, literal Malayalam that preserves the EXACT meaning — nothing more, nothing less.
 
 STRICT RULES:
-- Translate ONLY the Arabic text provided for each item.
+- Translate ONLY the Arabic text provided.
 - Output ONLY the Malayalam translation in Malayalam script.
 - Do NOT summarize, paraphrase, explain, add commentary, or skip any part.
 - Preserve Qur'an verses, Hadith, Names of God/angels/prophets, repetition counts, and ritual instructions exactly.
-- Transliterate names of God, angels, and prophets faithfully into Malayalam.
-- Return ONLY JSON: {"translations":[{"index":<number>,"malayalam":"<malayalam text>"}]}
+- This is chunk ${ci + 1} of ${chunks.length} of one chapter; translate it fully and faithfully.
 
-Arabic chapter texts:
-${batch.map((t: any, i: number) => `--- Item index ${i} ---\n${String(t.arabic_text).slice(0, 2500)}`).join("\n\n")}`,
-            response_json_schema: {
-              type: "object",
-              properties: {
-                translations: {
-                  type: "array",
-                  items: { type: "object", properties: { index: { type: "integer" }, malayalam: { type: "string" } } },
-                },
-              },
-            },
-          });
-          for (const t of (trRes?.translations || [])) {
-            const ml = String(t?.malayalam || "").trim();
-            const rec = batch[Number(t?.index)];
-            if (ml && rec) {
-              await base44.asServiceRole.entities.HolyNameImportedSection.update(rec.id, { malayalam_translation: ml });
-              translated++;
-            }
-          }
-        } catch { /* keep going on batch error */ }
+Arabic text (chunk ${ci + 1}/${chunks.length}):
+${chunks[ci]}`,
+              response_json_schema: { type: "object", properties: { malayalam: { type: "string" } }, required: ["malayalam"] },
+            });
+            const ml = String((trRes && trRes.malayalam) || "").trim();
+            if (ml) mlFull += (mlFull ? "\n" : "") + ml; else allOk = false;
+          } catch { allOk = false; }
+        }
+        if (mlFull.trim() && allOk) {
+          await base44.asServiceRole.entities.HolyNameImportedSection.update(rec.id, { malayalam_translation: mlFull });
+          translated++;
+        }
       }
       return Response.json({
         status: "ok",
@@ -212,6 +219,16 @@ ${batch.map((t: any, i: number) => `--- Item index ${i} ---\n${String(t.arabic_t
     for (const pi of Array.isArray(body?.page_images) ? body.page_images : []) {
       const pn = Number(pi?.page_number) || 0;
       if (pn && pi?.image_url) pageImagesMap.set(pn, { image_url: String(pi.image_url), has_visual: pi?.has_visual !== false });
+    }
+
+    // ── CACHE MODE: read the ONE-TIME permanent transcription cache.
+    //   No vision, no re-extraction — fully deterministic. TOC pages
+    //   (is_toc=true) are excluded, so chapter detection runs only on
+    //   real body pages. This is the deterministic import path. ──
+    if (mode === "import_cached" && source_pdf_file) {
+      const cached: any[] = await base44.asServiceRole.entities.HolyNameTranscriptionCache.filter({ source_pdf_file }, null, 2000);
+      const sorted = (cached || []).filter((c: any) => !c.is_toc).sort((a: any, b: any) => (a.page_number || 0) - (b.page_number || 0));
+      for (const c of sorted) pages.push({ page_number: Number(c.page_number) || 0, text: String(c.page_text || "") });
     }
     // ── Self-extraction via VISION (ExtractDataFromUploadedFile) for a page range.
     //   Used when the PDF's text layer is custom-encoded (pdfjs returns garbled
@@ -267,7 +284,7 @@ ${batch.map((t: any, i: number) => `--- Item index ${i} ---\n${String(t.arabic_t
     }
     // ── Self-extraction: if the caller did not supply the TOC headings,
     //   extract them from the PDF via the vision/LLM extractor. ──
-    if (chapter_headings.length === 0 && source_pdf_url) {
+    if (mode !== "import_cached" && chapter_headings.length === 0 && source_pdf_url) {
       try {
         const toc: any = await base44.asServiceRole.integrations.Core.ExtractDataFromUploadedFile({
           file_url: source_pdf_url,
@@ -290,7 +307,7 @@ ${batch.map((t: any, i: number) => `--- Item index ${i} ---\n${String(t.arabic_t
       }
     }
     if (pages.length === 0) return Response.json({ error: "pages (per-page text) required" }, { status: 400 });
-    if (chapter_headings.length === 0) return Response.json({ error: "chapter_headings (ordered TOC) required" }, { status: 400 });
+    if (chapter_headings.length === 0 && mode !== "import_cached") return Response.json({ error: "chapter_headings (ordered TOC) required" }, { status: 400 });
 
     // ── 1. Build Section B card matchers ──
     const existingCards: any[] = await base44.asServiceRole.entities.HolyOnePDFName.list(null, 1000);
