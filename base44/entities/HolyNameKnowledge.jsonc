@@ -1,7 +1,7 @@
 {
   "name": "HolyNameKnowledge",
   "type": "object",
-  "description": "INDEPENDENT Holy Names Knowledge database for the PDF Knowledge Import System on the Holy Names page ONLY. Completely separate from Section A's static magicalHolyNamesData array and from Section B's HolyOnePDFName entity. This entity holds the canonical Holy Name records (matching targets). Seeded once with the 99 Names of Allah (reference keys); ALL descriptive content (Malayalam meaning, description, benefits, usage, method, warnings, references, notes) comes ONLY from uploaded PDFs and is stored as HolyNameImportedSection child records \u2014 never AI-generated. Matching during import is done on arabic_normalized (harakat-stripped). ISOLATED \u2014 only seedHolyNameKnowledge and importHolyNamesPDF backend functions, and the Holy Names page PDF Knowledge tab, read/write this entity. Never used by any other module, engine, or page. EXTENDED (authoritative harakat + knowledge enrichment): new fields hold verified harakat, alternative readings, linguistic info, Islamic knowledge, traditional practices, and full source attribution for the Section A occult-name audit. record_class distinguishes the canonical 99-Name seed ('canonical_99') from the 443 occult Section-A names ('occult_section_a'). Existing records are never overwritten; enrichment only fills the new authoritative fields. FULL RESEARCH PROFILE: each card is a complete scholarly research page \u2014 alternative_spellings, original_source_word, research_profile (history/pronunciation/refs/earliest occurrence), separated meanings, categorized source-supported benefits, and relationship_to_99_names. Every statement source-attributed; empty/'Not Verified' when unsupported; zero fabricated content.",
+  "description": "INDEPENDENT Holy Names Knowledge database for the PDF Knowledge Import System on the Holy Names page ONLY. Completely separate from Section A's static magicalHolyNamesData array and from Section B's HolyOnePDFName entity. This entity holds the canonical Holy Name records (matching targets). Seeded once with the 99 Names of Allah (reference keys); ALL descriptive content (Malayalam meaning, description, benefits, usage, method, warnings, references, notes) comes ONLY from uploaded PDFs and is stored as HolyNameImportedSection child records \u2014 never AI-generated. Matching during import is done on arabic_normalized (harakat-stripped). ISOLATED \u2014 only seedHolyNameKnowledge and importHolyNamesPDF backend functions, and the Holy Names page PDF Knowledge tab, read/write this entity. Never used by any other module, engine, or page. EXTENDED (authoritative harakat + knowledge enrichment): new fields hold verified harakat, alternative readings, linguistic info, Islamic knowledge, traditional practices, and full source attribution for the Section A occult-name audit. record_class distinguishes the canonical 99-Name seed ('canonical_99') from the 443 occult Section-A names ('occult_section_a'). Existing records are never overwritten; enrichment only fills the new authoritative fields. FULL RESEARCH PROFILE: each card is a complete scholarly research page \u2014 alternative_spellings, original_source_word, research_profile (history/pronunciation/refs/earliest occurrence), separated meanings, categorized source-supported benefits, relationship_to_99_names, and invocations (practices, invocations & manuscript texts). Every statement source-attributed; empty/'Not Verified' when unsupported; zero fabricated content.",
   "properties": {
     "name_id": {
       "type": "string",
@@ -395,6 +395,159 @@
       ],
       "default": "unknown",
       "description": "Denormalized relationship_type from relationship_to_99_names for indexed filtering. 'unknown' until audited."
+    },
+    "invocations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "authentic_islamic_dhikr",
+              "quranic_supplication",
+              "hadith_supplication",
+              "classical_wazifa",
+              "traditional_invocation",
+              "vefk_practice",
+              "talismanic_formula",
+              "occult_manuscript_practice",
+              "unknown_origin"
+            ],
+            "description": "Category of the invocation. NEVER mixed \u2014 each invocation belongs to exactly one category. authentic_islamic_dhikr/quranic_supplication/hadith_supplication = authentic Islamic evidence; classical_wazifa/traditional_invocation = traditional practice; vefk_practice/talismanic_formula/occult_manuscript_practice = occult; unknown_origin = origin cannot be determined."
+          },
+          "text_ar": {
+            "type": "string",
+            "description": "Original Arabic of the invocation, copied EXACTLY as printed in the source \u2014 every letter and harakat preserved verbatim. Never normalized, rewritten, or invented."
+          },
+          "text_harakat": {
+            "type": "string",
+            "default": "",
+            "description": "Fully vowelized form only if it differs from text_ar (e.g. when the source prints unvowelized but a verified vocalization exists). Empty otherwise."
+          },
+          "transliteration": {
+            "type": "string",
+            "default": "",
+            "description": "Latin transliteration of the invocation."
+          },
+          "translation_ml": {
+            "type": "string",
+            "default": "",
+            "description": "Complete, easy-to-understand Malayalam translation of the invocation. Empty when no translation is sourced."
+          },
+          "translation_en": {
+            "type": "string",
+            "default": "",
+            "description": "English translation of the invocation. Empty when no translation is sourced."
+          },
+          "source_book": {
+            "type": "string",
+            "default": "",
+            "description": "Source book / printed work title."
+          },
+          "author": {
+            "type": "string",
+            "default": "",
+            "description": "Author of the source work."
+          },
+          "chapter": {
+            "type": "string",
+            "default": "",
+            "description": "Chapter or section of the source."
+          },
+          "page": {
+            "type": "string",
+            "default": "",
+            "description": "Page number in the source."
+          },
+          "edition": {
+            "type": "string",
+            "default": "",
+            "description": "Edition of the source work if available."
+          },
+          "manuscript_ref": {
+            "type": "string",
+            "default": "",
+            "description": "Manuscript reference (library/collection/folio) when the source is a manuscript."
+          },
+          "publication": {
+            "type": "string",
+            "default": "",
+            "description": "Publication details (publisher, city, year) when available."
+          },
+          "url": {
+            "type": "string",
+            "default": "",
+            "description": "Source URL when available."
+          },
+          "purpose": {
+            "type": "string",
+            "default": "",
+            "description": "Documented purpose of the invocation."
+          },
+          "traditional_usage": {
+            "type": "string",
+            "default": "",
+            "description": "Traditional usage documented for the invocation."
+          },
+          "historical_usage": {
+            "type": "string",
+            "default": "",
+            "description": "Historical usage documented for the invocation."
+          },
+          "conditions": {
+            "type": "string",
+            "default": "",
+            "description": "Conditions of use documented for the invocation."
+          },
+          "repetitions": {
+            "type": "string",
+            "default": "",
+            "description": "Documented number of repetitions. Empty if not documented."
+          },
+          "timing": {
+            "type": "string",
+            "default": "",
+            "description": "Days or timing prescribed. Empty if not documented."
+          },
+          "preparation": {
+            "type": "string",
+            "default": "",
+            "description": "Required preparation documented. Empty if not documented."
+          },
+          "warnings": {
+            "type": "string",
+            "default": "",
+            "description": "Warnings documented for the invocation."
+          },
+          "authenticated": {
+            "type": "boolean",
+            "default": false,
+            "description": "True ONLY for authentic Islamic evidence (Qur'an/Hadith/classical scholarship). False for traditional/occult material."
+          },
+          "scholarly_opinions": {
+            "type": "string",
+            "default": "",
+            "description": "Scholarly opinions on this practice, each with attribution. Empty when none documented."
+          },
+          "evidence_level": {
+            "type": "string",
+            "enum": [
+              "authenticated",
+              "traditional",
+              "unknown"
+            ],
+            "default": "unknown",
+            "description": "authenticated = authentic Islamic evidence; traditional = historical/traditional practice not authenticated as Islamic teaching; unknown = origin cannot be determined."
+          }
+        },
+        "required": [
+          "category",
+          "text_ar"
+        ]
+      },
+      "default": [],
+      "description": "PRACTICES, INVOCATIONS & MANUSCRIPT TEXTS explicitly containing this Holy Name, collected ONLY from trusted historical sources, manuscripts, printed books, academic references, linguistic sources, traditional Islamic literature, and historical occult manuscripts. NEVER fabricated \u2014 every Arabic letter and harakat copied exactly as printed in its source; never normalized or rewritten. Each invocation is categorized (categories are NEVER mixed): authentic_islamic_dhikr, quranic_supplication, hadith_supplication, classical_wazifa, traditional_invocation, vefk_practice, talismanic_formula, occult_manuscript_practice, unknown_origin. authenticated=true and evidence_level='authenticated' ONLY for authentic Islamic evidence; traditional/occult material has authenticated=false and evidence_level='traditional' or 'unknown'. Every invocation carries full source attribution (source_book, author, chapter, page, edition, manuscript_ref, publication, url) plus purpose, traditional_usage, historical_usage, conditions, repetitions, timing, preparation, warnings, scholarly_opinions, and evidence_level. Multiple versions of the same invocation are stored as separate entries, each with its own source. Empty array when no historically documented invocation exists for this name \u2014 never invented."
     },
     "review_notes": {
       "type": "string",

@@ -132,6 +132,21 @@ const SCHEMA = {
       sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}
     } },
     relationship_to_99_names_type: { type: "string", enum:["identical","alternate_reading","same_root","same_meaning","closely_related","synonymous","scholarly_relation","none","foreign_equivalent","traditional_only","unknown"] },
+    invocations: { type: "array", items: {
+      type: "object",
+      properties: {
+        category:{type:"string",enum:["authentic_islamic_dhikr","quranic_supplication","hadith_supplication","classical_wazifa","traditional_invocation","vefk_practice","talismanic_formula","occult_manuscript_practice","unknown_origin"]},
+        text_ar:{type:"string"}, text_harakat:{type:"string"}, transliteration:{type:"string"},
+        translation_ml:{type:"string"}, translation_en:{type:"string"},
+        source_book:{type:"string"}, author:{type:"string"}, chapter:{type:"string"}, page:{type:"string"},
+        edition:{type:"string"}, manuscript_ref:{type:"string"}, publication:{type:"string"}, url:{type:"string"},
+        purpose:{type:"string"}, traditional_usage:{type:"string"}, historical_usage:{type:"string"},
+        conditions:{type:"string"}, repetitions:{type:"string"}, timing:{type:"string"}, preparation:{type:"string"},
+        warnings:{type:"string"}, authenticated:{type:"boolean"}, scholarly_opinions:{type:"string"},
+        evidence_level:{type:"string",enum:["authenticated","traditional","unknown"]}
+      },
+      required:["category","text_ar"]
+    }},
     review_notes: { type: "string" }
   },
   required: ["name_origin","verification_status","verification_confidence","verification_sources","relationship_to_99_names_type"]
@@ -200,6 +215,15 @@ DEEP RESEARCH PROFILE (perform the widest possible reliable search across classi
 RELATIONSHIP TO THE 99 NAMES OF ALLAH:
 16. relationship_to_99_names: determine with evidence whether this name relates to the canonical 99 Names of Allah. relationship_type is ONE of: identical | alternate_reading | same_root | same_meaning | closely_related | synonymous | scholarly_relation | none | foreign_equivalent | traditional_only. If a relationship exists, set related_name_id (e.g. "HNK-001"), related_name_arabic, and explain evidence. If NO authentic relationship exists, set relationship_type="none" and state that clearly with evidence. relationship_to_99_names_type must equal relationship_type (use "unknown" only if you cannot determine it — never guess).
 
+PRACTICES, INVOCATIONS & MANUSCRIPT TEXTS:
+17. invocations: search ALL trusted historical sources, manuscripts, printed books, academic references, linguistic sources, traditional Islamic literature, and historical occult manuscripts for any invocation, wazifa, dhikr, mantra, prayer, talismanic formula, magical text, vefk text, or ritual that EXPLICITLY contains this Holy Name. For each one found, copy the Arabic EXACTLY as printed in the source (every letter and harakat preserved verbatim — NEVER normalized, rewritten, or invented) and record: transliteration, translation_ml (complete, easy-to-understand Malayalam), translation_en, source_book, author, chapter, page, edition, manuscript_ref, publication, url, purpose, traditional_usage, historical_usage, conditions, repetitions (only if documented), timing (only if documented), preparation (only if documented), warnings, scholarly_opinions, and evidence_level.
+STRICT INVOCATION RULES:
+- NEVER fabricate any Arabic text, harakat, translation, ritual, or benefit. If you cannot find a real documented invocation, return an EMPTY invocations array.
+- Assign exactly ONE category per invocation — NEVER mix categories: authentic_islamic_dhikr (authentic dhikr established in Qur'an/Hadith/classical scholarship, authenticated=true, evidence_level="authenticated"), quranic_supplication (a Qur'anic supplication/dua containing the name, authenticated=true), hadith_supplication (a supplication recorded in authentic Hadith, authenticated=true), classical_wazifa (classical Sufi wazifa from established manuals, authenticated=false, evidence_level="traditional"), traditional_invocation (traditional invocation from later manuscript literature, authenticated=false, evidence_level="traditional"), vefk_practice (a vefk/wafq text using this name, authenticated=false, evidence_level="traditional"), talismanic_formula (a talismanic formula, authenticated=false, evidence_level="traditional"), occult_manuscript_practice (an occult manuscript practice, authenticated=false, evidence_level="traditional"), unknown_origin (origin cannot be determined, authenticated=false, evidence_level="unknown").
+- For traditional/occult material set authenticated=false and evidence_level="traditional" (or "unknown" when origin is unclear). For authentic Islamic evidence set authenticated=true and evidence_level="authenticated".
+- If MULTIPLE versions of an invocation exist, output one invocation entry per version, each with its own source attribution.
+- If NO historically documented invocation exists for this name, return an EMPTY invocations array. Do NOT invent any.
+
 SOURCE REQUIREMENTS (mandatory): every statement must carry source attribution (title, author/book, page, url when available) inside the relevant sources array or verification_sources. reliability_score 1-100 (90+ Lisan al-Arab/Taj al-Arus/Quranic Corpus/King Fahd; 70-89 established academic lexicons; 40-69 occult manuscript; <40 blogs/forums which you MUST NOT use). If multiple scholars disagree, store every opinion separately with attribution — never force a single conclusion.
 
 UNKNOWN INFORMATION: if no reliable source exists for a field, leave it empty or set "Not Verified". NEVER generate speculative explanations.
@@ -233,6 +257,7 @@ Return ONLY the JSON object matching the schema. Empty strings/arrays where a fi
           benefits: out.benefits || {},
           relationship_to_99_names: out.relationship_to_99_names || {},
           relationship_to_99_names_type: out.relationship_to_99_names_type || (out.relationship_to_99_names && out.relationship_to_99_names.relationship_type) || "unknown",
+          invocations: Array.isArray(out.invocations) ? out.invocations : [],
           review_notes: out.review_notes || "",
         };
         await base44.asServiceRole.entities.HolyNameKnowledge.update(rec.id, update);
@@ -244,6 +269,7 @@ Return ONLY the JSON object matching the schema. Empty strings/arrays where a fi
           has_canonical: !!update.canonical_arabic, alternatives: update.alternative_readings.length,
           islamic_info: Object.keys(update.islamic_knowledge||{}).filter(k=>update.islamic_knowledge[k] && (Array.isArray(update.islamic_knowledge[k])?update.islamic_knowledge[k].length:update.islamic_knowledge[k])).length,
           traditional: update.traditional_practices.length,
+          invocations: update.invocations.length,
         };
       } catch (e: any) {
         return { name_id: rec.name_id, arabic: rec.arabic_name, error: String(e?.message||e) };

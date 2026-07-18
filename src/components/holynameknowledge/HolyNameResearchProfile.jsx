@@ -147,6 +147,61 @@ function BenefitList({ items, authenticated }) {
   );
 }
 
+const INVOCATION_CATS = [
+  { id: "authentic_islamic_dhikr", label: "Authentic Islamic Dhikr", auth: true },
+  { id: "quranic_supplication", label: "Qur'anic Supplications", auth: true },
+  { id: "hadith_supplication", label: "Hadith Supplications", auth: true },
+  { id: "classical_wazifa", label: "Classical Wazifa", auth: false },
+  { id: "traditional_invocation", label: "Traditional Invocation", auth: false },
+  { id: "vefk_practice", label: "Vefk Practice", auth: false },
+  { id: "talismanic_formula", label: "Talismanic Formula", auth: false },
+  { id: "occult_manuscript_practice", label: "Occult Manuscript Practice", auth: false },
+  { id: "unknown_origin", label: "Unknown Origin", auth: false },
+];
+
+function InvocationCard({ inv }) {
+  const auth = inv.authenticated === true || inv.evidence_level === "authenticated";
+  return (
+    <div className="space-y-2 rounded-lg p-3" style={{ background: auth ? "rgba(52,211,153,0.04)" : "rgba(251,191,36,0.04)", border: `1px solid ${auth ? "rgba(52,211,153,0.25)" : "rgba(251,191,36,0.25)"}` }}>
+      {inv.text_ar && (
+        <p className="font-amiri text-lg leading-loose selectable whitespace-pre-wrap" style={{ color: "rgba(255,255,255,0.92)" }} dir="rtl">{inv.text_ar}</p>
+      )}
+      {inv.text_harakat && inv.text_harakat !== inv.text_ar && (
+        <p className="font-amiri text-base leading-loose selectable" style={{ color: P.text }} dir="rtl">{inv.text_harakat}</p>
+      )}
+      {inv.transliteration && <p className="font-inter text-xs italic selectable" style={{ color: "rgba(255,255,255,0.70)" }} dir="ltr">{inv.transliteration}</p>}
+      {inv.translation_ml && <p className="font-malayalam text-sm leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.85)" }} dir="auto">{inv.translation_ml}</p>}
+      {inv.translation_en && <p className="font-inter text-xs selectable" style={{ color: "rgba(255,255,255,0.75)" }} dir="auto">{inv.translation_en}</p>}
+      <div className="flex flex-wrap gap-1.5">
+        <span className="font-inter text-[7px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded" style={{ color: auth ? "#34d399" : "#fbbf24", background: auth ? "rgba(52,211,153,0.10)" : "rgba(251,191,36,0.10)", border: `1px solid ${auth ? "rgba(52,211,153,0.30)" : "rgba(251,191,36,0.30)"}` }}>
+          {auth ? "Authenticated" : "NOT AUTHENTICATED · Traditional Historical Practice Only"}
+        </span>
+        {inv.evidence_level && <span className="font-inter text-[7px] uppercase tracking-widest px-1.5 py-0.5 rounded" style={{ color: P.dim, background: P.bg, border: `1px solid ${P.faint}` }}>Evidence: {inv.evidence_level}</span>}
+      </div>
+      {(inv.source_book || inv.author || inv.chapter || inv.page || inv.edition || inv.manuscript_ref || inv.publication || inv.url) && (
+        <div className="space-y-0.5 pt-1 border-t text-[10px] font-inter selectable" style={{ borderColor: "rgba(212,175,55,0.12)", color: "rgba(255,255,255,0.65)" }}>
+          {inv.source_book && <div>📚 {inv.source_book}{inv.author ? ` — ${inv.author}` : ""}</div>}
+          {(inv.chapter || inv.page || inv.edition) && <div>{[inv.chapter && `Ch. ${inv.chapter}`, inv.page && `p. ${inv.page}`, inv.edition && `Ed. ${inv.edition}`].filter(Boolean).join(" · ")}</div>}
+          {inv.manuscript_ref && <div>📜 Manuscript: {inv.manuscript_ref}</div>}
+          {inv.publication && <div>🏫 {inv.publication}</div>}
+          {inv.url && <a href={inv.url} target="_blank" rel="noreferrer" className="underline" style={{ color: P.dim }}>Source ↗</a>}
+        </div>
+      )}
+      <div className="space-y-1 text-xs font-inter selectable" style={{ color: "rgba(255,255,255,0.80)" }}>
+        {inv.purpose && <div><span style={{ color: P.dim }}>Purpose: </span>{inv.purpose}</div>}
+        {inv.traditional_usage && <div><span style={{ color: P.dim }}>Traditional usage: </span>{inv.traditional_usage}</div>}
+        {inv.historical_usage && <div><span style={{ color: P.dim }}>Historical usage: </span>{inv.historical_usage}</div>}
+        {inv.conditions && <div><span style={{ color: P.dim }}>Conditions: </span>{inv.conditions}</div>}
+        {inv.repetitions && <div><span style={{ color: P.dim }}>Repetitions: </span>{inv.repetitions}</div>}
+        {inv.timing && <div><span style={{ color: P.dim }}>Timing: </span>{inv.timing}</div>}
+        {inv.preparation && <div><span style={{ color: P.dim }}>Preparation: </span>{inv.preparation}</div>}
+        {inv.warnings && <div><span style={{ color: "#fbbf24" }}>⚠ Warnings: </span><span>{inv.warnings}</span></div>}
+        {inv.scholarly_opinions && <div><span style={{ color: P.dim }}>Scholarly opinions: </span>{inv.scholarly_opinions}</div>}
+      </div>
+    </div>
+  );
+}
+
 export default function HolyNameResearchProfile({ originalStaticId }) {
   const [rec, setRec] = useState(null);
   const [pdfs, setPdfs] = useState([]);
@@ -423,6 +478,29 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
             <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "#fbbf24" }}>23 · Traditional Benefits — Not Authenticated</p>
             <BenefitList items={ben.traditional} authenticated={false} />
           </>
+        )}
+      </Section>
+
+      {/* Practices, Invocations & Manuscript Texts */}
+      <Section icon={BookCopy} title={`Practices, Invocations & Manuscript Texts${Array.isArray(rec.invocations) && rec.invocations.length ? ` (${rec.invocations.length})` : ""}`} defaultOpen={false}>
+        {Array.isArray(rec.invocations) && rec.invocations.length > 0 ? (
+          <div className="space-y-3">
+            {INVOCATION_CATS.map(cat => {
+              const items = rec.invocations.filter(iv => iv.category === cat.id);
+              if (items.length === 0) return null;
+              return (
+                <div key={cat.id} className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: cat.auth ? "#34d399" : "#fbbf24" }} />
+                    <span className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: cat.auth ? "#34d399" : "#fbbf24" }}>{cat.label} ({items.length})</span>
+                  </div>
+                  {items.map((iv, i) => <InvocationCard key={i} inv={iv} />)}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.40)" }}>No historically documented invocation was found.</p>
         )}
       </Section>
 
