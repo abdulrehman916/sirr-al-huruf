@@ -122,13 +122,13 @@ const SCHEMA = {
       literal_ml:{type:"string"}, root_ml:{type:"string"}, symbolic_ml:{type:"string"}, historical_ml:{type:"string"}, traditional_ml:{type:"string"}, original_ml:{type:"string"}
     } },
     benefits: { type: "object", properties: {
-      authentic_islamic:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},page:{type:"string"},url:{type:"string"}}}},authenticated:{type:"boolean"}}}},
-      linguistic:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}},
-      historical:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}},
-      traditional:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}},authenticated:{type:"boolean"}}}},
-      wafq:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}},
-      amal:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}},
-      esoteric:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}},
+      authentic_islamic:{type:"array",items:{type:"object",properties:{text:{type:"string"},authenticated:{type:"boolean"}}}},
+      linguistic:{type:"array",items:{type:"object",properties:{text:{type:"string"}}}},
+      historical:{type:"array",items:{type:"object",properties:{text:{type:"string"}}}},
+      traditional:{type:"array",items:{type:"object",properties:{text:{type:"string"},authenticated:{type:"boolean"}}}},
+      wafq:{type:"array",items:{type:"object",properties:{text:{type:"string"}}}},
+      amal:{type:"array",items:{type:"object",properties:{text:{type:"string"}}}},
+      esoteric:{type:"array",items:{type:"object",properties:{text:{type:"string"}}}},
       authentic_islamic_ml:{type:"string"}, traditional_ml:{type:"string"}, linguistic_ml:{type:"string"}, historical_ml:{type:"string"}
     } },
     relationship_to_99_names: { type: "object", properties: {
@@ -157,6 +157,31 @@ const SCHEMA = {
   },
   required: ["name_origin","verification_status","verification_confidence","verification_sources","relationship_to_99_names_type"]
 };
+
+// Normalize Arabic for indexed matching: strip harakat/tatweel, unify hamza &
+// letter-form variants, keep leading alif-lam. Consistent with the import
+// matching logic so a corrected spelling still matches future imports.
+function normalizeArabic(s: string): string {
+  if (!s) return "";
+  return String(s)
+    .replace(/[\u064B-\u065F\u0670]/g, "")
+    .replace(/\u0640/g, "")
+    .replace(/\u0622/g, "\u0627")
+    .replace(/\u0623/g, "\u0627")
+    .replace(/\u0625/g, "\u0627")
+    .replace(/\u0624/g, "\u0648")
+    .replace(/\u0626/g, "\u064A")
+    .replace(/\u0649/g, "\u064A")
+    .replace(/\u0629/g, "\u0647")
+    .trim();
+}
+
+// Strip harakat/tatweel only (no hamza/letter-form normalization) — used for
+// the previous_spelling / corrected_spelling (plain, unvowelized) fields.
+function stripHarakatOnly(s: string): string {
+  if (!s) return "";
+  return String(s).replace(/[\u064B-\u065F\u0670\u0640]/g, "").trim();
+}
 
 Deno.serve(async (req) => {
   try {
@@ -205,6 +230,7 @@ STRICT RULES — violating any rule makes the output worthless:
 3. NEVER guess or invent any harakah. If no authoritative source attests a vowelized reading, leave canonical_arabic and fully_vowelized_name EMPTY and set verification_status to "not_in_classical_sources" (foreign name, no classical Arabic source) or "needs_review" (uncertain).
 4. If authoritative sources AGREE (>=2 independent reliable sources), set verification_status="verified", harakat_verified=true, verification_confidence 80-100 based on source strength.
 5. If sources DISAGREE on spelling or harakat, put EVERY variant in alternative_readings (each with its source), flag the preferred scholarly reading, set verification_status="conflicting_sources", harakat_verified=false.
+5b. SPELLING CORRECTION: canonical_arabic (and fully_vowelized_name) MUST hold the AUTHORITATIVELY CORRECT fully-vowelized form for THIS name — even when that means correcting the imported arabic_name's spelling or harakat. If the imported arabic_name is a proven OCR/transcription error (wrong/missing/extra letter, or wrong harakat backed by documentary evidence), put the corrected form in canonical_arabic. The server compares canonical_arabic to the imported form and, when they differ under a scholarly verdict, records the full correction (previous vs corrected spelling/harakat, confidence, evidence, sources, date) and applies the corrected form — while preserving the name's identity. NEVER merge two different Holy Names into one, and NEVER change one Holy Name into a different Holy Name just because they look similar — only correct demonstrable OCR/transcription errors of THIS name. If the imported form is merely an acceptable variant, set canonical_arabic to the preferred reading and ALSO record the variant in alternative_readings or alternative_spellings.
 6. NEVER fabricate Islamic knowledge. Fill islamic_knowledge (tafsir_refs, hadith_refs, quran_verses, authentic_duas, authentic_adhkar, scholarly_explanation) ONLY when the name genuinely appears in the Qur'an, Hadith, or classical tafsir. For Hebrew/Syriac names absent from Islamic sources, leave ALL islamic_knowledge fields EMPTY — do NOT invent tafsir/hadith/duas.
 7. For traditional practices (wafq/amal/dua/hizb/dhikr) found in occult manuscripts, store them in traditional_practices with authenticated=false and note="Traditional Manuscript Reference (Not authenticated)" UNLESS a verified manuscript confirms them. Never present traditional occult material as established Islamic fact.
 8. Every verification_source MUST have a real title (and author/page/url where available) and a reliability_score (1-100: 90+ for Lisan al-Arab/Taj al-Arus/Quranic Corpus/King Fahd; 70-89 for established academic lexicons; 40-69 for the occult manuscript; <40 for blogs/forums which you must NOT use). Do not cite sources you cannot actually identify.
@@ -216,7 +242,7 @@ DEEP RESEARCH PROFILE (perform the widest possible reliable search across classi
 12. original_source_word: the original word in its source language (Hebrew/Syriac/Aramaic/Persian) when this is a transliteration; empty for native Arabic.
 13. research_profile: { historical_background, pronunciation_guide, classical_dict_refs[], academic_refs[], manuscript_refs[], earliest_occurrence, related_historical_usage, linguistic_explanation, root_meaning, literal_meaning }. Fill each ONLY from reliable sources; empty/"Not Verified" when unsupported.
 14. meanings: separated meanings { arabic, malayalam, english, original, symbolic, historical, traditional }. symbolic ONLY when sourced. malayalam = detailed Malayalam meaning.
-15. benefits: source-supported benefits by category { authentic_islamic[], linguistic[], historical[], traditional[], wafq[], amal[], esoteric[] }. Each entry { text, sources[], authenticated }. authentic_islamic ONLY from Qur'an/Hadith/classical scholars (authenticated=true). traditional/wafq/amal/esoteric = traditional/occult material with authenticated=false and text noting "Traditional/Historical/Not Authenticated as Islamic Teaching". NEVER mix traditional occult material with authenticated Islamic teachings.
+15. benefits: source-supported benefits by category { authentic_islamic[], linguistic[], historical[], traditional[], wafq[], amal[], esoteric[] }. Each entry { text, authenticated } (per-item sources are omitted to keep the schema compact — cite all benefit sources in verification_sources instead). authentic_islamic ONLY from Qur'an/Hadith/classical scholars (authenticated=true). traditional/wafq/amal/esoteric = traditional/occult material with authenticated=false and text noting "Traditional/Historical/Not Authenticated as Islamic Teaching". NEVER mix traditional occult material with authenticated Islamic teachings.
 
 RELATIONSHIP TO THE 99 NAMES OF ALLAH:
 16. relationship_to_99_names: determine with evidence whether this name relates to the canonical 99 Names of Allah. relationship_type is ONE of: identical | alternate_reading | same_root | same_meaning | closely_related | synonymous | scholarly_relation | none | foreign_equivalent | traditional_only. If a relationship exists, set related_name_id (e.g. "HNK-001"), related_name_arabic, and explain evidence. If NO authentic relationship exists, set relationship_type="none" and state that clearly with evidence. relationship_to_99_names_type must equal relationship_type (use "unknown" only if you cannot determine it — never guess).
@@ -280,6 +306,36 @@ Return ONLY the JSON object matching the schema. Empty strings/arrays where a fi
           invocations: Array.isArray(out.invocations) ? out.invocations : [],
           review_notes: out.review_notes || "",
         };
+        // SCHOLARLY SPELLING CORRECTION (server-side): the LLM places the
+        // authoritatively correct vowelized form in canonical_arabic. When that
+        // differs from the imported arabic_name under a scholarly verdict
+        // (verified / conflicting_sources), apply it as the corrected spelling
+        // and record the full correction (previous vs corrected spelling &
+        // harakat, confidence, evidence, sources, date). Identity is always
+        // preserved — canonical_arabic is the SAME name, never a different one.
+        const canonical = (out.canonical_arabic || out.fully_vowelized_name || "").trim();
+        if (canonical && canonical !== (rec.arabic_name || "").trim() &&
+            (out.verification_status === "verified" || out.verification_status === "conflicting_sources")) {
+          const prev = rec.arabic_name || "";
+          const prevLetters = stripHarakatOnly(prev);
+          const corrLetters = stripHarakatOnly(canonical);
+          const srcTitles = (Array.isArray(out.verification_sources) ? out.verification_sources : [])
+            .map((s: any) => s && s.title).filter(Boolean).join("; ");
+          const kind = prevLetters === corrLetters ? "harakat" : "spelling";
+          update.arabic_name = canonical;
+          update.arabic_normalized = normalizeArabic(canonical);
+          update.spelling_corrected = true;
+          update.spelling_correction = {
+            previous_harakat: prev,
+            corrected_harakat: canonical,
+            previous_spelling: prevLetters,
+            corrected_spelling: corrLetters,
+            confidence: Number(out.verification_confidence || 0),
+            evidence: `Scholarly verification established "${canonical}" as the correct ${kind} of this name${srcTitles ? ` (sources: ${srcTitles})` : ""}.`,
+            corrected_at: now,
+            sources: [],
+          };
+        }
         await base44.asServiceRole.entities.HolyNameKnowledge.update(rec.id, update);
 
         return {

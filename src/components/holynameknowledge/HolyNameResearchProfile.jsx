@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import { motion } from "framer-motion";
 import {
   Loader2, ShieldCheck, ShieldAlert, BookOpen, Languages, ScrollText, Sparkles,
@@ -6,6 +6,8 @@ import {
   Network, BookCopy, ChevronDown,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import HolyNameProfileLangSelector from "./HolyNameProfileLangSelector";
+import { arTitle } from "./holyNameProfileI18n";
 
 const P = {
   border: "rgba(212,175,55,0.30)",
@@ -39,34 +41,36 @@ const NOT_VERIFIED = "Not Verified";
 const NOT_FOUND = "Not found in verified primary sources";
 const has = (v) => v && (Array.isArray(v) ? v.length > 0 : String(v).trim() !== "");
 
-// Trilingual field: English paragraph → Malayalam explanation (primary) → Arabic (where applicable).
-// arabicFirst = true renders Arabic first (for fields whose primary content is Arabic).
+// Active display language for the research profile (en | ml | ar).
+const LangCtx = createContext("en");
+
+// Trilingual field. Order depends on the active language (LangCtx):
+//   en  → English, Malayalam, Arabic
+//   ml  → Malayalam, English, Arabic
+//   ar  → Arabic, Malayalam, English
+// arabicFirst = true forces Arabic first (for fields whose primary content is an Arabic proper noun).
 function TriField({ label, labelML, arabic, malayalam, english, arabicFirst }) {
+  const lang = useContext(LangCtx);
   const any = has(arabic) || has(malayalam) || has(english);
+  const parts = [];
+  const push = (val, cls, dir) => { if (has(val)) parts.push({ val, cls, dir }); };
+  if (arabicFirst) { push(arabic, "font-amiri text-base leading-loose", "rtl"); push(malayalam, "font-malayalam text-sm leading-relaxed", "auto"); push(english, "font-inter text-xs leading-relaxed", "auto"); }
+  else if (lang === "ml") { push(malayalam, "font-malayalam text-sm leading-relaxed", "auto"); push(english, "font-inter text-xs leading-relaxed", "auto"); push(arabic, "font-amiri text-base leading-loose", "rtl"); }
+  else if (lang === "ar") { push(arabic, "font-amiri text-base leading-loose", "rtl"); push(malayalam, "font-malayalam text-sm leading-relaxed", "auto"); push(english, "font-inter text-xs leading-relaxed", "auto"); }
+  else { push(english, "font-inter text-xs leading-relaxed", "auto"); push(malayalam, "font-malayalam text-sm leading-relaxed", "auto"); push(arabic, "font-amiri text-base leading-loose", "rtl"); }
+  const mlLabel = lang === "ml" && labelML;
   return (
     <div className="space-y-1.5">
       <div className="flex items-baseline gap-2 flex-wrap">
-        <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>{label}</span>
-        {labelML && <span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.45)" }}>· {labelML}</span>}
+        {mlLabel
+          ? <span className="font-malayalam text-[11px] font-semibold" style={{ color: P.dim }}>{labelML}</span>
+          : <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>{label}</span>}
+        {labelML && !mlLabel && <span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.45)" }}>· {labelML}</span>}
       </div>
       {!any ? (
         <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.30)" }}>{NOT_VERIFIED}</p>
       ) : (
-        <div className="space-y-1">
-          {arabicFirst ? (
-            <>
-              {has(arabic) && <p className="font-amiri text-base leading-loose selectable" style={{ color: "rgba(255,255,255,0.92)" }} dir="rtl">{arabic}</p>}
-              {has(malayalam) && <p className="font-malayalam text-sm leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.90)" }} dir="auto">{malayalam}</p>}
-              {has(english) && <p className="font-inter text-xs leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.60)" }} dir="auto">{english}</p>}
-            </>
-          ) : (
-            <>
-              {has(english) && <p className="font-inter text-xs leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.72)" }} dir="auto">{english}</p>}
-              {has(malayalam) && <p className="font-malayalam text-sm leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.90)" }} dir="auto">{malayalam}</p>}
-              {has(arabic) && <p className="font-amiri text-base leading-loose selectable" style={{ color: "rgba(255,255,255,0.85)" }} dir="rtl">{arabic}</p>}
-            </>
-          )}
-        </div>
+        <div className="space-y-1">{parts.map((p, i) => <p key={i} className={`${p.cls} selectable`} style={{ color: "rgba(255,255,255,0.88)" }} dir={p.dir}>{p.val}</p>)}</div>
       )}
     </div>
   );
@@ -95,14 +99,21 @@ function SourcesList({ sources }) {
 }
 
 function Section({ icon: Icon, title, titleML, children, accent, defaultOpen = true }) {
+  const lang = useContext(LangCtx);
+  const ar = arTitle(title);
+  const primary = lang === "ml" ? (titleML || title) : lang === "ar" ? (ar || title) : title;
+  const secondary = lang === "ml" ? (ar || null) : lang === "ar" ? (titleML || null) : titleML;
+  const primaryIsAr = lang === "ar" && !!ar;
+  const secIsAr = lang === "ml" && !!ar;
+  const primaryCls = lang === "ml" ? "font-malayalam text-[11px] font-semibold flex-1" : primaryIsAr ? "font-amiri text-sm flex-1" : "font-inter text-[9px] uppercase tracking-widest font-bold flex-1";
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="rounded-xl border overflow-hidden" style={{ background: "rgba(8,16,38,0.55)", borderColor: P.border }}>
       <details open={defaultOpen} className="group">
         <summary className="cursor-pointer list-none flex items-center gap-2 px-3 py-2.5 select-none" style={{ borderBottom: defaultOpen ? `1px solid ${P.faint}` : "none" }}>
           <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accent || P.text }} />
-          <span className="font-inter text-[9px] uppercase tracking-widest font-bold flex-1" style={{ color: accent || P.text }}>{title}</span>
-          {titleML && <span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.50)" }}>{titleML}</span>}
-          <ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180" style={{ color: P.dim }} />
+          <span className={primaryCls} style={{ color: accent || P.text }} dir={primaryIsAr ? "rtl" : undefined}>{primary}</span>
+          {secondary && secondary !== primary && <span className={secIsAr ? "font-amiri text-xs" : "font-malayalam text-[10px]"} style={{ color: "rgba(245,208,96,0.50)" }} dir={secIsAr ? "rtl" : undefined}>{secondary}</span>}
+          <ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180 flex-shrink-0" style={{ color: P.dim }} />
         </summary>
         <div className="px-3 py-3 space-y-2.5">{children}</div>
       </details>
@@ -208,6 +219,7 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
   const [rec, setRec] = useState(null);
   const [pdfs, setPdfs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lang, setLang] = useState("en");
 
   useEffect(() => {
     let alive = true;
@@ -264,11 +276,15 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
   const originML = ORIGIN_ML[rec.name_origin] || "അജ്ഞാതം";
 
   return (
+    <LangCtx.Provider value={lang}>
     <div className="pt-3 mt-1 space-y-3" style={{ borderTop: `1px solid ${P.faint}` }}>
-      <div className="flex items-center gap-2 mb-1">
-        <Sparkles className="w-3.5 h-3.5" style={{ color: P.text }} />
-        <span className="font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: P.text }}>Scholarly Research Profile</span>
-        <span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.50)" }}>· പണ്ഡിതോപയോഗിയായ ഗവേഷണ പ്രൊഫൈൽ</span>
+      <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-3.5 h-3.5" style={{ color: P.text }} />
+          <span className="font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: P.text }}>Scholarly Research Profile</span>
+          <span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.50)" }}>· പണ്ഡിതോപയോഗിയായ ഗവേഷണ പ്രൊഫൈൽ</span>
+        </div>
+        <HolyNameProfileLangSelector lang={lang} setLang={setLang} />
       </div>
 
       {/* 1 — Verified Arabic spelling + verification meta */}
@@ -277,6 +293,30 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
           <p className="font-amiri text-[2.2rem] font-bold leading-[2.2] selectable" style={{ color: P.text, textShadow: "0 0 20px rgba(212,175,55,0.30)" }} dir="rtl">{rec.canonical_arabic || rec.fully_vowelized_name || rec.arabic_name}</p>
           {rec.canonical_arabic && rec.arabic_name && rec.canonical_arabic !== rec.arabic_name && <p className="font-inter text-[8px] mt-1" style={{ color: P.dim }}>As printed: <span className="font-amiri text-sm" dir="rtl">{rec.arabic_name}</span></p>}
         </div>
+        {rec.spelling_corrected && rec.spelling_correction && rec.spelling_correction.corrected_harakat && (
+          <div className="rounded-lg p-2.5 space-y-1.5" style={{ background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.30)" }}>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <ShieldCheck className="w-3 h-3" style={{ color: "#34d399" }} />
+              <span className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: "#34d399" }}>Spelling Corrected by Scholarly Verification</span>
+              <span className="font-malayalam text-[10px]" style={{ color: "rgba(52,211,153,0.70)" }}>· പണ്ഡിതോപയോഗിയായ പരിശോധനയിൽ അക്ഷരക്രമം തിരുത്തി</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-0.5">
+                <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>Previous (as imported)</span>
+                <p className="font-amiri text-base selectable" style={{ color: "rgba(255,255,255,0.70)" }} dir="rtl">{rec.spelling_correction.previous_harakat}</p>
+              </div>
+              <div className="space-y-0.5">
+                <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>Corrected (scholarly)</span>
+                <p className="font-amiri text-base selectable" style={{ color: P.text }} dir="rtl">{rec.spelling_correction.corrected_harakat}</p>
+              </div>
+            </div>
+            {rec.spelling_correction.evidence && <p className="font-inter text-[10px] leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.78)" }} dir="auto">{rec.spelling_correction.evidence}</p>}
+            <div className="flex items-center gap-3 flex-wrap">
+              {rec.spelling_correction.confidence != null && <span className="font-inter text-[9px]" style={{ color: P.dim }}>Confidence: <b style={{ color: P.text }}>{rec.spelling_correction.confidence}%</b></span>}
+              {rec.spelling_correction.corrected_at && <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.45)" }}>· {new Date(rec.spelling_correction.corrected_at).toLocaleDateString()}</span>}
+            </div>
+          </div>
+        )}
         <div className="flex items-center justify-between flex-wrap gap-2">
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: st.c, background: `${st.c}1a`, border: `1px solid ${st.c}55` }}><ShieldCheck className="w-3 h-3" /> {st.t}</span>
           <span className="font-inter text-[9px]" style={{ color: P.dim }}>Confidence: <b style={{ color: P.text }}>{rec.verification_confidence || 0}%</b></span>
@@ -504,5 +544,6 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
         </div>
       </Section>
     </div>
+    </LangCtx.Provider>
   );
 }

@@ -1,7 +1,7 @@
 {
   "name": "HolyNameKnowledge",
   "type": "object",
-  "description": "INDEPENDENT Holy Names Knowledge database for the PDF Knowledge Import System on the Holy Names page ONLY. Completely separate from Section A's static magicalHolyNamesData array and from Section B's HolyOnePDFName entity. This entity holds the canonical Holy Name records (matching targets). Seeded once with the 99 Names of Allah (reference keys); ALL descriptive content (Malayalam meaning, description, benefits, usage, method, warnings, references, notes) comes ONLY from uploaded PDFs and is stored as HolyNameImportedSection child records \u2014 never AI-generated. Matching during import is done on arabic_normalized (harakat-stripped). ISOLATED \u2014 only seedHolyNameKnowledge and importHolyNamesPDF backend functions, and the Holy Names page PDF Knowledge tab, read/write this entity. Never used by any other module, engine, or page. EXTENDED (authoritative harakat + knowledge enrichment): new fields hold verified harakat, alternative readings, linguistic info, Islamic knowledge, traditional practices, and full source attribution for the Section A occult-name audit. record_class distinguishes the canonical 99-Name seed ('canonical_99') from the 443 occult Section-A names ('occult_section_a'). Existing records are never overwritten; enrichment only fills the new authoritative fields. FULL RESEARCH PROFILE: each card is a complete scholarly research page \u2014 alternative_spellings, original_source_word, research_profile (history/pronunciation/refs/earliest occurrence), separated meanings, categorized source-supported benefits, relationship_to_99_names, and invocations (practices, invocations & manuscript texts). Every statement source-attributed; empty/'Not Verified' when unsupported; zero fabricated content.",
+  "description": "INDEPENDENT Holy Names Knowledge database for the PDF Knowledge Import System on the Holy Names page ONLY. Completely separate from Section A's static magicalHolyNamesData array and from Section B's HolyOnePDFName entity. This entity holds the canonical Holy Name records (matching targets). Seeded once with the 99 Names of Allah (reference keys); ALL descriptive content (Malayalam meaning, description, benefits, usage, method, warnings, references, notes) comes ONLY from uploaded PDFs and is stored as HolyNameImportedSection child records \u2014 never AI-generated. Matching during import is done on arabic_normalized (harakat-stripped). ISOLATED \u2014 only seedHolyNameKnowledge and importHolyNamesPDF backend functions, and the Holy Names page PDF Knowledge tab, read/write this entity. Never used by any other module, engine, or page. EXTENDED (authoritative harakat + knowledge enrichment): new fields hold verified harakat, alternative readings, linguistic info, Islamic knowledge, traditional practices, and full source attribution for the Section A occult-name audit. record_class distinguishes the canonical 99-Name seed ('canonical_99') from the 443 occult Section-A names ('occult_section_a'). Existing records are never overwritten; enrichment only fills the new authoritative fields. SCHOLARLY SPELLING CORRECTION: when the imported arabic_name is a proven OCR/transcription error, the verification pass corrects arabic_name + arabic_normalized and records the full correction (spelling_corrected + spelling_correction) \u2014 identity of the name is always preserved, two different names are never merged. FULL RESEARCH PROFILE: each card is a complete scholarly research page \u2014 alternative_spellings, original_source_word, research_profile (history/pronunciation/refs/earliest occurrence), separated meanings, categorized source-supported benefits, relationship_to_99_names, and invocations (practices, invocations & manuscript texts). Every statement source-attributed; empty/'Not Verified' when unsupported; zero fabricated content.",
   "properties": {
     "name_id": {
       "type": "string",
@@ -18,12 +18,12 @@
     },
     "arabic_name": {
       "type": "string",
-      "description": "Arabic Holy Name with harakat preserved verbatim. The display + matching source. For occult names this is the spelling as printed in the source manuscript array (magicalHolyNamesData.js)."
+      "description": "Arabic Holy Name with harakat preserved verbatim. The display + matching source. For occult names this is the spelling as printed in the source manuscript array (magicalHolyNamesData.js). When the scholarly verification pass proves the imported spelling/harakat was an OCR or transcription error, this field is CORRECTED to the documentary-evidence form (and arabic_normalized updated with it); the original imported form is preserved in spelling_correction.previous_spelling."
     },
     "arabic_normalized": {
       "type": "string",
       "default": "",
-      "description": "Arabic name WITHOUT harakat/tatweel, leading '\u0627\u0644' kept, normalized for indexed matching/search. Populated by the seeding/import functions."
+      "description": "Arabic name WITHOUT harakat/tatweel, leading '\u0627\u0644' kept, normalized for indexed matching/search. Populated by the seeding/import functions and updated by the verification pass whenever arabic_name is corrected."
     },
     "transliteration": {
       "type": "string",
@@ -88,12 +88,72 @@
     "canonical_arabic": {
       "type": "string",
       "default": "",
-      "description": "AUTHORITATIVE fully-vowelized canonical Arabic spelling, verified against authoritative sources for the name's actual linguistic origin. Empty until verified \u2014 NEVER guessed. When sources disagree, the preferred scholarly reading is stored here and variants go to alternative_readings."
+      "description": "AUTHORITATIVE fully-vowelized canonical Arabic spelling, verified against authoritative sources for the name's actual linguistic origin. Empty until verified \u2014 NEVER guessed. When sources disagree, the preferred scholarly reading is stored here and variants go to alternative_readings. When the imported arabic_name was a proven OCR/transcription error, this holds the corrected form (and arabic_name is also corrected to it)."
     },
     "fully_vowelized_name": {
       "type": "string",
       "default": "",
       "description": "Alias of canonical_arabic: the complete vowelized form with every harakah, hamza, madd, shaddah, sukoon, tanween verified. Empty until verified."
+    },
+    "spelling_corrected": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if the imported arabic_name spelling or harakat was corrected by the scholarly verification pass because the imported form was a proven OCR error or transcription mistake backed by documentary evidence. When true, arabic_name and arabic_normalized have been updated to the corrected values and spelling_correction holds the full correction record (previous vs corrected spelling/harakat, confidence, evidence, sources). The identity of the Holy Name is always preserved \u2014 never merged with a different name."
+    },
+    "spelling_correction": {
+      "type": "object",
+      "properties": {
+        "previous_spelling": {
+          "type": "string",
+          "default": ""
+        },
+        "corrected_spelling": {
+          "type": "string",
+          "default": ""
+        },
+        "previous_harakat": {
+          "type": "string",
+          "default": ""
+        },
+        "corrected_harakat": {
+          "type": "string",
+          "default": ""
+        },
+        "confidence": {
+          "type": "integer",
+          "default": 0
+        },
+        "evidence": {
+          "type": "string",
+          "default": ""
+        },
+        "corrected_at": {
+          "type": "string",
+          "default": ""
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "page": {
+                "type": "string",
+                "default": ""
+              },
+              "url": {
+                "type": "string",
+                "default": ""
+              }
+            }
+          },
+          "default": []
+        }
+      },
+      "default": {},
+      "description": "Full correction record when spelling_corrected=true: the previous imported spelling/harakat, the corrected spelling/harakat, a confidence score, the documentary evidence proving the correction, and the sources that establish the corrected form. Empty object when no correction was needed."
     },
     "alternative_readings": {
       "type": "array",
@@ -631,6 +691,12 @@
       "name": "idx_relationship_to_99_names_type",
       "fields": [
         "relationship_to_99_names_type"
+      ]
+    },
+    {
+      "name": "idx_spelling_corrected",
+      "fields": [
+        "spelling_corrected"
       ]
     }
   ],
