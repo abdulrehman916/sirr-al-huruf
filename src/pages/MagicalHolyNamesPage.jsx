@@ -15,6 +15,7 @@ import { getFeatures } from "@/lib/featureRegistry";
 import HolyNameImportPanel from "@/components/holynameknowledge/HolyNameImportPanel";
 import HolyNameContentsSeedPanel from "@/components/holynameknowledge/HolyNameContentsSeedPanel";
 import HolyNameImportedSections from "@/components/holynameknowledge/HolyNameImportedSections";
+import HolyNameResearchProfile from "@/components/holynameknowledge/HolyNameResearchProfile";
 import { useAuth } from "@/lib/AuthContext";
 
 const PAGE_PATH = "/holy-names";
@@ -245,6 +246,7 @@ function SectionA({ importRefreshKey }) {
                             <p className="font-amiri text-[1.8rem] font-bold" style={{ color: P.text }}>{name.letterCount}</p>
                           </div>
                         </div>
+                        <HolyNameResearchProfile originalStaticId={name.id} />
                         <HolyNameImportedSections sourceSection="section_a" sourceNameKey={String(name.id)} refreshKey={importRefreshKey} />
                       </motion.div>
                     )}
