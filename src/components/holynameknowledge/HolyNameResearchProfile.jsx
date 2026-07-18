@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   Loader2, ShieldCheck, ShieldAlert, BookOpen, Languages, ScrollText, Sparkles,
   Link2, BookMarked, FileText, Quote, Award, AlertTriangle, Clock, Volume2,
-  Network, GitBranch, BookCopy, ChevronDown,
+  Network, BookCopy, ChevronDown,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
@@ -22,45 +22,51 @@ const STATUS_LABELS = {
   verified: { t: "Verified", ml: "പരിശോധിച്ചു സ്ഥിരീകരിച്ചു", c: "#34d399" },
   needs_review: { t: "Needs Review", ml: "വീണ്ടും പരിശോധന ആവശ്യം", c: "#fbbf24" },
   conflicting_sources: { t: "Conflicting Sources", ml: "ഉറവിടങ്ങൾ തമ്മിൽ ഭിന്നത", c: "#fb923c" },
-  not_in_classical_sources: { t: "Not in Classical Sources", ml: "ക്ലാസിക്ക് സ്രോതസ്സുകളിൽ ഇല്ല", c: "#94a3b8" },
+  not_in_classical_sources: { t: "Not in Classical Sources", ml: "ക്ലാസിക് സ്രോതസ്സുകളിൽ ഇല്ല", c: "#94a3b8" },
   unverified: { t: "Not Verified", ml: "പരിശോധിച്ചിട്ടില്ല", c: "#64748b" },
 };
-const ORIGIN_LABELS = {
-  hebrew: "Hebrew", syriac: "Syriac", aramaic: "Aramaic", arabic: "Arabic",
-  persian: "Persian", mixed: "Mixed", unknown: "Unknown",
-};
-const ORIGIN_ML = {
-  hebrew: "ഹീബ്രു", syriac: "സിറിയാക്ക്", aramaic: "അറമായിക്ക്", arabic: "അറബിക്",
-  persian: "പേർഷ്യൻ", mixed: "മിശ്രിതം", unknown: "അജ്ഞാതം",
-};
+const ORIGIN_LABELS = { hebrew: "Hebrew", syriac: "Syriac", aramaic: "Aramaic", arabic: "Arabic", persian: "Persian", mixed: "Mixed", unknown: "Unknown" };
+const ORIGIN_ML = { hebrew: "ഹീബ്രു", syriac: "സിറിയാക്ക്", aramaic: "അറമായിക്ക്", arabic: "അറബിക്", persian: "പേർഷ്യൻ", mixed: "മിശ്രിതം", unknown: "അജ്ഞാതം" };
 const REL_LABELS = {
   identical: "Identical to a 99 Name", alternate_reading: "Alternate Reading of a 99 Name",
-  same_root: "Same Arabic Root", same_meaning: "Same Meaning",
-  closely_related: "Closely Related", synonymous: "Synonymous",
-  scholarly_relation: "Related via Classical Scholarship", none: "No Authentic Relationship",
-  foreign_equivalent: "Foreign-Language Equivalent", traditional_only: "Traditional/Occult Association Only",
-  unknown: "Relationship Not Determined",
+  same_root: "Same Arabic Root", same_meaning: "Same Meaning", closely_related: "Closely Related",
+  synonymous: "Synonymous", scholarly_relation: "Related via Classical Scholarship",
+  none: "No Authentic Relationship", foreign_equivalent: "Foreign-Language Equivalent",
+  traditional_only: "Traditional/Occult Association Only", unknown: "Relationship Not Determined",
 };
 
 const NOT_VERIFIED = "Not Verified";
 const NOT_FOUND = "Not found in verified primary sources";
 const has = (v) => v && (Array.isArray(v) ? v.length > 0 : String(v).trim() !== "");
 
-function Row({ label, value, dir, mono, ml }) {
-  const empty = !has(value);
+// Trilingual field: English paragraph → Malayalam explanation (primary) → Arabic (where applicable).
+// arabicFirst = true renders Arabic first (for fields whose primary content is Arabic).
+function TriField({ label, labelML, arabic, malayalam, english, arabicFirst }) {
+  const any = has(arabic) || has(malayalam) || has(english);
   return (
-    <div className="space-y-1">
-      <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>{label}</p>
-      {empty ? (
+    <div className="space-y-1.5">
+      <div className="flex items-baseline gap-2 flex-wrap">
+        <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>{label}</span>
+        {labelML && <span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.45)" }}>· {labelML}</span>}
+      </div>
+      {!any ? (
         <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.30)" }}>{NOT_VERIFIED}</p>
       ) : (
-        <p
-          className={ml ? "font-malayalam text-sm leading-relaxed selectable" : mono ? "font-amiri text-base leading-loose selectable" : "font-inter text-sm leading-relaxed selectable"}
-          style={{ color: "rgba(255,255,255,0.88)" }}
-          dir={dir || (mono ? "rtl" : "auto")}
-        >
-          {value}
-        </p>
+        <div className="space-y-1">
+          {arabicFirst ? (
+            <>
+              {has(arabic) && <p className="font-amiri text-base leading-loose selectable" style={{ color: "rgba(255,255,255,0.92)" }} dir="rtl">{arabic}</p>}
+              {has(malayalam) && <p className="font-malayalam text-sm leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.90)" }} dir="auto">{malayalam}</p>}
+              {has(english) && <p className="font-inter text-xs leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.60)" }} dir="auto">{english}</p>}
+            </>
+          ) : (
+            <>
+              {has(english) && <p className="font-inter text-xs leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.72)" }} dir="auto">{english}</p>}
+              {has(malayalam) && <p className="font-malayalam text-sm leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.90)" }} dir="auto">{malayalam}</p>}
+              {has(arabic) && <p className="font-amiri text-base leading-loose selectable" style={{ color: "rgba(255,255,255,0.85)" }} dir="rtl">{arabic}</p>}
+            </>
+          )}
+        </div>
       )}
     </div>
   );
@@ -79,9 +85,7 @@ function SourceChip({ s }) {
       {s.reliability_score ? <span style={{ color: "rgba(212,175,55,0.45)" }}>· {s.reliability_score}%</span> : null}
     </span>
   );
-  return url
-    ? <a href={url} target="_blank" rel="noreferrer" className="inline-flex no-underline">{inner}</a>
-    : <span className="inline-flex">{inner}</span>;
+  return url ? <a href={url} target="_blank" rel="noreferrer" className="inline-flex no-underline">{inner}</a> : <span className="inline-flex">{inner}</span>;
 }
 
 function SourcesList({ sources }) {
@@ -90,35 +94,19 @@ function SourcesList({ sources }) {
   return <div className="flex flex-wrap gap-1.5">{arr.map((s, i) => <SourceChip key={i} s={s} />)}</div>;
 }
 
-function Section({ icon: Icon, title, children, accent, defaultOpen = true }) {
+function Section({ icon: Icon, title, titleML, children, accent, defaultOpen = true }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-      className="rounded-xl border overflow-hidden"
-      style={{ background: "rgba(8,16,38,0.55)", borderColor: P.border }}
-    >
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="rounded-xl border overflow-hidden" style={{ background: "rgba(8,16,38,0.55)", borderColor: P.border }}>
       <details open={defaultOpen} className="group">
         <summary className="cursor-pointer list-none flex items-center gap-2 px-3 py-2.5 select-none" style={{ borderBottom: defaultOpen ? `1px solid ${P.faint}` : "none" }}>
           <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accent || P.text }} />
           <span className="font-inter text-[9px] uppercase tracking-widest font-bold flex-1" style={{ color: accent || P.text }}>{title}</span>
+          {titleML && <span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.50)" }}>{titleML}</span>}
           <ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180" style={{ color: P.dim }} />
         </summary>
         <div className="px-3 py-3 space-y-2.5">{children}</div>
       </details>
     </motion.div>
-  );
-}
-
-function BoolLine({ label, present, note }) {
-  return (
-    <div className="flex items-start gap-2">
-      <span className="font-malayalam text-[10px] uppercase tracking-wider flex-shrink-0 mt-0.5" style={{ color: P.dim }}>{label}</span>
-      <span className="font-malayalam text-sm selectable" style={{ color: present ? "#34d399" : "rgba(255,255,255,0.45)" }} dir="auto">
-        {present ? "ഉണ്ട്" : "ഇല്ല / പരിശോധിച്ചിട്ടില്ല"}{note ? ` — ${note}` : ""}
-      </span>
-    </div>
   );
 }
 
@@ -129,7 +117,8 @@ function BenefitList({ items, authenticated }) {
     <div className="space-y-2">
       {arr.map((b, i) => (
         <div key={i} className="space-y-1.5 rounded-lg p-2.5" style={{ background: "rgba(212,175,55,0.05)", border: `1px solid ${P.faint}` }}>
-          <p className="font-inter text-xs leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.85)" }} dir="auto">{b.text}</p>
+          {b.text && <p className="font-inter text-xs leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.80)" }} dir="auto">{b.text}</p>}
+          {b.text_ml && <p className="font-malayalam text-sm leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.90)" }} dir="auto">{b.text_ml}</p>}
           {authenticated === false && (
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-inter text-[7px] uppercase tracking-widest font-bold" style={{ color: "#fbbf24", background: "rgba(251,191,36,0.10)", border: "1px solid rgba(251,191,36,0.30)" }}>
               <AlertTriangle className="w-2.5 h-2.5" /> Traditional / Historical · Not Authenticated as Islamic Teaching
@@ -148,30 +137,26 @@ function BenefitList({ items, authenticated }) {
 }
 
 const INVOCATION_CATS = [
-  { id: "authentic_islamic_dhikr", label: "Authentic Islamic Dhikr", auth: true },
-  { id: "quranic_supplication", label: "Qur'anic Supplications", auth: true },
-  { id: "hadith_supplication", label: "Hadith Supplications", auth: true },
-  { id: "classical_wazifa", label: "Classical Wazifa", auth: false },
-  { id: "traditional_invocation", label: "Traditional Invocation", auth: false },
-  { id: "vefk_practice", label: "Vefk Practice", auth: false },
-  { id: "talismanic_formula", label: "Talismanic Formula", auth: false },
-  { id: "occult_manuscript_practice", label: "Occult Manuscript Practice", auth: false },
-  { id: "unknown_origin", label: "Unknown Origin", auth: false },
+  { id: "authentic_islamic_dhikr", label: "Authentic Islamic Dhikr", labelML: "പ്രാമാണിക ഇസ്ലാമിക് ദിക്ർ", auth: true },
+  { id: "quranic_supplication", label: "Qur'anic Supplications", labelML: "ഖുർആൻ പ്രാർഥനകൾ", auth: true },
+  { id: "hadith_supplication", label: "Hadith Supplications", labelML: "ഹദീസ് പ്രാർഥനകൾ", auth: true },
+  { id: "classical_wazifa", label: "Classical Wazifa", labelML: "ക്ലാസിക് വസീഫ", auth: false },
+  { id: "traditional_invocation", label: "Traditional Invocation", labelML: "പാരമ്പര്യ പ്രാർഥന", auth: false },
+  { id: "vefk_practice", label: "Vefk Practice", labelML: "വെഫ്ക് അഭ്യാസം", auth: false },
+  { id: "talismanic_formula", label: "Talismanic Formula", labelML: "തായ്ലിസ്മാൻ ഫോർമുല", auth: false },
+  { id: "occult_manuscript_practice", label: "Occult Manuscript Practice", labelML: "ഒക്കൾട്ട് കയ്യെഴുത്തുപ്രതി അഭ്യാസം", auth: false },
+  { id: "unknown_origin", label: "Unknown Origin", labelML: "അജ്ഞാത ഉദ്ഭവം", auth: false },
 ];
 
 function InvocationCard({ inv }) {
   const auth = inv.authenticated === true || inv.evidence_level === "authenticated";
   return (
     <div className="space-y-2 rounded-lg p-3" style={{ background: auth ? "rgba(52,211,153,0.04)" : "rgba(251,191,36,0.04)", border: `1px solid ${auth ? "rgba(52,211,153,0.25)" : "rgba(251,191,36,0.25)"}` }}>
-      {inv.text_ar && (
-        <p className="font-amiri text-lg leading-loose selectable whitespace-pre-wrap" style={{ color: "rgba(255,255,255,0.92)" }} dir="rtl">{inv.text_ar}</p>
-      )}
-      {inv.text_harakat && inv.text_harakat !== inv.text_ar && (
-        <p className="font-amiri text-base leading-loose selectable" style={{ color: P.text }} dir="rtl">{inv.text_harakat}</p>
-      )}
+      {inv.text_ar && <p className="font-amiri text-lg leading-loose selectable whitespace-pre-wrap" style={{ color: "rgba(255,255,255,0.92)" }} dir="rtl">{inv.text_ar}</p>}
+      {inv.text_harakat && inv.text_harakat !== inv.text_ar && <p className="font-amiri text-base leading-loose selectable" style={{ color: P.text }} dir="rtl">{inv.text_harakat}</p>}
       {inv.transliteration && <p className="font-inter text-xs italic selectable" style={{ color: "rgba(255,255,255,0.70)" }} dir="ltr">{inv.transliteration}</p>}
-      {inv.translation_ml && <p className="font-malayalam text-sm leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.85)" }} dir="auto">{inv.translation_ml}</p>}
-      {inv.translation_en && <p className="font-inter text-xs selectable" style={{ color: "rgba(255,255,255,0.75)" }} dir="auto">{inv.translation_en}</p>}
+      {inv.translation_ml && <p className="font-malayalam text-sm leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.90)" }} dir="auto">{inv.translation_ml}</p>}
+      {inv.translation_en && <p className="font-inter text-xs selectable" style={{ color: "rgba(255,255,255,0.72)" }} dir="auto">{inv.translation_en}</p>}
       <div className="flex flex-wrap gap-1.5">
         <span className="font-inter text-[7px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded" style={{ color: auth ? "#34d399" : "#fbbf24", background: auth ? "rgba(52,211,153,0.10)" : "rgba(251,191,36,0.10)", border: `1px solid ${auth ? "rgba(52,211,153,0.30)" : "rgba(251,191,36,0.30)"}` }}>
           {auth ? "Authenticated" : "NOT AUTHENTICATED · Traditional Historical Practice Only"}
@@ -202,6 +187,23 @@ function InvocationCard({ inv }) {
   );
 }
 
+function RefList({ label, labelML, items }) {
+  const arr = Array.isArray(items) ? items : [];
+  return (
+    <div className="space-y-1">
+      <div className="flex items-baseline gap-2">
+        <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>{label}</span>
+        <span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.45)" }}>· {labelML}</span>
+      </div>
+      {arr.length === 0 ? (
+        <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.30)" }}>{NOT_VERIFIED}</p>
+      ) : (
+        arr.map((r, i) => <p key={i} className="font-inter text-xs selectable" style={{ color: "rgba(255,255,255,0.85)" }} dir="auto">{r}</p>)
+      )}
+    </div>
+  );
+}
+
 export default function HolyNameResearchProfile({ originalStaticId }) {
   const [rec, setRec] = useState(null);
   const [pdfs, setPdfs] = useState([]);
@@ -214,12 +216,10 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
     Promise.all([
       base44.entities.HolyNameKnowledge.filter({ name_id: nameId }, null, 1).then(r => (r && r[0]) || null).catch(() => null),
       base44.entities.HolyNameImportedSection.filter({ source_section: "section_a", source_name_key: String(originalStaticId) }, null, 500)
-        .then(r => (r || []).filter(s => s.source_pdf_file))
-        .catch(() => []),
+        .then(r => (r || []).filter(s => s.source_pdf_file)).catch(() => []),
     ]).then(([k, secs]) => {
       if (!alive) return;
       setRec(k);
-      // group source PDFs
       const map = new Map();
       for (const s of secs) {
         const key = s.source_pdf_file;
@@ -246,7 +246,7 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
         <ShieldAlert className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "rgba(148,163,184,0.7)" }} />
         <div className="space-y-0.5">
           <p className="font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: "rgba(148,163,184,0.85)" }}>{NOT_VERIFIED}</p>
-          <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>This name's scholarly research profile has not been verified yet. Authoritative harakat, origin, meanings, and source-attributed knowledge will appear here once the verification pipeline reaches this name.</p>
+          <p className="font-malayalam text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>ഈ നാമത്തിന്റെ പണ്ഡിതോപയോഗിയായ ഗവേഷണ വിവരങ്ങൾ ഇതുവരെ പരിശോധിച്ചിട്ടില്ല. പരിശോധന പൂർത്തിയാകുമ്പോൾ ഇവിടെ പ്രദർശിപ്പിക്കും.</p>
         </div>
       </div>
     );
@@ -268,38 +268,27 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
       <div className="flex items-center gap-2 mb-1">
         <Sparkles className="w-3.5 h-3.5" style={{ color: P.text }} />
         <span className="font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: P.text }}>Scholarly Research Profile</span>
+        <span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.50)" }}>· പണ്ഡിതോപയോഗിയായ ഗവേഷണ പ്രൊഫൈൽ</span>
       </div>
 
-      {/* 1,28,29,30 — Verified spelling + verification meta */}
-      <Section icon={ShieldCheck} title="1 · Verified Arabic Spelling & Harakat" accent={st.c}>
+      {/* 1 — Verified Arabic spelling + verification meta */}
+      <Section icon={ShieldCheck} title="1 · Verified Arabic Spelling & Harakat" titleML="സ്ഥിരീകരിച്ച അറബി നാമവും ഹരകത്തും" accent={st.c}>
         <div className="text-center py-2 rounded-lg" style={{ background: P.bgHi, border: `1px solid ${P.borderHi}` }}>
-          <p className="font-amiri text-[2.2rem] font-bold leading-[2.2] selectable" style={{ color: P.text, textShadow: "0 0 20px rgba(212,175,55,0.30)" }} dir="rtl">
-            {rec.canonical_arabic || rec.fully_vowelized_name || rec.arabic_name}
-          </p>
-          {rec.canonical_arabic && rec.arabic_name && rec.canonical_arabic !== rec.arabic_name && (
-            <p className="font-inter text-[8px] mt-1" style={{ color: P.dim }}>As printed in source: <span className="font-amiri text-sm" dir="rtl">{rec.arabic_name}</span></p>
-          )}
+          <p className="font-amiri text-[2.2rem] font-bold leading-[2.2] selectable" style={{ color: P.text, textShadow: "0 0 20px rgba(212,175,55,0.30)" }} dir="rtl">{rec.canonical_arabic || rec.fully_vowelized_name || rec.arabic_name}</p>
+          {rec.canonical_arabic && rec.arabic_name && rec.canonical_arabic !== rec.arabic_name && <p className="font-inter text-[8px] mt-1" style={{ color: P.dim }}>As printed: <span className="font-amiri text-sm" dir="rtl">{rec.arabic_name}</span></p>}
         </div>
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: st.c, background: `${st.c}1a`, border: `1px solid ${st.c}55` }}>
-            <ShieldCheck className="w-3 h-3" /> {st.t}
-          </span>
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: st.c, background: `${st.c}1a`, border: `1px solid ${st.c}55` }}><ShieldCheck className="w-3 h-3" /> {st.t}</span>
           <span className="font-inter text-[9px]" style={{ color: P.dim }}>Confidence: <b style={{ color: P.text }}>{rec.verification_confidence || 0}%</b></span>
-          {rec.last_verified_date && (
-            <span className="inline-flex items-center gap-1 font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.45)" }}>
-              <Clock className="w-2.5 h-2.5" /> {new Date(rec.last_verified_date).toLocaleDateString()}
-            </span>
-          )}
-          {rec.harakat_verified && (
-            <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "#34d399" }}>Harakat Confirmed (≥2 sources)</span>
-          )}
+          {rec.last_verified_date && <span className="inline-flex items-center gap-1 font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.45)" }}><Clock className="w-2.5 h-2.5" /> {new Date(rec.last_verified_date).toLocaleDateString()}</span>}
+          {rec.harakat_verified && <span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "#34d399" }}>Harakat Confirmed (≥2 sources)</span>}
         </div>
-        {rec.review_notes && <Row label="Reviewer Notes" value={rec.review_notes} />}
+        {rec.review_notes && <TriField label="Reviewer Notes" labelML="പരിശോധകന്റെ കുറിപ്പുകൾ" english={rec.review_notes} />}
       </Section>
 
-      {/* 2 — Alternative Harakat & accepted readings */}
+      {/* 2 — Alternative harakat */}
       {Array.isArray(rec.alternative_readings) && rec.alternative_readings.length > 0 && (
-        <Section icon={BookOpen} title="2 · Alternative Harakat & Accepted Readings">
+        <Section icon={BookOpen} title="2 · Alternative Accepted Harakat & Readings" titleML="മാറ്റൊലികളും സ്വീകാര്യമായ വായനകളും">
           <div className="space-y-2">
             {rec.alternative_readings.map((a, i) => (
               <div key={i} className="space-y-1">
@@ -315,9 +304,8 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
         </Section>
       )}
 
-      {/* Alternative spellings */}
       {Array.isArray(rec.alternative_spellings) && rec.alternative_spellings.length > 0 && (
-        <Section icon={BookOpen} title="Alternative Spellings">
+        <Section icon={BookOpen} title="Alternative Spellings" titleML="മാറ്റ് അക്ഷരക്രമങ്ങൾ">
           <div className="space-y-1.5">
             {rec.alternative_spellings.map((a, i) => (
               <div key={i} className="space-y-1">
@@ -330,130 +318,129 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
         </Section>
       )}
 
-      {/* 3 — Original Script */}
-      <Section icon={Languages} title="3 · Original Script" defaultOpen>
-        <Row label="Original Source Word (Native Script)" value={rec.original_source_word} mono />
-        <Row label="Language of Origin" value={`${originLabel} (${originML})`} />
-        <Row label="Etymology" value={rec.etymology} />
+      {/* 3,4,5,6 — Pronunciation, Origin, Original word, Etymology */}
+      <Section icon={Languages} title="3–6 · Pronunciation, Origin, Original Word & Etymology" titleML="ഉച്ചാരണം, ഉദ്ഭവ ഭാഷ, മൂലപദം, പദോൽപ്പത്തി">
+        <TriField label="3 · Pronunciation" labelML="ഉച്ചാരണം" english={rp.pronunciation_guide} malayalam={rp.pronunciation_guide_ml} />
+        <TriField label="4 · Language of Origin" labelML="ഉദ്ഭവ ഭാഷ" english={originLabel} malayalam={originML} />
+        <TriField label="5 · Original Source Word" labelML="മൂലപദം" arabic={rec.original_source_word} arabicFirst />
+        <TriField label="6 · Etymology" labelML="പദോൽപ്പത്തി" english={rec.etymology} malayalam={rp.etymology_ml} />
       </Section>
 
-      {/* 4 — Pronunciation */}
-      <Section icon={Volume2} title="4 · Pronunciation">
-        <Row label="Pronunciation Guide" value={rp.pronunciation_guide} />
-        <Row label="Linguistic Explanation" value={rp.linguistic_explanation || ling.classical_explanation} />
+      {/* 7,8 — Historical background & earliest occurrence */}
+      <Section icon={ScrollText} title="7–8 · Historical Background & Earliest Occurrence" titleML="ചരിത്രപരമായ പശ്ചാത്തലവും ആദ്യത്തെ പരാമർശവും">
+        <TriField label="7 · Historical Background" labelML="ചരിത്രപരമായ പശ്ചാത്തലം" english={rp.historical_background} malayalam={rp.historical_background_ml} />
+        <TriField label="8 · Earliest Known Occurrence" labelML="ആദ്യത്തെ പരാമർശം" english={rp.earliest_occurrence} malayalam={rp.earliest_occurrence_ml} />
+        <TriField label="Related Historical Usage" labelML="ബന്ധപ്പെട്ട ചരിത്രപരമായ ഉപയോഗം" english={rp.related_historical_usage} malayalam={rp.related_historical_usage_ml} />
+        {!has(rp.historical_background) && !has(rp.earliest_occurrence) && <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.40)" }}>{NOT_FOUND}</p>}
       </Section>
 
-      {/* 5,6,7,8 — Meanings */}
-      <Section icon={BookOpen} title="5–8 · Meanings" defaultOpen>
-        <Row label="Arabic Meaning" value={mean.arabic} mono />
-        <Row label="Malayalam Meaning" value={mean.malayalam} ml />
-        <Row label="English Meaning" value={mean.english} />
-        <Row label="Original-Language Meaning" value={mean.original} />
-        <Row label="Literal Meaning" value={rp.literal_meaning || ling.literal_meaning} />
-        <Row label="Root Meaning" value={rp.root_meaning || ling.lexical_meaning} />
-        {has(mean.symbolic) && <Row label="Symbolic Meaning (sourced)" value={mean.symbolic} />}
-        {has(mean.historical) && <Row label="Historical Meaning" value={mean.historical} />}
-        {has(mean.traditional) && <Row label="Traditional Meaning" value={mean.traditional} />}
+      {/* 9–17 — Meanings (trilingual) */}
+      <Section icon={BookOpen} title="9–17 · Meanings" titleML="അർത്ഥങ്ങൾ">
+        <TriField label="9 · Arabic Meaning" labelML="അറബി അർത്ഥം" arabic={mean.arabic} arabicFirst />
+        <TriField label="10 · Malayalam Meaning" labelML="മലയാളം അർത്ഥം" malayalam={mean.malayalam} />
+        <TriField label="11 · English Meaning" labelML="ഇംഗ്ലീഷ് അർത്ഥം" english={mean.english} />
+        <TriField label="12 · Original-Language Meaning" labelML="മൂലഭാഷാ അർത്ഥം" english={mean.original} malayalam={mean.original_ml} />
+        <TriField label="13 · Literal Meaning" labelML="ആക്ഷരിക അർത്ഥം" english={rp.literal_meaning || ling.literal_meaning} malayalam={mean.literal_ml} />
+        <TriField label="14 · Root Meaning" labelML="ധാതു അർത്ഥം" english={rp.root_meaning || ling.lexical_meaning} malayalam={mean.root_ml} />
+        <TriField label="15 · Symbolic Meaning" labelML="പ്രതീകാത്മക അർത്ഥം" english={mean.symbolic} malayalam={mean.symbolic_ml} />
+        <TriField label="16 · Historical Meaning" labelML="ചരിത്രപരമായ അർത്ഥം" english={mean.historical} malayalam={mean.historical_ml} />
+        <TriField label="17 · Traditional Meaning" labelML="പാരമ്പര്യ അർത്ഥം" english={mean.traditional} malayalam={mean.traditional_ml} />
       </Section>
 
-      {/* 9,10,11,12 — Origin, Etymology, Historical Background, Earliest Occurrence */}
-      <Section icon={ScrollText} title="9–12 · Origin, History & Earliest Occurrence">
-        <Row label="Language of Origin" value={`${originLabel} (${originML})`} />
-        <Row label="Etymology" value={rec.etymology} />
-        <Row label="Historical Background" value={rp.historical_background} />
-        <Row label="Earliest Known Occurrence" value={rp.earliest_occurrence} />
-        <Row label="Related Historical Usage" value={rp.related_historical_usage} />
-        {!has(rp.historical_background) && !has(rp.earliest_occurrence) && !has(rp.related_historical_usage) && (
-          <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.40)" }}>{NOT_FOUND}</p>
-        )}
-      </Section>
-
-      {/* 13 — Relationship to 99 Names */}
-      <Section icon={Link2} title="13 · Relationship to the 99 Beautiful Names of Allah" accent={relType === "none" ? "rgba(148,163,184,0.8)" : P.text}>
+      {/* 18 — Relationship to 99 Names */}
+      <Section icon={Link2} title="18 · Relationship with the 99 Beautiful Names of Allah" titleML="99 സുന്ദര നാമങ്ങളുമായുള്ള ബന്ധം" accent={relType === "none" ? "rgba(148,163,184,0.8)" : P.text}>
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="px-2 py-1 rounded-lg font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: relType === "none" ? "rgba(148,163,184,0.85)" : P.text, background: relType === "none" ? "rgba(148,163,184,0.10)" : P.bgHi, border: `1px solid ${relType === "none" ? "rgba(148,163,184,0.30)" : P.border}` }}>
-            {REL_LABELS[relType] || relType}
-          </span>
+          <span className="px-2 py-1 rounded-lg font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: relType === "none" ? "rgba(148,163,184,0.85)" : P.text, background: relType === "none" ? "rgba(148,163,184,0.10)" : P.bgHi, border: `1px solid ${relType === "none" ? "rgba(148,163,184,0.30)" : P.border}` }}>{REL_LABELS[relType] || relType}</span>
           {rel99.related_name_arabic && <span className="font-amiri text-base" style={{ color: P.text }} dir="rtl">{rel99.related_name_arabic}</span>}
           {rel99.related_name_id && <span className="font-inter text-[9px]" style={{ color: P.dim }}>({rel99.related_name_id})</span>}
         </div>
-        <Row label="Evidence" value={rel99.evidence} />
-        {relType === "none" && !has(rel99.evidence) && (
-          <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.40)" }}>No authentic relationship to the 99 Names of Allah is known.</p>
-        )}
+        <TriField label="Evidence" labelML="തെളിവുകൾ" english={rel99.evidence} malayalam={rel99.evidence_ml} />
+        {relType === "none" && !has(rel99.evidence) && <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.40)" }}>No authentic relationship to the 99 Names of Allah is known.</p>}
         {rel99.sources && rel99.sources.length > 0 && <SourcesList sources={rel99.sources} />}
       </Section>
 
-      {/* 14,15,16,17 — Authentic Islamic References */}
-      <Section icon={Quote} title="14–17 · Authentic Islamic References">
+      {/* 19,20,21 — Quran / Hadith / Tafsir (only if authentic) */}
+      <Section icon={Quote} title="19–21 · Qur'an, Hadith & Tafsir References" titleML="ഖുർആൻ, ഹദീസ്, തഫ്സീർ പരാമർശങ്ങൾ">
         {has(ik.quran_verses) || has(ik.hadith_refs) || has(ik.tafsir_refs) || has(ik.scholarly_explanation) ? (
           <>
             {has(ik.quran_verses) && (
               <div className="space-y-1">
-                <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>15 · Qur'an References</p>
+                <div className="flex items-baseline gap-2"><span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>19 · Qur'an References</span><span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.45)" }}>· ഖുർആൻ പരാമർശങ്ങൾ</span></div>
                 {ik.quran_verses.map((q, i) => <p key={i} className="font-amiri text-sm leading-loose selectable" style={{ color: "rgba(255,255,255,0.88)" }} dir="rtl">{q}</p>)}
               </div>
             )}
             {has(ik.hadith_refs) && (
               <div className="space-y-1">
-                <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>16 · Hadith References</p>
+                <div className="flex items-baseline gap-2"><span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>20 · Hadith References</span><span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.45)" }}>· ഹദീസ് പരാമർശങ്ങൾ</span></div>
                 {ik.hadith_refs.map((h, i) => <p key={i} className="font-inter text-xs selectable" style={{ color: "rgba(255,255,255,0.85)" }} dir="auto">{h}</p>)}
               </div>
             )}
             {has(ik.tafsir_refs) && (
               <div className="space-y-1">
-                <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>17 · Classical Tafsir References</p>
+                <div className="flex items-baseline gap-2"><span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>21 · Tafsir References</span><span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.45)" }}>· തഫ്സീർ പരാമർശങ്ങൾ</span></div>
                 {ik.tafsir_refs.map((t, i) => <p key={i} className="font-inter text-xs selectable" style={{ color: "rgba(255,255,255,0.85)" }} dir="auto">{t}</p>)}
               </div>
             )}
-            {has(ik.scholarly_explanation) && <Row label="Scholarly Explanation" value={ik.scholarly_explanation} />}
-            {!has(ik.quran_verses) && !has(ik.hadith_refs) && !has(ik.tafsir_refs) && (
-              <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.40)" }}>Not found in Qur'an or Hadith (common for foreign-origin names).</p>
-            )}
+            {has(ik.scholarly_explanation) && <TriField label="Scholarly Explanation" labelML="പണ്ഡിത വിശദീകരണം" english={ik.scholarly_explanation} malayalam={ik.scholarly_explanation_ml} />}
+            {!has(ik.quran_verses) && !has(ik.hadith_refs) && !has(ik.tafsir_refs) && <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.40)" }}>Not found in Qur'an or Hadith (common for foreign-origin names).</p>}
           </>
         ) : (
           <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.40)" }}>Not found in verified primary Islamic sources.</p>
         )}
       </Section>
 
-      {/* 18,19,20 — Classical / Academic / Manuscript references */}
-      <Section icon={BookMarked} title="18–20 · Classical, Academic & Manuscript References" defaultOpen={false}>
-        <div className="space-y-2">
-          <div>
-            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>18 · Classical Dictionary References</p>
-            {has(rp.classical_dict_refs) ? rp.classical_dict_refs.map((r, i) => <p key={i} className="font-inter text-xs selectable" style={{ color: "rgba(255,255,255,0.85)" }} dir="auto">{r}</p>) : <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.30)" }}>{NOT_VERIFIED}</p>}
-          </div>
-          <div>
-            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>19 · Academic References</p>
-            {has(rp.academic_refs) ? rp.academic_refs.map((r, i) => <p key={i} className="font-inter text-xs selectable" style={{ color: "rgba(255,255,255,0.85)" }} dir="auto">{r}</p>) : <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.30)" }}>{NOT_VERIFIED}</p>}
-          </div>
-          <div>
-            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>20 · Manuscript References</p>
-            {has(rp.manuscript_refs) ? rp.manuscript_refs.map((r, i) => <p key={i} className="font-inter text-xs selectable" style={{ color: "rgba(255,255,255,0.85)" }} dir="auto">{r}</p>) : <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.30)" }}>{NOT_VERIFIED}</p>}
-          </div>
-        </div>
+      {/* 22,23,24 — Classical / Academic / Manuscript references */}
+      <Section icon={BookMarked} title="22–24 · Classical, Academic & Manuscript References" titleML="ക്ലാസിക്, അക്കാദമിക്, കയ്യെഴുത്തുപ്രതി പരാമർശങ്ങൾ" defaultOpen={false}>
+        <RefList label="22 · Classical Dictionary References" labelML="ക്ലാസിക് നിഘണ്ടു പരാമർശങ്ങൾ" items={rp.classical_dict_refs} />
+        <RefList label="23 · Academic References" labelML="അക്കാദമിക് പരാമർശങ്ങൾ" items={rp.academic_refs} />
+        <RefList label="24 · Manuscript References" labelML="കയ്യെഴുത്തുപ്രതി പരാമർശങ്ങൾ" items={rp.manuscript_refs} />
       </Section>
 
-      {/* 21 — Traditional / Occult, clearly labelled */}
-      {((ben.traditional && ben.traditional.length > 0) || (ben.wafq && ben.wafq.length > 0) || (ben.amal && ben.amal.length > 0) || (ben.esoteric && ben.esoteric.length > 0) || (Array.isArray(rec.traditional_practices) && rec.traditional_practices.length > 0)) && (
-        <Section icon={AlertTriangle} title="21 · Traditional / Occult References" accent="#fbbf24" defaultOpen={false}>
+      {/* 25,26 — Related names & root words */}
+      <Section icon={Network} title="25–26 · Related Names & Related Root Words" titleML="ബന്ധപ്പെട്ട നാമങ്ങളും ധാതുക്കളും" defaultOpen={false}>
+        <TriField label="25 · Related Names" labelML="ബന്ധപ്പെട്ട നാമങ്ങൾ" english={ling.related_names} malayalam={rp.related_names_ml} />
+        <TriField label="26 · Related Root Words" labelML="ബന്ധപ്പെട്ട ധാതുക്കൾ" arabic={ling.arabic_root} arabicFirst />
+        <TriField label="Root Letters" labelML="ധാതു അക്ഷരങ്ങൾ" arabic={ling.root_letters || rp.root_letters} arabicFirst />
+        <TriField label="Morphological Pattern" labelML="രൂപശാസ്ത്ര പാറ്റേൺ" english={ling.morphological_pattern || rp.morphological_pattern} />
+      </Section>
+
+      {/* 27,28 — Authentic & Traditional benefits */}
+      <Section icon={Award} title="27–28 · Authentic Islamic & Traditional Benefits" titleML="പ്രാമാണിക ഇസ്ലാമിക, പാരമ്പര്യ ഗുണങ്ങൾ" defaultOpen={false}>
+        {has(ben.authentic_islamic) ? (
+          <>
+            <div className="flex items-baseline gap-2"><span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>27 · Authentic Islamic Benefits (evidence-based)</span><span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.45)" }}>· പ്രാമാണിക ഇസ്ലാമിക ഗുണങ്ങൾ</span></div>
+            <BenefitList items={ben.authentic_islamic} authenticated={true} />
+            {ben.authentic_islamic_ml && <p className="font-malayalam text-sm leading-relaxed selectable pt-1" style={{ color: "rgba(255,255,255,0.88)" }} dir="auto">{ben.authentic_islamic_ml}</p>}
+          </>
+        ) : (
+          <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.40)" }}>No authentic Islamic virtues found in reliable sources.</p>
+        )}
+        {has(ben.linguistic) && (<div className="space-y-1"><div className="flex items-baseline gap-2"><span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>Linguistic Significance</span><span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.45)" }}>· ഭാഷാശാസ്ത്ര പ്രാധാന്യം</span></div><BenefitList items={ben.linguistic} />{ben.linguistic_ml && <p className="font-malayalam text-sm leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.88)" }} dir="auto">{ben.linguistic_ml}</p>}</div>)}
+        {has(ben.historical) && (<div className="space-y-1"><div className="flex items-baseline gap-2"><span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>Historical Significance</span><span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.45)" }}>· ചരിത്രപരമായ പ്രാധാന്യം</span></div><BenefitList items={ben.historical} />{ben.historical_ml && <p className="font-malayalam text-sm leading-relaxed selectable" style={{ color: "rgba(255,255,255,0.88)" }} dir="auto">{ben.historical_ml}</p>}</div>)}
+        {has(ben.traditional) && (
+          <>
+            <div className="flex items-baseline gap-2"><span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "#fbbf24" }}>28 · Traditional Benefits — Not Authenticated</span><span className="font-malayalam text-[10px]" style={{ color: "rgba(251,191,36,0.60)" }}>· പാരമ്പര്യ ഗുണങ്ങൾ — പ്രാമാണികമല്ല</span></div>
+            <BenefitList items={ben.traditional} authenticated={false} />
+            {ben.traditional_ml && <p className="font-malayalam text-sm leading-relaxed selectable pt-1" style={{ color: "rgba(255,255,255,0.88)" }} dir="auto">{ben.traditional_ml}</p>}
+          </>
+        )}
+      </Section>
+
+      {/* Traditional / occult practices (legacy) */}
+      {((ben.wafq && ben.wafq.length > 0) || (ben.amal && ben.amal.length > 0) || (ben.esoteric && ben.esoteric.length > 0) || (Array.isArray(rec.traditional_practices) && rec.traditional_practices.length > 0)) && (
+        <Section icon={AlertTriangle} title="Traditional / Occult References" titleML="പാരമ്പര്യ / ഒക്കൾട്ട് പരാമർശങ്ങൾ" accent="#fbbf24" defaultOpen={false}>
           <p className="font-inter text-[9px] italic" style={{ color: "rgba(251,191,36,0.75)" }}>Traditional / Historical · Not Authenticated as Islamic Teaching</p>
-          {has(ben.traditional) && <BenefitList items={ben.traditional} authenticated={false} />}
-          {has(ben.wafq) && (<div className="space-y-1"><p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>Wafq-related</p><BenefitList items={ben.wafq} authenticated={false} /></div>)}
-          {has(ben.amal) && (<div className="space-y-1"><p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>Amal-related</p><BenefitList items={ben.amal} authenticated={false} /></div>)}
-          {has(ben.esoteric) && (<div className="space-y-1"><p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>Esoteric Traditions</p><BenefitList items={ben.esoteric} authenticated={false} /></div>)}
+          {has(ben.wafq) && <BenefitList items={ben.wafq} authenticated={false} />}
+          {has(ben.amal) && <BenefitList items={ben.amal} authenticated={false} />}
+          {has(ben.esoteric) && <BenefitList items={ben.esoteric} authenticated={false} />}
           {Array.isArray(rec.traditional_practices) && rec.traditional_practices.length > 0 && (
             <div className="space-y-2">
-              <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>Traditional Practices</p>
               {rec.traditional_practices.map((tp, i) => (
                 <div key={i} className="space-y-1 rounded-lg p-2.5" style={{ background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.25)" }}>
                   {tp.text_ar && <p className="font-amiri text-sm selectable" style={{ color: "rgba(255,255,255,0.85)" }} dir="rtl">{tp.text_ar}</p>}
-                  {tp.translation_en && <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.70)" }}>{tp.translation_en}</p>}
                   {tp.translation_ml && <p className="font-malayalam text-sm selectable" style={{ color: "rgba(255,255,255,0.80)" }} dir="auto">{tp.translation_ml}</p>}
+                  {tp.translation_en && <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.70)" }}>{tp.translation_en}</p>}
                   {tp.source && <p className="font-inter text-[9px]" style={{ color: P.dim }}>Source: {tp.source}</p>}
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-inter text-[7px] uppercase tracking-widest font-bold" style={{ color: "#fbbf24", background: "rgba(251,191,36,0.10)", border: "1px solid rgba(251,191,36,0.30)" }}>
-                    <AlertTriangle className="w-2.5 h-2.5" /> Traditional Manuscript Reference (Not Authenticated)
-                  </span>
                 </div>
               ))}
             </div>
@@ -461,28 +448,8 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
         </Section>
       )}
 
-      {/* 22,23 — Benefits */}
-      <Section icon={Award} title="22–23 · Authentic & Traditional Benefits" defaultOpen={false}>
-        {has(ben.authentic_islamic) ? (
-          <>
-            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>22 · Authentic Benefits (evidence-supported)</p>
-            <BenefitList items={ben.authentic_islamic} authenticated={true} />
-          </>
-        ) : (
-          <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.40)" }}>No authentic Islamic virtues found in reliable sources.</p>
-        )}
-        {has(ben.linguistic) && (<div className="space-y-1"><p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>Linguistic Significance</p><BenefitList items={ben.linguistic} /></div>)}
-        {has(ben.historical) && (<div className="space-y-1"><p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>Historical Significance</p><BenefitList items={ben.historical} /></div>)}
-        {has(ben.traditional) && (
-          <>
-            <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: "#fbbf24" }}>23 · Traditional Benefits — Not Authenticated</p>
-            <BenefitList items={ben.traditional} authenticated={false} />
-          </>
-        )}
-      </Section>
-
-      {/* Practices, Invocations & Manuscript Texts */}
-      <Section icon={BookCopy} title={`Practices, Invocations & Manuscript Texts${Array.isArray(rec.invocations) && rec.invocations.length ? ` (${rec.invocations.length})` : ""}`} defaultOpen={false}>
+      {/* Invocations / Wazifa / Dhikr / Manuscript Practices */}
+      <Section icon={BookCopy} title={`Invocations / Wazifa / Dhikr / Manuscript Practices${Array.isArray(rec.invocations) && rec.invocations.length ? ` (${rec.invocations.length})` : ""}`} titleML="പ്രാർഥനകൾ / വസീഫ / ദിക്ർ / കയ്യെഴുത്തുപ്രതി അഭ്യാസങ്ങൾ" defaultOpen={false}>
         {Array.isArray(rec.invocations) && rec.invocations.length > 0 ? (
           <div className="space-y-3">
             {INVOCATION_CATS.map(cat => {
@@ -493,6 +460,7 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full" style={{ background: cat.auth ? "#34d399" : "#fbbf24" }} />
                     <span className="font-inter text-[8px] uppercase tracking-widest font-bold" style={{ color: cat.auth ? "#34d399" : "#fbbf24" }}>{cat.label} ({items.length})</span>
+                    <span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.45)" }}>· {cat.labelML}</span>
                   </div>
                   {items.map((iv, i) => <InvocationCard key={i} inv={iv} />)}
                 </div>
@@ -504,17 +472,8 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
         )}
       </Section>
 
-      {/* 24,25,26 — Related Names, Similar Names, Related Root Words */}
-      <Section icon={Network} title="24–26 · Related Names, Similar Names & Root Words" defaultOpen={false}>
-        <Row label="24 · Related Names" value={ling.related_names} />
-        <Row label="25 · Similar Names — Distinctions" value={ling.difference_from_similar} />
-        <Row label="26 · Related Root Words" value={ling.arabic_root} mono />
-        <Row label="Root Letters" value={ling.root_letters || rp.root_letters} mono />
-        <Row label="Morphological Pattern" value={ling.morphological_pattern || rp.morphological_pattern} />
-      </Section>
-
-      {/* 27 — Source PDFs */}
-      <Section icon={BookCopy} title={`27 · Source PDFs${pdfs.length ? ` (${pdfs.length})` : ""}`} defaultOpen={false}>
+      {/* Source PDFs */}
+      <Section icon={BookCopy} title={`Source PDFs${pdfs.length ? ` (${pdfs.length})` : ""}`} titleML="സ്രോതസ്സ് PDF-കൾ" defaultOpen={false}>
         {pdfs.length === 0 ? (
           <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.40)" }}>No imported PDF paragraphs linked to this name yet.</p>
         ) : (
@@ -522,80 +481,26 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
             {pdfs.map((p, i) => (
               <div key={i} className="flex items-center gap-2 rounded-lg p-2" style={{ background: "rgba(212,175,55,0.05)", border: `1px solid ${P.faint}` }}>
                 <FileText className="w-3 h-3 flex-shrink-0" style={{ color: P.dim }} />
-                {p.url ? (
-                  <a href={p.url} target="_blank" rel="noreferrer" className="font-inter text-xs truncate flex-1 underline" style={{ color: P.text }}>{p.file}</a>
-                ) : (
-                  <span className="font-inter text-xs truncate flex-1" style={{ color: "rgba(255,255,255,0.75)" }}>{p.file}</span>
-                )}
-                <span className="font-inter text-[9px] flex-shrink-0" style={{ color: P.dim }}>
-                  {p.pageList.length} page{p.pageList.length > 1 ? "s" : ""}: {p.pageList[0]}{p.pageList.length > 1 ? `–${p.pageList[p.pageList.length-1]}` : ""}
-                </span>
+                {p.url ? <a href={p.url} target="_blank" rel="noreferrer" className="font-inter text-xs truncate flex-1 underline" style={{ color: P.text }}>{p.file}</a> : <span className="font-inter text-xs truncate flex-1" style={{ color: "rgba(255,255,255,0.75)" }}>{p.file}</span>}
+                <span className="font-inter text-[9px] flex-shrink-0" style={{ color: P.dim }}>{p.pageList.length} page{p.pageList.length > 1 ? "s" : ""}: {p.pageList[0]}{p.pageList.length > 1 ? `–${p.pageList[p.pageList.length-1]}` : ""}</span>
               </div>
             ))}
           </div>
         )}
       </Section>
 
-      {/* 28,29,30 — Verification + every source */}
-      <Section icon={ShieldCheck} title="28–30 · Verification & All Sources" defaultOpen={false} accent={st.c}>
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: st.c, background: `${st.c}1a`, border: `1px solid ${st.c}55` }}>
-            {st.t}
-          </span>
-          <span className="font-inter text-[9px]" style={{ color: P.dim }}>Confidence: <b style={{ color: P.text }}>{rec.verification_confidence || 0}%</b></span>
-          {rec.last_verified_date && <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.45)" }}>· {new Date(rec.last_verified_date).toLocaleDateString()}</span>}
-        </div>
-        <div>
-          <p className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>30 · Every Source Consulted</p>
+      {/* 29,30,31 — Verification + sources */}
+      <Section icon={ShieldCheck} title="29–31 · Verification Status, Confidence & Sources" titleML="പരിശോധന നില, വിശ്വാസ്യത, സ്രോതസ്സുകൾ" defaultOpen={false} accent={st.c}>
+        <div className="space-y-2">
+          <div className="flex items-baseline gap-2"><span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>29 · Verification Status</span><span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.45)" }}>· പരിശോധന നില</span></div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: st.c, background: `${st.c}1a`, border: `1px solid ${st.c}55` }}>{st.t}</span>
+            <span className="font-malayalam text-sm" style={{ color: st.c }}>{st.ml}</span>
+          </div>
+          <div className="flex items-baseline gap-2"><span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>30 · Verification Confidence</span><span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.45)" }}>· പരിശോധന വിശ്വാസ്യത</span></div>
+          <span className="font-inter text-[9px]" style={{ color: P.dim }}>Confidence: <b style={{ color: P.text }}>{rec.verification_confidence || 0}%</b>{rec.last_verified_date ? ` · ${new Date(rec.last_verified_date).toLocaleDateString()}` : ""}</span>
+          <div className="flex items-baseline gap-2 pt-1"><span className="font-inter text-[8px] uppercase tracking-widest" style={{ color: P.dim }}>31 · Complete Source Citations</span><span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.45)" }}>· സ്രോതസ്സ് പരാമർശങ്ങൾ</span></div>
           {has(rec.verification_sources) ? <SourcesList sources={rec.verification_sources} /> : <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.30)" }}>{NOT_VERIFIED}</p>}
-        </div>
-      </Section>
-
-      {/* Malayalam Explanation — comprehensive narrative using available data */}
-      <Section icon={Languages} title="മലയാളം · വിശദീകരണം (Malayalam Explanation)" accent="#60a5fa" defaultOpen>
-        <div className="space-y-2.5 rounded-lg p-3" style={{ background: "rgba(96,165,250,0.05)", border: "1px solid rgba(96,165,250,0.20)" }}>
-          <Row label="അർത്ഥം (Meaning)" value={mean.malayalam} ml />
-          <div className="space-y-1">
-            <p className="font-malayalam text-[10px] uppercase tracking-wider" style={{ color: P.dim }}>ഭാഷ (Language)</p>
-            <p className="font-malayalam text-sm selectable" style={{ color: "rgba(255,255,255,0.88)" }} dir="auto">{originML}{has(rec.etymology) ? ` — ${rec.etymology}` : ""}</p>
-          </div>
-          <div className="space-y-1">
-            <p className="font-malayalam text-[10px] uppercase tracking-wider" style={{ color: P.dim }}>99 നാമങ്ങളുമായി ബന്ധം</p>
-            <p className="font-malayalam text-sm selectable" style={{ color: relType === "none" ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.88)" }} dir="auto">
-              {relType === "none" ? "അല്ലാഹുവിന്റെ 99 നാമങ്ങളുമായി ആധികാരിക ബന്ധമൊന്നുമില്ല." : `${REL_LABELS[relType] || relType}${has(rel99.related_name_arabic) ? ` — ${rel99.related_name_arabic}` : ""}`}
-            </p>
-            {has(rel99.evidence) && <p className="font-malayalam text-sm selectable" style={{ color: "rgba(255,255,255,0.70)" }} dir="auto">{rel99.evidence}</p>}
-          </div>
-          <BoolLine label="ഖുർആനിൽ" present={has(ik.quran_verses)} />
-          {has(ik.quran_verses) && ik.quran_verses.map((q, i) => <p key={i} className="font-amiri text-sm leading-loose selectable" style={{ color: "rgba(255,255,255,0.80)" }} dir="rtl">{q}</p>)}
-          <BoolLine label="ഹദീസിൽ" present={has(ik.hadith_refs)} />
-          <BoolLine label="ക്ലാസിക്ക് അറബി സാഹിത്യത്തിൽ" present={has(rp.classical_dict_refs) || has(ling.classical_explanation)} />
-          <div className="space-y-1">
-            <p className="font-malayalam text-[10px] uppercase tracking-wider" style={{ color: P.dim }}>ആദ്യത്തെ പരാമർശം / ചരിത്രം</p>
-            {has(rp.earliest_occurrence) || has(rp.historical_background) ? (
-              <>
-                {has(rp.earliest_occurrence) && <p className="font-inter text-xs selectable" style={{ color: "rgba(255,255,255,0.80)" }} dir="auto">{rp.earliest_occurrence}</p>}
-                {has(rp.historical_background) && <p className="font-inter text-xs selectable" style={{ color: "rgba(255,255,255,0.70)" }} dir="auto">{rp.historical_background}</p>}
-              </>
-            ) : <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.30)" }}>{NOT_FOUND}</p>}
-          </div>
-          <div className="space-y-1">
-            <p className="font-malayalam text-[10px] uppercase tracking-wider" style={{ color: "#34d399" }}>പ്രാമാണിക ഗുണങ്ങൾ</p>
-            {has(ben.authentic_islamic) ? ben.authentic_islamic.map((b, i) => <p key={i} className="font-inter text-xs selectable" style={{ color: "rgba(255,255,255,0.85)" }} dir="auto">{b.text}</p>) : <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.30)" }}>ആധികാരിക സ്രോതസ്സുകളിൽ ഗുണങ്ങൾ രേഖപ്പെടുത്തിയിട്ടില്ല.</p>}
-          </div>
-          <div className="space-y-1">
-            <p className="font-malayalam text-[10px] uppercase tracking-wider" style={{ color: "#fbbf24" }}>പാരമ്പര്യ വിശ്വാസങ്ങൾ</p>
-            {has(ben.traditional) ? ben.traditional.map((b, i) => (
-              <div key={i} className="space-y-0.5">
-                <p className="font-inter text-xs selectable" style={{ color: "rgba(255,255,255,0.80)" }} dir="auto">{b.text}</p>
-                <span className="font-malayalam text-[10px] italic" style={{ color: "rgba(251,191,36,0.75)" }}>പ്രാമാണികമല്ല — പരിശോധിച്ചു സ്ഥിരീകരിച്ചിട്ടില്ല</span>
-              </div>
-            )) : <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.30)" }}>രേഖപ്പെടുത്തിയിട്ടില്ല.</p>}
-          </div>
-          <div className="space-y-1 pt-1 border-t" style={{ borderColor: "rgba(96,165,250,0.15)" }}>
-            <p className="font-malayalam text-[10px] uppercase tracking-wider" style={{ color: P.dim }}>പരിശോധന നില</p>
-            <p className="font-malayalam text-sm selectable" style={{ color: st.c } } dir="auto">{st.ml} — {rec.verification_confidence || 0}%</p>
-          </div>
         </div>
       </Section>
     </div>

@@ -92,7 +92,8 @@ const SCHEMA = {
         authentic_duas:{type:"array",items:{type:"string"}},
         authentic_adhkar:{type:"array",items:{type:"string"}},
         quran_verses:{type:"array",items:{type:"string"}},
-        classical_explanations:{type:"string"}
+        classical_explanations:{type:"string"},
+        meaning_ml:{type:"string"}, scholarly_explanation_ml:{type:"string"}, detailed_explanation_ml:{type:"string"}
       }
     },
     traditional_practices: { type: "array", items: {
@@ -104,31 +105,36 @@ const SCHEMA = {
     }},
     alternative_spellings: { type: "array", items: { type: "object", properties: { arabic:{type:"string"}, note:{type:"string"}, sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},page:{type:"string"},url:{type:"string"}}}} }, required:["arabic"] } },
     original_source_word: { type: "string" },
-    research_profile: { type: "object", additionalProperties: true, properties: {
+    research_profile: { type: "object", properties: {
       historical_background:{type:"string"}, pronunciation_guide:{type:"string"},
       classical_dict_refs:{type:"array",items:{type:"string"}}, academic_refs:{type:"array",items:{type:"string"}},
       manuscript_refs:{type:"array",items:{type:"string"}}, earliest_occurrence:{type:"string"},
       related_historical_usage:{type:"string"}, linguistic_explanation:{type:"string"},
       root_meaning:{type:"string"}, literal_meaning:{type:"string"},
-      root_letters:{type:"string"}, arabic_root:{type:"string"}, morphological_pattern:{type:"string"}
+      root_letters:{type:"string"}, arabic_root:{type:"string"}, morphological_pattern:{type:"string"},
+      historical_background_ml:{type:"string"}, pronunciation_guide_ml:{type:"string"}, earliest_occurrence_ml:{type:"string"},
+      related_historical_usage_ml:{type:"string"}, linguistic_explanation_ml:{type:"string"}, classical_explanation_ml:{type:"string"},
+      related_names_ml:{type:"string"}, etymology_ml:{type:"string"}
     } },
-    meanings: { type: "object", additionalProperties: true, properties: {
+    meanings: { type: "object", properties: {
       arabic:{type:"string"}, malayalam:{type:"string"}, english:{type:"string"},
-      original:{type:"string"}, symbolic:{type:"string"}, historical:{type:"string"}, traditional:{type:"string"}
+      original:{type:"string"}, symbolic:{type:"string"}, historical:{type:"string"}, traditional:{type:"string"},
+      literal_ml:{type:"string"}, root_ml:{type:"string"}, symbolic_ml:{type:"string"}, historical_ml:{type:"string"}, traditional_ml:{type:"string"}, original_ml:{type:"string"}
     } },
-    benefits: { type: "object", additionalProperties: true, properties: {
+    benefits: { type: "object", properties: {
       authentic_islamic:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},page:{type:"string"},url:{type:"string"}}}},authenticated:{type:"boolean"}}}},
       linguistic:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}},
       historical:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}},
       traditional:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}},authenticated:{type:"boolean"}}}},
       wafq:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}},
       amal:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}},
-      esoteric:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}}
+      esoteric:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}},
+      authentic_islamic_ml:{type:"string"}, traditional_ml:{type:"string"}, linguistic_ml:{type:"string"}, historical_ml:{type:"string"}
     } },
-    relationship_to_99_names: { type: "object", additionalProperties: true, properties: {
+    relationship_to_99_names: { type: "object", properties: {
       relationship_type:{type:"string",enum:["identical","alternate_reading","same_root","same_meaning","closely_related","synonymous","scholarly_relation","none","foreign_equivalent","traditional_only"]},
       related_name_id:{type:"string"}, related_name_arabic:{type:"string"},
-      evidence:{type:"string"},
+      evidence:{type:"string"}, evidence_ml:{type:"string"}, related_name_ml:{type:"string"},
       sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}
     } },
     relationship_to_99_names_type: { type: "string", enum:["identical","alternate_reading","same_root","same_meaning","closely_related","synonymous","scholarly_relation","none","foreign_equivalent","traditional_only","unknown"] },
@@ -223,6 +229,20 @@ STRICT INVOCATION RULES:
 - For traditional/occult material set authenticated=false and evidence_level="traditional" (or "unknown" when origin is unclear). For authentic Islamic evidence set authenticated=true and evidence_level="authenticated".
 - If MULTIPLE versions of an invocation exist, output one invocation entry per version, each with its own source attribution.
 - If NO historically documented invocation exists for this name, return an EMPTY invocations array. Do NOT invent any.
+
+TRILINGUAL MALAYALAM EXPLANATION (mandatory — Malayalam is the PRIMARY explanation language for ordinary readers):
+18. For EVERY prose field, ALSO provide a natural, scholarly Malayalam explanation in the corresponding *_ml field:
+   - research_profile: historical_background_ml, pronunciation_guide_ml, earliest_occurrence_ml, related_historical_usage_ml, linguistic_explanation_ml, classical_explanation_ml, related_names_ml, etymology_ml
+   - meanings: literal_ml, root_ml, symbolic_ml, historical_ml, traditional_ml, original_ml (meanings.malayalam already holds the main Malayalam meaning — keep it detailed)
+   - islamic_knowledge: meaning_ml, scholarly_explanation_ml, detailed_explanation_ml
+   - relationship_to_99_names: evidence_ml, related_name_ml
+   - benefits: authentic_islamic_ml (Malayalam prose summarizing the authentic Islamic benefits), traditional_ml (Malayalam prose summarizing the traditional benefits), linguistic_ml, historical_ml (Malayalam prose for those sections)
+   - invocations: translation_ml (already required)
+MALAYALAM RULES (strict — violating these makes the output worthless):
+- Write NATURAL, scholarly Malayalam PROSE that an ordinary Malayalam reader can easily understand. Do NOT produce mechanical word-for-word translation or transliteration of English. Use proper Malayalam Islamic/linguistic terminology where it is established.
+- Ground Malayalam explanations in reliable Malayalam sources (Malayalam tafsir/exegesis, Malayalam Islamic scholarship, recognized Malayalam linguistic works) where they exist. Where no Malayalam source exists but the underlying FACT is verified from Arabic/English sources, write a faithful scholarly Malayalam explanation of that verified fact — clearly a human-readable explanation, not a translation dump.
+- NEVER fabricate Malayalam for an unverified fact. If the underlying field is empty or "Not Verified", leave the *_ml field EMPTY too — the UI will show "Not Verified".
+- Malayalam must be complete and easy to understand; never leave a reader with only English.
 
 SOURCE REQUIREMENTS (mandatory): every statement must carry source attribution (title, author/book, page, url when available) inside the relevant sources array or verification_sources. reliability_score 1-100 (90+ Lisan al-Arab/Taj al-Arus/Quranic Corpus/King Fahd; 70-89 established academic lexicons; 40-69 occult manuscript; <40 blogs/forums which you MUST NOT use). If multiple scholars disagree, store every opinion separately with attribution — never force a single conclusion.
 
