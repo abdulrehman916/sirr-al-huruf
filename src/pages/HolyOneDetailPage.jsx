@@ -101,26 +101,55 @@ export default function HolyOneDetailPage() {
     }
   };
 
-  // Calculate Abjad value for Section B names only
-  const abjadValue = useMemo(() => {
+  // ── Divine Name extraction + dual Abjad (Section B only) ──
+  // The PDF chapter heading is "اسمه <Divine Name> <explanatory phrase>".
+  // ONLY the Divine Name (the heading's first word, with ال) is used for
+  // every Abjad calculation — never the full chapter heading. Honorific /
+  // explanatory phrases (جلت قدرته, تبارك وتعالى, عز وجل, سبحانه, جل جلاله,
+  // تعالى, جل شأنه, قدس سره, and ANY similar text after the name) are ignored.
+  // The full heading is still displayed verbatim above; nothing inside the
+  // imported PDF Knowledge is altered or recalculated. Two values are shown:
+  // with ال and without ال, each with its own square (value × value).
+  // Computed at render time → applies automatically to every existing and
+  // future Holy Name card; no database change.
+  const divineNameInfo = useMemo(() => {
     if (source !== "B" || !name || !name.arabic_name) return null;
-    
-    // Remove harakat and spaces for calculation
-    const cleanArabic = name.arabic_name.replace(/[\u064B-\u0652\u0670]/g, '').replace(/\s+/g, '');
-    
-    let total = 0;
-    for (const char of cleanArabic) {
-      if (ABJAD_VALUES[char]) {
-        total += ABJAD_VALUES[char];
-      }
+    // Strip the "اسمه" chapter marker (and any leading "اسم" prefix).
+    const heading = String(name.arabic_name)
+      .replace(/^\s*اسمه\s+/, "")
+      .replace(/^\s*اسم\s+/, "")
+      .trim();
+    const tokens = heading.split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) return null;
+    // Divine Name = the FIRST word of the heading (with ال). Everything
+    // after it is explanatory/honorific and is never used for calculation.
+    const withAL = tokens[0].replace(/\u0640/g, ""); // strip tatweel only
+    let withoutAL = withAL;
+    const bareFirst = withAL.replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g, "");
+    if (bareFirst.startsWith("\u0627\u0644") && bareFirst.length > 2) {
+      withoutAL = withAL.replace(/^\u0627\u0644/, "");
     }
-    return total;
+    const calcAbjad = (txt) => {
+      const clean = String(txt)
+        .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, "")
+        .replace(/\s+/g, "");
+      let total = 0;
+      for (const ch of clean) {
+        if (ABJAD_VALUES[ch]) total += ABJAD_VALUES[ch];
+      }
+      return total;
+    };
+    const withALValue = calcAbjad(withAL);
+    const withoutALValue = calcAbjad(withoutAL);
+    return {
+      withAL,
+      withoutAL,
+      withALValue,
+      withoutALValue,
+      withALSquare: withALValue * withALValue,
+      withoutALSquare: withoutALValue * withoutALValue,
+    };
   }, [name?.arabic_name, source]);
-
-  const abjadSquare = useMemo(() => {
-    if (!abjadValue) return null;
-    return abjadValue * abjadValue;
-  }, [abjadValue]);
 
   if (loading) {
     return (
@@ -221,41 +250,95 @@ export default function HolyOneDetailPage() {
           </button>
         </div>
 
-        {/* Abjad Calculation Cards - Section B Only */}
-        {source === "B" && abjadValue && (
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {/* Card 1: Abjad Value */}
-            <div className="rounded-xl border p-5 text-center" style={{
-              background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.05) 100%)",
-              border: "1px solid rgba(212,175,55,0.40)",
-              boxShadow: "0 0 20px rgba(212,175,55,0.12)"
-            }}>
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Calculator className="w-5 h-5" style={{ color: G.text }} />
-                <h3 className="font-inter font-semibold text-white text-sm">Abjad Value</h3>
+        {/* Abjad Calculation - Section B Only
+            ONLY the Divine Name (heading's first word) is calculated — never
+            the full chapter heading. Two values: with ال and without ال,
+            each with its own square (value × value). The full heading is
+            displayed verbatim above; PDF Knowledge below is never altered. */}
+        {source === "B" && divineNameInfo && (
+          <div className="space-y-5 mb-6">
+            {/* With ال */}
+            <div>
+              <div className="text-center mb-3">
+                <span className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.text }}>
+                  Holy Name (with ال)
+                </span>
+                <p className="font-quranic text-gold mt-1">{divineNameInfo.withAL}</p>
               </div>
-              <p className="font-amiri text-4xl font-bold" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.35)" }}>
-                {abjadValue}
-              </p>
-              <p className="text-xs text-gray-400 mt-2">{name.arabic_name}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-xl border p-5 text-center" style={{
+                  background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.05) 100%)",
+                  border: "1px solid rgba(212,175,55,0.40)",
+                  boxShadow: "0 0 20px rgba(212,175,55,0.12)"
+                }}>
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <Calculator className="w-5 h-5" style={{ color: G.text }} />
+                    <h3 className="font-inter font-semibold text-white text-sm">Abjad Value</h3>
+                  </div>
+                  <p className="font-amiri text-4xl font-bold" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.35)" }}>
+                    {divineNameInfo.withALValue}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-2">{divineNameInfo.withAL}</p>
+                </div>
+                <div className="rounded-xl border p-5 text-center" style={{
+                  background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.05) 100%)",
+                  border: "1px solid rgba(212,175,55,0.40)",
+                  boxShadow: "0 0 20px rgba(212,175,55,0.12)"
+                }}>
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <Calculator className="w-5 h-5" style={{ color: G.text }} />
+                    <h3 className="font-inter font-semibold text-white text-sm">Abjad Square</h3>
+                  </div>
+                  <p className="font-amiri text-3xl font-bold" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.35)" }}>
+                    {divineNameInfo.withALSquare}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    {divineNameInfo.withALValue} × {divineNameInfo.withALValue} = {divineNameInfo.withALSquare}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* Card 2: Abjad Square */}
-            <div className="rounded-xl border p-5 text-center" style={{
-              background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.05) 100%)",
-              border: "1px solid rgba(212,175,55,0.40)",
-              boxShadow: "0 0 20px rgba(212,175,55,0.12)"
-            }}>
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Calculator className="w-5 h-5" style={{ color: G.text }} />
-                <h3 className="font-inter font-semibold text-white text-sm">Abjad Square</h3>
+            {/* Without ال */}
+            <div>
+              <div className="text-center mb-3">
+                <span className="font-inter text-[10px] uppercase tracking-widest" style={{ color: G.text }}>
+                  Holy Name (without ال)
+                </span>
+                <p className="font-quranic text-gold mt-1">{divineNameInfo.withoutAL}</p>
               </div>
-              <p className="font-amiri text-3xl font-bold" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.35)" }}>
-                {abjadSquare}
-              </p>
-              <p className="text-xs text-gray-400 mt-2">
-                {abjadValue} × {abjadValue} = {abjadSquare}
-              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-xl border p-5 text-center" style={{
+                  background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.05) 100%)",
+                  border: "1px solid rgba(212,175,55,0.40)",
+                  boxShadow: "0 0 20px rgba(212,175,55,0.12)"
+                }}>
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <Calculator className="w-5 h-5" style={{ color: G.text }} />
+                    <h3 className="font-inter font-semibold text-white text-sm">Abjad Value</h3>
+                  </div>
+                  <p className="font-amiri text-4xl font-bold" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.35)" }}>
+                    {divineNameInfo.withoutALValue}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-2">{divineNameInfo.withoutAL}</p>
+                </div>
+                <div className="rounded-xl border p-5 text-center" style={{
+                  background: "linear-gradient(145deg, rgba(212,175,55,0.14) 0%, rgba(212,175,55,0.05) 100%)",
+                  border: "1px solid rgba(212,175,55,0.40)",
+                  boxShadow: "0 0 20px rgba(212,175,55,0.12)"
+                }}>
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <Calculator className="w-5 h-5" style={{ color: G.text }} />
+                    <h3 className="font-inter font-semibold text-white text-sm">Abjad Square</h3>
+                  </div>
+                  <p className="font-amiri text-3xl font-bold" style={{ color: G.text, textShadow: "0 0 20px rgba(212,175,55,0.35)" }}>
+                    {divineNameInfo.withoutALSquare}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    {divineNameInfo.withoutALValue} × {divineNameInfo.withoutALValue} = {divineNameInfo.withoutALSquare}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}
