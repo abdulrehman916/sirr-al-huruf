@@ -134,9 +134,8 @@ Deno.serve(async (req) => {
     }
     if (targets.length === 0) return Response.json({ status: "ok", message: "no targets", processed: 0 });
 
-    const results: any[] = [];
-    for (const rec of targets) {
-      if ((Date.now() - startedAt) >= TIME_BUDGET_MS) break;
+    const CONCURRENCY = 8;
+    const processOne = async (rec: any) => {
       try {
         const llm: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
           model: "gemini_3_1_pro",
@@ -187,17 +186,25 @@ Return ONLY the JSON object matching the schema. Empty strings/arrays where a fi
         };
         await base44.asServiceRole.entities.HolyNameKnowledge.update(rec.id, update);
 
-        results.push({
+        return {
           name_id: rec.name_id, arabic: rec.arabic_name, transliteration: rec.transliteration,
           origin: update.name_origin, status: update.verification_status,
           confidence: update.verification_confidence, sources: update.verification_sources.length,
           has_canonical: !!update.canonical_arabic, alternatives: update.alternative_readings.length,
           islamic_info: Object.keys(update.islamic_knowledge||{}).filter(k=>update.islamic_knowledge[k] && (Array.isArray(update.islamic_knowledge[k])?update.islamic_knowledge[k].length:update.islamic_knowledge[k])).length,
           traditional: update.traditional_practices.length,
-        });
+        };
       } catch (e: any) {
-        results.push({ name_id: rec.name_id, arabic: rec.arabic_name, error: String(e?.message||e) });
+        return { name_id: rec.name_id, arabic: rec.arabic_name, error: String(e?.message||e) };
       }
+    };
+
+    const results: any[] = [];
+    for (let i = 0; i < targets.length; i += CONCURRENCY) {
+      if ((Date.now() - startedAt) >= TIME_BUDGET_MS) break;
+      const chunk = targets.slice(i, i + CONCURRENCY);
+      const chunkRes = await Promise.all(chunk.map(processOne));
+      results.push(...chunkRes);
     }
 
     return Response.json({
