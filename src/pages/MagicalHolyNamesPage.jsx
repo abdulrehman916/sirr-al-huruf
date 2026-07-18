@@ -32,6 +32,27 @@ function SectionA({ importRefreshKey }) {
   const [sortIdx, setSortIdx] = useState(initial.sortIdx || 0);
   const [openId, setOpenId] = useState(initial.openId || null);
 
+  // Canonical verified spelling map (by static id) so each card title shows
+  // the best verified scholarly form instead of the imported one when the
+  // imported spelling/harakat was proven incorrect.
+  const [knowledgeMap, setKnowledgeMap] = useState({});
+  useEffect(() => {
+    let alive = true;
+    Promise.all([
+      base44.entities.HolyNameKnowledge.filter({ record_class: "occult_section_a", verification_status: "verified" }, "order_index", 500),
+      base44.entities.HolyNameKnowledge.filter({ record_class: "occult_section_a", verification_status: "conflicting_sources" }, "order_index", 500),
+    ]).then(([a, b]) => {
+      if (!alive) return;
+      const map = {};
+      for (const r of [...(a || []), ...(b || [])]) {
+        const m = /^HNK-MHN-(\d+)$/.exec(r.name_id || "");
+        if (m) map[Number(m[1])] = r;
+      }
+      setKnowledgeMap(map);
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
   const SORT_CYCLE = ["default", "az", "za", "value"];
   const SORT_LABELS = { default: "#", az: "A → Z", za: "Z → A", value: "Value ↑" };
   const sort = SORT_CYCLE[sortIdx];
@@ -179,6 +200,14 @@ function SectionA({ importRefreshKey }) {
             filtered.map((name, i) => {
               const cat = name.abjadValue <= 200 ? "Low" : name.abjadValue <= 600 ? "Medium" : "High";
               const isOpen = openId === name.id;
+              // Canonical verified spelling for this card (HolyNameKnowledge).
+              // When the imported form was proven incorrect, the card title
+              // shows the verified canonical form; the imported form is kept
+              // as "Original Imported Form" in the detail block.
+              const kn = knowledgeMap[name.id];
+              const canonical = (kn && (kn.canonical_arabic || kn.fully_vowelized_name)) || "";
+              const showCanonical = canonical && canonical !== name.arabicName;
+              const corrected = !!(showCanonical && kn && kn.spelling_corrected);
               return (
                 <motion.div
                   key={name.id}
@@ -203,8 +232,13 @@ function SectionA({ importRefreshKey }) {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-inter text-[8px] font-semibold" style={{ color: "rgba(255,255,255,0.28)" }}>#{name.id}</span>
                         <span className="font-amiri text-[1.65rem] font-bold" style={{ color: P.text, textShadow: isOpen ? "0 0 20px rgba(212,175,55,0.35)" : "0 0 12px rgba(212,175,55,0.20)" }}>
-                          {name.arabicName}
+                          {showCanonical ? canonical : name.arabicName}
                         </span>
+                        {showCanonical && (
+                          <span className="font-inter text-[6px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border whitespace-nowrap" style={{ color: "#34d399", borderColor: "rgba(52,211,153,0.45)", background: "rgba(52,211,153,0.10)" }} title="Verified canonical spelling">
+                            ✓ Verified
+                          </span>
+                        )}
                         <span className="font-inter text-[7px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border whitespace-nowrap" style={{ color: P.dim, borderColor: P.border, background: "rgba(245,208,96,0.08)" }}>
                           {cat}
                         </span>
@@ -228,10 +262,24 @@ function SectionA({ importRefreshKey }) {
                       >
                         <div className="px-4 pb-4 pt-1 grid grid-cols-2 gap-3" style={{ borderTop: "1px solid " + P.faint }}>
                           <div className="col-span-2 rounded-xl p-4 text-center" style={{ background: P.bgHi, border: "1px solid " + P.borderHi }}>
-                            <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: P.dim }}>Arabic Name (Full Harakat)</p>
-                            <p className="font-amiri text-[2.8rem] font-bold leading-[2.4]" style={{ color: P.text, textShadow: "0 0 24px rgba(212,175,55,0.40)" }}>
-                              {name.arabicHarakat}
+                            <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: P.dim }}>
+                              {showCanonical ? "Canonical Name (Verified Harakat)" : "Arabic Name (Full Harakat)"}
                             </p>
+                            <p className="font-amiri text-[2.8rem] font-bold leading-[2.4]" style={{ color: P.text, textShadow: "0 0 24px rgba(212,175,55,0.40)" }} dir="rtl">
+                              {showCanonical ? canonical : name.arabicHarakat}
+                            </p>
+                            {corrected && (
+                              <div className="mt-3 pt-2 border-t" style={{ borderColor: "rgba(52,211,153,0.25)" }}>
+                                <p className="font-inter text-[7px] uppercase tracking-widest mb-1" style={{ color: "rgba(148,163,184,0.70)" }}>Original Imported Form</p>
+                                <p className="font-amiri text-base leading-loose" style={{ color: "rgba(255,255,255,0.55)" }} dir="rtl">{name.arabicHarakat}</p>
+                                {kn.spelling_correction && kn.spelling_correction.evidence && (
+                                  <p className="font-inter text-[9px] mt-1 leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }} dir="auto">{kn.spelling_correction.evidence}</p>
+                                )}
+                                {kn.spelling_correction && kn.spelling_correction.confidence != null && (
+                                  <p className="font-inter text-[8px] mt-0.5" style={{ color: P.dim }}>Confidence: <b style={{ color: P.text }}>{kn.spelling_correction.confidence}%</b></p>
+                                )}
+                              </div>
+                            )}
                           </div>
                           <div className="col-span-2 rounded-xl p-3 text-center" style={{ background: P.bg, border: "1px solid " + P.border }}>
                             <p className="font-inter text-[8px] uppercase tracking-widest mb-1" style={{ color: P.dim }}>English Name</p>
