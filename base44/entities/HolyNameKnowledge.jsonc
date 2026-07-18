@@ -1,7 +1,7 @@
 {
   "name": "HolyNameKnowledge",
   "type": "object",
-  "description": "INDEPENDENT Holy Names Knowledge database for the PDF Knowledge Import System on the Holy Names page ONLY. Completely separate from Section A's static magicalHolyNamesData array and from Section B's HolyOnePDFName entity. This entity holds the canonical Holy Name records (matching targets). Seeded once with the 99 Names of Allah (reference keys); ALL descriptive content (Malayalam meaning, description, benefits, usage, method, warnings, references, notes) comes ONLY from uploaded PDFs and is stored as HolyNameImportedSection child records \u2014 never AI-generated. Matching during import is done on arabic_normalized (harakat-stripped). ISOLATED \u2014 only seedHolyNameKnowledge and importHolyNamesPDF backend functions, and the Holy Names page PDF Knowledge tab, read/write this entity. Never used by any other module, engine, or page. EXTENDED (authoritative harakat + knowledge enrichment): new fields hold verified harakat, alternative readings, linguistic info, Islamic knowledge, traditional practices, and full source attribution for the Section A occult-name audit. record_class distinguishes the canonical 99-Name seed ('canonical_99') from the 443 occult Section-A names ('occult_section_a'). Existing records are never overwritten; enrichment only fills the new authoritative fields.",
+  "description": "INDEPENDENT Holy Names Knowledge database for the PDF Knowledge Import System on the Holy Names page ONLY. Completely separate from Section A's static magicalHolyNamesData array and from Section B's HolyOnePDFName entity. This entity holds the canonical Holy Name records (matching targets). Seeded once with the 99 Names of Allah (reference keys); ALL descriptive content (Malayalam meaning, description, benefits, usage, method, warnings, references, notes) comes ONLY from uploaded PDFs and is stored as HolyNameImportedSection child records \u2014 never AI-generated. Matching during import is done on arabic_normalized (harakat-stripped). ISOLATED \u2014 only seedHolyNameKnowledge and importHolyNamesPDF backend functions, and the Holy Names page PDF Knowledge tab, read/write this entity. Never used by any other module, engine, or page. EXTENDED (authoritative harakat + knowledge enrichment): new fields hold verified harakat, alternative readings, linguistic info, Islamic knowledge, traditional practices, and full source attribution for the Section A occult-name audit. record_class distinguishes the canonical 99-Name seed ('canonical_99') from the 443 occult Section-A names ('occult_section_a'). Existing records are never overwritten; enrichment only fills the new authoritative fields. FULL RESEARCH PROFILE: each card is a complete scholarly research page \u2014 alternative_spellings, original_source_word, research_profile (history/pronunciation/refs/earliest occurrence), separated meanings, categorized source-supported benefits, and relationship_to_99_names. Every statement source-attributed; empty/'Not Verified' when unsupported; zero fabricated content.",
   "properties": {
     "name_id": {
       "type": "string",
@@ -145,7 +145,52 @@
         ]
       },
       "default": [],
-      "description": "Every alternative spelling/harakat reading attested by a source, with its source(s) and a preferred flag. Populated only when authoritative sources disagree \u2014 never auto-overwritten."
+      "description": "Every alternative VOCALIZATION/harakat reading attested by a source, with its source(s) and a preferred flag. Populated only when authoritative sources disagree \u2014 never auto-overwritten."
+    },
+    "alternative_spellings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "arabic": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string",
+            "default": ""
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "page": {
+                  "type": "string",
+                  "default": ""
+                },
+                "url": {
+                  "type": "string",
+                  "default": ""
+                }
+              }
+            },
+            "default": []
+          }
+        },
+        "required": [
+          "arabic"
+        ]
+      },
+      "default": [],
+      "description": "Alternative SPELLINGS of the name (distinct from vocalization variants in alternative_readings). Each with source attribution. Append-only."
+    },
+    "original_source_word": {
+      "type": "string",
+      "default": "",
+      "description": "The original word in its source language (Hebrew/Syriac/Aramaic/Persian/etc.) when the name is a transliteration of a foreign Divine/angelic name. Empty when origin is Arabic or unknown."
     },
     "harakat_verified": {
       "type": "boolean",
@@ -237,11 +282,12 @@
         "syriac",
         "aramaic",
         "arabic",
+        "persian",
         "mixed",
         "unknown"
       ],
       "default": "unknown",
-      "description": "The name's actual linguistic origin, determined honestly per name. 'hebrew'/'syriac'/'aramaic' for the many foreign-origin occult transliterations; 'arabic' for genuine Arabic words; 'mixed' for hybrid forms; 'unknown' when origin cannot be determined (never guessed)."
+      "description": "The name's actual linguistic origin, determined honestly per name. 'hebrew'/'syriac'/'aramaic'/'persian' for foreign-origin occult transliterations; 'arabic' for genuine Arabic words; 'mixed' for hybrid forms; 'unknown' when origin cannot be determined (never guessed)."
     },
     "etymology": {
       "type": "string",
@@ -307,6 +353,48 @@
       },
       "default": [],
       "description": "Traditional manuscript practices (wafq/amal/dua/hizb/dhikr) associated with this name, with COMPLETE source attribution. authenticated=false and note='Traditional Manuscript Reference (Not authenticated)' when authenticity cannot be verified \u2014 never presented as established Islamic fact."
+    },
+    "research_profile": {
+      "type": "object",
+      "additionalProperties": true,
+      "default": {},
+      "description": "DEEP RESEARCH PROFILE (Gemini 3.1 Pro + live web search, scholarly sources only). Holds: { historical_background, pronunciation_guide, classical_dict_refs[], academic_refs[], manuscript_refs[], earliest_occurrence, related_historical_usage, linguistic_explanation, root_meaning, literal_meaning, root_letters, arabic_root, morphological_pattern }. Each sub-field filled ONLY from reliable sources; left empty or 'Not Verified' when unsupported. Never fabricated."
+    },
+    "meanings": {
+      "type": "object",
+      "additionalProperties": true,
+      "default": {},
+      "description": "SEPARATED MEANINGS: { arabic, malayalam, english, original, symbolic, historical, traditional }. symbolic ONLY when sourced. Each filled from reliable sources; empty when unsupported."
+    },
+    "benefits": {
+      "type": "object",
+      "additionalProperties": true,
+      "default": {},
+      "description": "SOURCE-SUPPORTED BENEFITS by category: { authentic_islamic[], linguistic[], historical[], traditional[], wafq[], amal[], esoteric[] }. Each entry: { text, sources[], authenticated }. Traditional/occult material labeled 'Traditional/Historical/Not Authenticated as Islamic Teaching' with authenticated=false. Never mix traditional occult material with authenticated Islamic teachings."
+    },
+    "relationship_to_99_names": {
+      "type": "object",
+      "additionalProperties": true,
+      "default": {},
+      "description": "RELATIONSHIP to the canonical 99 Names of Allah. { relationship_type, related_name_id, related_name_arabic, evidence, sources[] }. relationship_type: identical | alternate_reading | same_root | same_meaning | closely_related | synonymous | scholarly_relation | none | foreign_equivalent | traditional_only. 'none' = no authentic relationship found. Never invent relationships \u2014 state 'none' with evidence when absent."
+    },
+    "relationship_to_99_names_type": {
+      "type": "string",
+      "enum": [
+        "identical",
+        "alternate_reading",
+        "same_root",
+        "same_meaning",
+        "closely_related",
+        "synonymous",
+        "scholarly_relation",
+        "none",
+        "foreign_equivalent",
+        "traditional_only",
+        "unknown"
+      ],
+      "default": "unknown",
+      "description": "Denormalized relationship_type from relationship_to_99_names for indexed filtering. 'unknown' until audited."
     },
     "review_notes": {
       "type": "string",
@@ -384,6 +472,12 @@
       "name": "idx_original_static_id",
       "fields": [
         "original_static_id"
+      ]
+    },
+    {
+      "name": "idx_relationship_to_99_names_type",
+      "fields": [
+        "relationship_to_99_names_type"
       ]
     }
   ],

@@ -102,9 +102,39 @@ const SCHEMA = {
         source:{type:"string"}, authenticated:{type:"boolean"}, note:{type:"string"}
       }
     }},
+    alternative_spellings: { type: "array", items: { type: "object", properties: { arabic:{type:"string"}, note:{type:"string"}, sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},page:{type:"string"},url:{type:"string"}}}} }, required:["arabic"] } },
+    original_source_word: { type: "string" },
+    research_profile: { type: "object", additionalProperties: true, properties: {
+      historical_background:{type:"string"}, pronunciation_guide:{type:"string"},
+      classical_dict_refs:{type:"array",items:{type:"string"}}, academic_refs:{type:"array",items:{type:"string"}},
+      manuscript_refs:{type:"array",items:{type:"string"}}, earliest_occurrence:{type:"string"},
+      related_historical_usage:{type:"string"}, linguistic_explanation:{type:"string"},
+      root_meaning:{type:"string"}, literal_meaning:{type:"string"},
+      root_letters:{type:"string"}, arabic_root:{type:"string"}, morphological_pattern:{type:"string"}
+    } },
+    meanings: { type: "object", additionalProperties: true, properties: {
+      arabic:{type:"string"}, malayalam:{type:"string"}, english:{type:"string"},
+      original:{type:"string"}, symbolic:{type:"string"}, historical:{type:"string"}, traditional:{type:"string"}
+    } },
+    benefits: { type: "object", additionalProperties: true, properties: {
+      authentic_islamic:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},page:{type:"string"},url:{type:"string"}}}},authenticated:{type:"boolean"}}}},
+      linguistic:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}},
+      historical:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}},
+      traditional:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}},authenticated:{type:"boolean"}}}},
+      wafq:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}},
+      amal:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}},
+      esoteric:{type:"array",items:{type:"object",properties:{text:{type:"string"},sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}}}}
+    } },
+    relationship_to_99_names: { type: "object", additionalProperties: true, properties: {
+      relationship_type:{type:"string",enum:["identical","alternate_reading","same_root","same_meaning","closely_related","synonymous","scholarly_relation","none","foreign_equivalent","traditional_only"]},
+      related_name_id:{type:"string"}, related_name_arabic:{type:"string"},
+      evidence:{type:"string"},
+      sources:{type:"array",items:{type:"object",properties:{title:{type:"string"},url:{type:"string"}}}}
+    } },
+    relationship_to_99_names_type: { type: "string", enum:["identical","alternate_reading","same_root","same_meaning","closely_related","synonymous","scholarly_relation","none","foreign_equivalent","traditional_only","unknown"] },
     review_notes: { type: "string" }
   },
-  required: ["name_origin","verification_status","verification_confidence","verification_sources"]
+  required: ["name_origin","verification_status","verification_confidence","verification_sources","relationship_to_99_names_type"]
 };
 
 Deno.serve(async (req) => {
@@ -160,6 +190,20 @@ STRICT RULES — violating any rule makes the output worthless:
 9. linguistic fields: fill root_letters/arabic_root/morphological_pattern/literal_meaning/lexical_meaning/classical_explanation/grammar_notes ONLY for names with a real Arabic root; leave empty for foreign transliterations. quranic_usage/hadith_usage empty unless the name is actually in the Qur'an/Hadith.
 10. review_notes: briefly explain any uncertainty or why review is needed.
 
+DEEP RESEARCH PROFILE (perform the widest possible reliable search across classical Arabic lexicons, Islamic references, academic publications, manuscript catalogues, historical sources, linguistic resources, and trusted scholarly websites):
+11. alternative_spellings: every alternative SPELLING attested (distinct from vocalizations), each with source.
+12. original_source_word: the original word in its source language (Hebrew/Syriac/Aramaic/Persian) when this is a transliteration; empty for native Arabic.
+13. research_profile: { historical_background, pronunciation_guide, classical_dict_refs[], academic_refs[], manuscript_refs[], earliest_occurrence, related_historical_usage, linguistic_explanation, root_meaning, literal_meaning }. Fill each ONLY from reliable sources; empty/"Not Verified" when unsupported.
+14. meanings: separated meanings { arabic, malayalam, english, original, symbolic, historical, traditional }. symbolic ONLY when sourced. malayalam = detailed Malayalam meaning.
+15. benefits: source-supported benefits by category { authentic_islamic[], linguistic[], historical[], traditional[], wafq[], amal[], esoteric[] }. Each entry { text, sources[], authenticated }. authentic_islamic ONLY from Qur'an/Hadith/classical scholars (authenticated=true). traditional/wafq/amal/esoteric = traditional/occult material with authenticated=false and text noting "Traditional/Historical/Not Authenticated as Islamic Teaching". NEVER mix traditional occult material with authenticated Islamic teachings.
+
+RELATIONSHIP TO THE 99 NAMES OF ALLAH:
+16. relationship_to_99_names: determine with evidence whether this name relates to the canonical 99 Names of Allah. relationship_type is ONE of: identical | alternate_reading | same_root | same_meaning | closely_related | synonymous | scholarly_relation | none | foreign_equivalent | traditional_only. If a relationship exists, set related_name_id (e.g. "HNK-001"), related_name_arabic, and explain evidence. If NO authentic relationship exists, set relationship_type="none" and state that clearly with evidence. relationship_to_99_names_type must equal relationship_type (use "unknown" only if you cannot determine it — never guess).
+
+SOURCE REQUIREMENTS (mandatory): every statement must carry source attribution (title, author/book, page, url when available) inside the relevant sources array or verification_sources. reliability_score 1-100 (90+ Lisan al-Arab/Taj al-Arus/Quranic Corpus/King Fahd; 70-89 established academic lexicons; 40-69 occult manuscript; <40 blogs/forums which you MUST NOT use). If multiple scholars disagree, store every opinion separately with attribution — never force a single conclusion.
+
+UNKNOWN INFORMATION: if no reliable source exists for a field, leave it empty or set "Not Verified". NEVER generate speculative explanations.
+
 Return ONLY the JSON object matching the schema. Empty strings/arrays where a field does not apply — never fabricated.`,
           response_json_schema: SCHEMA,
         });
@@ -182,6 +226,13 @@ Return ONLY the JSON object matching the schema. Empty strings/arrays where a fi
           linguistic: out.linguistic || {},
           islamic_knowledge: out.islamic_knowledge || {},
           traditional_practices: Array.isArray(out.traditional_practices) ? out.traditional_practices : [],
+          alternative_spellings: Array.isArray(out.alternative_spellings) ? out.alternative_spellings : [],
+          original_source_word: out.original_source_word || "",
+          research_profile: out.research_profile || {},
+          meanings: out.meanings || {},
+          benefits: out.benefits || {},
+          relationship_to_99_names: out.relationship_to_99_names || {},
+          relationship_to_99_names_type: out.relationship_to_99_names_type || (out.relationship_to_99_names && out.relationship_to_99_names.relationship_type) || "unknown",
           review_notes: out.review_notes || "",
         };
         await base44.asServiceRole.entities.HolyNameKnowledge.update(rec.id, update);
