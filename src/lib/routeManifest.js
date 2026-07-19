@@ -77,6 +77,8 @@ const ROUTE_MANIFEST = [
   { path: '/admin/shop', component: 'AdminShopDashboard', chunk: 'AdminShopDashboard' },
   { path: '/admin/audit-log', component: 'AdminAuditLog', chunk: 'AdminAuditLog' },
   { path: '/admin/purpose-dictionary', component: 'AdminPurposeDictionary', chunk: 'AdminPurposeDictionary' },
+  // Master PDF Library — Owner-only (Knowledge Management). Gated by rbac + server-side.
+  { path: '/admin/master-pdf-library', component: 'MasterPdfLibrary', chunk: 'MasterPdfLibrary' },
 
   // Rules & Conditions — public
   { path: '/rules-conditions', component: 'RulesConditions', chunk: 'RulesConditions', flags: ['public'] },

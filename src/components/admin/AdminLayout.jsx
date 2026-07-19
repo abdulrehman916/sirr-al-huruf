@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal, ShoppingBag, Store, ScrollText, Tags, LogOut, BookMarked } from "lucide-react";
+import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal, ShoppingBag, Store, ScrollText, Tags, LogOut, BookMarked, Library } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { filterAdminSections } from "@/lib/rbac";
 import { base44 } from "@/api/base44Client";
@@ -37,6 +37,12 @@ const SIDEBAR_SECTIONS = [
       { path: "/admin/access-requests", label: "Access Requests", icon: Inbox },
       { path: "/admin/redeem-approvals", label: "Redeem Approvals", icon: ClipboardCheck },
       { path: "/admin/page-permissions", label: "Page Access", icon: Globe },
+    ]
+  },
+  {
+    label: "Knowledge Management",
+    items: [
+      { path: "/admin/master-pdf-library", label: "Master PDF Library", icon: Library },
     ]
   },
   {

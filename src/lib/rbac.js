@@ -84,6 +84,11 @@ export const ROUTE_ACCESS = {
   // Purpose Dictionary Manager — Owner-only (admin-only backend lookup database
   // for the 7th Mizan). NOT part of any calculation. Pure management surface.
   "/admin/purpose-dictionary":    { roles: [ROLES.OWNER] },
+  // Master PDF Library — Owner-only private research workspace. Single source of
+  // truth for all project knowledge. NEVER visible to admins/users/guests. Backend
+  // functions (searchGoogleDrivePdfs, searchOneDrivePdfs, searchAdobeCloudPdfs) also
+  // enforce Owner-only server-side. Entity RLS is admin-only as a second layer.
+  "/admin/master-pdf-library":   { roles: [ROLES.OWNER] },
 };
 
 // Match a concrete path against ROUTE_ACCESS patterns (supports :param).
