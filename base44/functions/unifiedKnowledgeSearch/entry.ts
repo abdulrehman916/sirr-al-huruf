@@ -61,6 +61,68 @@ Deno.serve(async (req) => {
     // ── Arabic normalization (harakat/tatweel strip) ──
     const stripHarakat = (s) => (s || '').replace(/[\u064B-\u0652\u0670\u0640]/g, '').replace(/[\u0622\u0623\u0625\u0649]/g, '\u0627').trim();
     const normQ = stripHarakat(query);
+
+    // ══════════════════════════════════════════════════════════════
+    // KNOWLEDGE CACHE — verified-hit fast path (zero AI, zero credits).
+    // Before any search/AI, check if the Owner has already verified
+    // knowledge for this exact (query, mode). If so, return it
+    // instantly. This is req 3 + req 7: retrieve instantly, never
+    // re-run AI for the same query.
+    // ══════════════════════════════════════════════════════════════
+    const queryNormalized = `${normQ.toLowerCase()}|${mode}`;
+    let contentHash = '';
+    try {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(queryNormalized));
+      contentHash = Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+    } catch (_) {}
+    const cacheId = `KC-${contentHash}`;
+
+    if (contentHash) {
+      try {
+        const cached = await sdk.entities.KnowledgeCache.filter(
+          { cache_id: cacheId, verification_status: 'verified' },
+          '-approved_at',
+          1
+        );
+        if (cached && cached.length > 0) {
+          const c = cached[0];
+          // Bump serve count (best-effort) — every serve = one AI run avoided.
+          sdk.entities.KnowledgeCache.update(c.id || c._id, {
+            last_served_at: new Date().toISOString(),
+            serve_count: (c.serve_count || 0) + 1,
+          }).catch(() => {});
+          // Reconstruct the SAME response shape the page expects, from the cache.
+          const cachedDb = (c.db_results_summary || []).map((p) => ({
+            page_id: '', master_book_id: p.master_book_id, page_number: p.page_number, page_label: p.page_label || '',
+            original_pdf_name: p.book_title || '', cloud_source: 'Indexed',
+            arabic: '', verified_arabic: '', english: '', malayalam: '', ocr_text: '',
+            ocr_confidence: p.ocr_confidence ?? 100,
+            duplicate_status: p.duplicate_status || 'Unique', related_books: [],
+            citation: {
+              author: p.author || '', book_title: p.book_title || '', volume: p.volume || '',
+              page: p.page_number, publisher: p.publisher || '', edition: p.edition || '',
+              language: p.language || '', year: p.publication_year || '',
+            },
+            content_hash: p.content_hash || '', ai_classification: {}, processing_date: '', review_status: 'verified',
+            original_scan_url: '', pdf_file_url: '',
+          }));
+          return Response.json({
+            query, mode,
+            counts: { db: cachedDb.length, googleDrive: 0, oneDrive: 0, adobe: 0 },
+            db_results: cachedDb,
+            cloud_matches: { googleDrive: [], oneDrive: [], adobe: { available: false, note: 'Served from verified cache.' } },
+            scholarly_entries: c.scholarly_entries || null,
+            llm_ran: false,
+            served_from_cache: true,
+            cache_id: cacheId,
+            pending_owner_review: false,
+            confidence_score: c.confidence_score || 0,
+            serve_count: (c.serve_count || 0) + 1,
+            approved_at: c.approved_at || '',
+          });
+        }
+      } catch (_) { /* cache miss → fall through to normal search */ }
+    }
     const arabicRoot = (s) => {
       const n = (s || '').replace(/[\u064B-\u0652\u0670\u0640]/g, '');
       return n.replace(/[\u0627\u0623\u0625\u0622\u0648\u064a\u0649\u0621\u0651]/g, '').trim();
@@ -258,6 +320,78 @@ ${context}`;
       }
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // SAVE-PENDING — store the AI findings as a PENDING KnowledgeCache
+    // entry so the Owner can review + approve. NEVER auto-published.
+    // Idempotent: if a pending entry already exists for this query,
+    // refresh its payload + last_repopulated_at + version_history
+    // (append-only — previous payload hash preserved). If a verified
+    // entry exists, do NOT overwrite it (req 9); instead create a new
+    // pending entry so the Owner can compare and re-approve (the old
+    // verified entry is later marked 'superseded' on re-approval).
+    // ══════════════════════════════════════════════════════════════
+    let pendingSaved = false;
+    let pendingCacheId = '';
+    if (contentHash && (dbResults.length > 0 || scholarly)) {
+      try {
+        const dbSummary = dbResults.map((r) => ({
+          master_book_id: r.master_book_id, book_title: r.citation?.book_title || r.original_pdf_name || '',
+          author: r.citation?.author || '', page_number: r.page_number, page_label: r.page_label || '',
+          edition: r.citation?.edition || '', publisher: r.citation?.publisher || '',
+          volume: r.citation?.volume || '', language: r.citation?.language || '',
+          publication_year: r.citation?.year || '', ocr_confidence: r.ocr_confidence ?? 100,
+          content_hash: r.content_hash || '', duplicate_status: r.duplicate_status || '',
+        }));
+        const sourceBooks = dbResults.map((r) => ({
+          book_title: r.citation?.book_title || r.original_pdf_name || '',
+          author: r.citation?.author || '', page: String(r.page_number || ''),
+          pdf_page: r.page_number || 0,
+          citation: `${r.citation?.author ? r.citation.author + ', ' : ''}${r.citation?.book_title || ''}${r.citation?.edition ? ', ' + r.citation.edition : ''}${r.citation?.publisher ? ', ' + r.citation.publisher : ''}${r.page_number ? ', p.' + r.page_number : ''}`,
+          edition: r.citation?.edition || '', publisher: r.citation?.publisher || '', language: r.citation?.language || '',
+        }));
+        const minConf = dbResults.length > 0 ? Math.min(...dbResults.map((r) => r.ocr_confidence ?? 100)) : 100;
+        const now = new Date().toISOString();
+
+        const existing = await sdk.entities.KnowledgeCache.filter(
+          { cache_id: cacheId, verification_status: 'pending_review' }, undefined, 1
+        ).catch(() => []);
+        if (existing && existing.length > 0) {
+          // Refresh the pending payload (append-only version trail of the pending state).
+          const ex = existing[0];
+          let prevHash = '';
+          try {
+            const pb = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(ex.scholarly_entries || {})));
+            prevHash = Array.from(new Uint8Array(pb)).map((b) => b.toString(16).padStart(2, '0')).join('');
+          } catch (_) {}
+          const vh = Array.isArray(ex.version_history) ? [...ex.version_history] : [];
+          vh.push({ version: vh.length + 1, timestamp: now, action: 'repopulated', changed_by: user?.id || '', changed_by_name: user?.full_name || user?.email || '', summary: 'New AI run refreshed the pending payload before re-approval.', previous_status: 'pending_review', previous_payload_hash: prevHash });
+          await sdk.entities.KnowledgeCache.update(ex.id || ex._id, {
+            scholarly_entries: scholarly || {}, db_results_summary: dbSummary, source_books: sourceBooks,
+            ocr_confidence_min: minConf, ai_was_used: true, llm_model: 'gemini_3_flash',
+            last_repopulated_at: now, version_history: vh, query, mode,
+          }).catch(() => {});
+          pendingSaved = true; pendingCacheId = cacheId;
+        } else {
+          // No pending entry yet — create one. (If a verified entry exists for this
+          // query, it is left untouched per req 9; the Owner reviews the new pending
+          // entry and may re-approve, which supersedes the old verified one.)
+          const vh = [{ version: 1, timestamp: now, action: 'created', changed_by: user?.id || '', changed_by_name: user?.full_name || user?.email || '', summary: 'Created from unifiedKnowledgeSearch AI run — awaiting Owner review.', previous_status: '', previous_payload_hash: '' }];
+          await sdk.entities.KnowledgeCache.create({
+            cache_id: cacheId, query, mode, query_normalized: queryNormalized, content_hash: contentHash,
+            requesting_module: 'unified_search',
+            scholarly_entries: scholarly || {}, db_results_summary: dbSummary, source_books: sourceBooks,
+            linked_cards: [], verification_status: 'pending_review',
+            confidence_score: minConf, ocr_confidence_min: minConf,
+            ai_was_used: true, llm_model: 'gemini_3_flash',
+            approved_by: '', approved_by_name: '', approved_at: '',
+            approval_history: [], version_history: vh,
+            created_at: now, last_served_at: '', serve_count: 0, last_repopulated_at: now,
+          }).catch(() => {});
+          pendingSaved = true; pendingCacheId = cacheId;
+        }
+      } catch (_) { /* save-pending failure never blocks the response */ }
+    }
+
     return Response.json({
       query,
       mode,
@@ -271,6 +405,9 @@ ${context}`;
       cloud_matches: cloudMatches,
       scholarly_entries: scholarly,
       llm_ran: llmRan,
+      served_from_cache: false,
+      pending_owner_review: pendingSaved,
+      cache_id: pendingCacheId || cacheId,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
