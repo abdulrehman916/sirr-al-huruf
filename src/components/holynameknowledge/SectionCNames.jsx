@@ -59,8 +59,8 @@ export default function SectionCNames() {
     return (
       <div className="text-center py-12 space-y-3">
         <ShieldAlert className="w-10 h-10 mx-auto" style={{ color: "rgba(148,163,184,0.6)" }} />
-        <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "rgba(148,163,184,0.7)" }}>
-          No Section C cards found
+        <p className="font-malayalam text-sm" style={{ color: "rgba(148,163,184,0.7)" }}>
+          സെക്ഷൻ C കാർഡുകൾ ലഭ്യമായില്ല
         </p>
         <p className="font-malayalam text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
           കാർഡുകൾ ലഭ്യമായില്ല
@@ -78,7 +78,7 @@ export default function SectionCNames() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search Birhatīya names..."
+          placeholder="ബിർഹതിയ്യ നാമങ്ങൾ തിരയുക..."
           className="flex-1 bg-transparent outline-none font-inter text-sm"
           style={{ color: "rgba(255,255,255,0.85)" }}
           dir="auto"
@@ -93,15 +93,15 @@ export default function SectionCNames() {
 
       {/* Count */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <p className="font-inter text-[10px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.22)" }}>
-          {filtered.length} of {cards.length} names
+        <p className="font-malayalam text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.30)" }}>
+          {filtered.length} / {cards.length} നാമങ്ങൾ
         </p>
         <button
           onClick={() => { setQuery(""); setOpenId(null); }}
-          className="px-3 py-1.5 rounded-xl border font-inter text-[10px] uppercase tracking-widest"
+          className="px-3 py-1.5 rounded-xl border font-malayalam text-[12px] font-semibold"
           style={{ background: P.bg, borderColor: P.border, color: P.dim }}
         >
-          Clear
+          മായ്ക്കുക
         </button>
       </div>
 
@@ -111,7 +111,7 @@ export default function SectionCNames() {
           {filtered.length === 0 ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16 space-y-3">
               <p className="font-amiri text-lg" style={{ color: P.dim }}>لا توجد نتائج</p>
-              <p className="font-inter text-xs" style={{ color: "rgba(255,255,255,0.22)" }}>Try a different search</p>
+              <p className="font-malayalam text-sm" style={{ color: "rgba(255,255,255,0.22)" }}>മറ്റൊരു തിരയൽ ശ്രമിക്കുക</p>
             </motion.div>
           ) : (
             filtered.map((card, i) => {
