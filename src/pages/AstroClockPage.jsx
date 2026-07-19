@@ -30,6 +30,7 @@ const ZodiacEncyclopedia = lazy(() => import("@/components/astroclock/dashboard/
 const ReferenceLibrary = lazy(() => import("@/components/astroclock/dashboard/ReferenceLibrary"));
 const ImportHistory = lazy(() => import("@/components/astroclock/dashboard/ImportHistory"));
 const EntityKnowledgeReviewQueue = lazy(() => import("@/components/astroclock/dashboard/EntityKnowledgeReviewQueue"));
+const AstroVerifiedKnowledge = lazy(() => import("@/components/astroclock/AstroVerifiedKnowledge"));
 
 function LangSelector() {
   const { language, setLanguage, txt } = useAstroClockLanguage();
@@ -153,6 +154,11 @@ function AstroClockContent() {
   const { role } = useAuth();
   const isAdmin = role === 'admin' || role === 'owner';
 
+  // Verified Knowledge Cache query — current weekday (deterministic, no engine dependency).
+  // The Owner populates the cache by running unifiedKnowledgeSearch for the weekday name;
+  // on cache miss this layer renders nothing and the existing Astro Clock panels remain.
+  const currentWeekday = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
   // Request GPS permission + start continuous location watch on mount.
   useEffect(() => {
     requestLocationPermission();
@@ -176,6 +182,13 @@ function AstroClockContent() {
             <LocationSelector />
           </div>
         </div>
+
+        {/* ── Verified Knowledge Cache (additive — renders null on miss, existing panels remain) ── */}
+        <AstroClockErrorBoundary label="Verified Knowledge">
+          <Suspense fallback={null}>
+            <AstroVerifiedKnowledge query={currentWeekday} />
+          </Suspense>
+        </AstroClockErrorBoundary>
 
         {/* ── 8 Sections — each unique, no duplication ── */}
         <AstroClockErrorBoundary label="Today Dashboard">
