@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
+import { getDocument } from 'npm:pdfjs-dist@4.10.38/legacy/build/pdf.mjs';
 
 // ═══════════════════════════════════════════════════════════════
 // MASTER PDF LIBRARY — BACKGROUND PROCESSING PIPELINE
@@ -286,7 +287,7 @@ Deno.serve(async (req) => {
             if (!conn?.accessToken) throw new Error('Google Drive not connected');
             const r = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(target.google_drive_file_id)}?alt=media`, { headers: { Authorization: `Bearer ${conn.accessToken}` } });
             if (!r.ok) throw new Error(`Drive fetch ${r.status}`);
-            fileRef = await r.blob(); // in-memory only; discarded after this chunk
+            fileRef = await r.arrayBuffer(); // in-memory PDF bytes; discarded after extraction
           } else if (target.onedrive_file_id) {
             cloudSource = 'one_drive';
             const conn = await sdk.connectors.getConnection('one_drive');
@@ -334,31 +335,71 @@ BOOK METADATA (from title/copyright pages, only if visible in this chunk):
 
 Return ONLY the JSON object. No commentary.`;
 
-        let liveExtracted, liveSuccess = false, liveErr = '';
-        for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        let livePages = [];
+        let liveReturnedTotal = 0;
+        let liveData = null;
+
+        if (cloudSource === 'googledrive') {
+          // ── GOOGLE DRIVE: in-memory PDF text extraction (pdfjs). No binary is
+          //    ever persisted — the ArrayBuffer is discarded after extraction.
+          //    Only extracted text + page index + citations are stored. (Drive PDFs
+          //    are not text-exportable via the API, and the backend SDK cannot pass
+          //    a binary to the vision model, so the OCR engine for Drive is pdfjs
+          //    text-layer extraction instead of vision — a pipeline redesign, not a
+          //    storage change. Scanned/image-only pages yield empty text and are
+          //    flagged needs_owner_review rather than guessed.)
           try {
-            liveExtracted = await sdk.integrations.Core.InvokeLLM({ prompt: livePrompt, file_urls: [fileRef], response_json_schema: PAGE_SCHEMA, model: 'gemini_3_flash' });
-            liveSuccess = true; break;
+            const pdf = await getDocument({ data: new Uint8Array(fileRef), disableFontFace: true, isEvalSupported: false, useSystemFonts: false }).promise;
+            liveReturnedTotal = pdf.numPages || 0;
+            const pEnd = Math.min(page_end, liveReturnedTotal);
+            for (let pnum = page_start; pnum <= pEnd; pnum++) {
+              const page = await pdf.getPage(pnum);
+              const tc = await page.getTextContent();
+              let text = '';
+              for (const it of (tc.items || [])) { text += (it.str || '') + (it.hasEOL ? '\n' : ' '); }
+              const empty = text.trim().length === 0;
+              livePages.push({
+                page_number: pnum, page_label: '',
+                ocr_text: text, ocr_text_ar: text, ocr_text_en: '', ocr_text_ml: '',
+                ocr_confidence: empty ? 0 : 100,
+                quality_flags: empty ? { incomplete_ocr: true, low_quality_scan: true } : {},
+                classification: {}, images: [],
+              });
+            }
+            try { await pdf.destroy(); } catch (_) {}
           } catch (e) {
-            liveErr = String(e?.message || e);
-            if (attempt >= MAX_ATTEMPTS - 1) break;
-            await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+            const errMsg = String(e?.message || e);
+            await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'partial', extraction_error: `Drive text extract failed: ${errMsg.slice(0,300)}` }).catch(() => {});
+            await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `Drive pdfjs extract failed: ${errMsg.slice(0,200)}`, { page_range: `${page_start}-${page_end}` });
+            continue;
+          }
+        } else {
+          // ── ONEDRIVE: vision OCR via the headerless pre-auth download URL.
+          let liveExtracted, liveSuccess = false, liveErr = '';
+          for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+            try {
+              liveExtracted = await sdk.integrations.Core.InvokeLLM({ prompt: livePrompt, file_urls: [fileRef], response_json_schema: PAGE_SCHEMA, model: 'gemini_3_flash' });
+              liveSuccess = true; break;
+            } catch (e) {
+              liveErr = String(e?.message || e);
+              if (attempt >= MAX_ATTEMPTS - 1) break;
+              await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+            }
+          }
+          if (!liveSuccess) {
+            await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'partial', extraction_error: `OCR failed (${cloudSource}): ${liveErr.slice(0,300)}` }).catch(() => {});
+            await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `OCR failed: ${liveErr.slice(0,200)}`, { page_range: `${page_start}-${page_end}` });
+            continue;
+          }
+          liveData = (liveExtracted && typeof liveExtracted === 'object') ? liveExtracted : {};
+          livePages = Array.isArray(liveData.pages) ? liveData.pages : [];
+          liveReturnedTotal = Number(liveData.total_pages) || 0;
+          if (livePages.length === 0) {
+            await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `Zero content for chunk ${page_start}-${page_end} (${cloudSource}) — possible corrupt/unreadable PDF`, { page_range: `${page_start}-${page_end}` });
+            await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'failed', extraction_error: `Zero content extracted (${cloudSource}). Possible corrupt/unreadable PDF.` }).catch(() => {});
+            continue;
           }
         }
-        if (!liveSuccess) {
-          await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'partial', extraction_error: `OCR failed (${cloudSource}): ${liveErr.slice(0,300)}` }).catch(() => {});
-          await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `OCR failed: ${liveErr.slice(0,200)}`, { page_range: `${page_start}-${page_end}` });
-          continue;
-        }
-
-        const liveData = (liveExtracted && typeof liveExtracted === 'object') ? liveExtracted : {};
-        const livePages = Array.isArray(liveData.pages) ? liveData.pages : [];
-        if (livePages.length === 0) {
-          await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `Zero content for chunk ${page_start}-${page_end} (${cloudSource}) — possible corrupt/unreadable PDF`, { page_range: `${page_start}-${page_end}` });
-          await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'failed', extraction_error: `Zero content extracted (${cloudSource}). Possible corrupt/unreadable PDF.` }).catch(() => {});
-          continue;
-        }
-        const liveReturnedTotal = Number(liveData.total_pages) || 0;
 
         const now = new Date().toISOString();
         const liveRecords = [];
@@ -424,7 +465,7 @@ Return ONLY the JSON object. No commentary.`;
           extraction_status: liveDone ? 'pending_verification' : 'processing',
           extraction_error: '',
         };
-        if (page_start === 1) {
+        if (page_start === 1 && liveData) {
           if (liveData.book_title) liveUpdate.book_title = liveData.book_title;
           if (liveData.book_title_ar) liveUpdate.book_title_ar = liveData.book_title_ar;
           if (liveData.author) liveUpdate.author = liveData.author;
