@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
-import { extractText as unpdfExtractText } from 'npm:unpdf@1.6.2';
+import { extractText as unpdfExtractText, getDocumentProxy as unpdfGetDocumentProxy } from 'npm:unpdf@1.6.2';
 // unpdf ships a serverless pdfjs bundle that runs IN-PROCESS — no worker thread,
 // no dynamic import of npm specifiers, no binary stored. Used ONLY for Google Drive
 // PDFs (Drive has no server-side text export, and the backend SDK cannot pass a
@@ -46,6 +46,13 @@ import { extractText as unpdfExtractText } from 'npm:unpdf@1.6.2';
 //   access for HUMANS is enforced by the library page + the cloud search
 //   functions + entity RLS (admin-only).
 // ═══════════════════════════════════════════════════════════════
+
+// standardFontDataUrl — pdfjs standard-14 fonts CDN. unpdf's serverless bundle has
+// no bundled standard fonts in Deno (auto-resolve is node-only), so PDFs with
+// unembedded standard fonts (Helvetica/Times/Courier) abort without this. Configured
+// ONCE here for the entire backend PDF-extraction path. Version matches unpdf's
+// bundled pdfjs (v5.6.205 per unpdf 1.6.2).
+const STANDARD_FONT_DATA_URL = 'https://unpkg.com/pdfjs-dist@5.6.205/standard_fonts/';
 
 const CHUNK_SIZE = 3;            // pages per LLM vision call (rich per-page schema)
 const TIME_BUDGET_MS = 85000;    // total run budget
@@ -178,7 +185,8 @@ Deno.serve(async (req) => {
           const fres = await withTimeout(fetch('https://raw.githubusercontent.com/mozilla/pdf.js/master/web/compressed.tracemonkey-pldi-09.pdf'), 20000);
           if (!fres.ok) throw new Error('fetch ' + fres.status);
           const buf = new Uint8Array(await withTimeout(fres.arrayBuffer(), 20000));
-          const out = await withTimeout(unpdfExtractText(buf, { mergePages: false }), 30000);
+          const pdfProbe = await withTimeout(unpdfGetDocumentProxy(buf, { standardFontDataUrl: STANDARD_FONT_DATA_URL }), 30000);
+          const out = await withTimeout(unpdfExtractText(pdfProbe, { mergePages: false }), 30000);
           r.totalPages = Number(out.totalPages) || 0;
           r.pageCount = Array.isArray(out.text) ? out.text.length : 0;
           r.page1Text = (Array.isArray(out.text) ? (out.text[0] || '') : '').slice(0, 120);
@@ -444,7 +452,8 @@ Return ONLY the JSON object. No commentary.`;
           let pageTexts = [];
           try {
             const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout ' + ms + 'ms')), ms))]);
-            const out = await withTimeout(unpdfExtractText(new Uint8Array(fileRef), { mergePages: false }), 60000);
+            const pdfDrive = await withTimeout(unpdfGetDocumentProxy(new Uint8Array(fileRef), { standardFontDataUrl: STANDARD_FONT_DATA_URL }), 60000);
+            const out = await withTimeout(unpdfExtractText(pdfDrive, { mergePages: false }), 60000);
             totalPages = Number(out.totalPages) || 0;
             pageTexts = Array.isArray(out.text) ? out.text : [];
           } catch (e) {
