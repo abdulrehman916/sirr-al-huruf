@@ -1,14 +1,32 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
-import { getDocument, GlobalWorkerOptions } from 'npm:pdfjs-dist@4.10.38/legacy/build/pdf.mjs';
-// pdfjs worker: this Deno runtime has no import.meta.resolve, so point workerSrc
-// directly at the npm specifier. pdfjs's main-thread "fake worker" does a dynamic
-// import(workerSrc), which Deno CAN resolve for npm specifiers — so the worker
-// runs in-process (no separate Worker thread), and no binary is ever stored.
-try {
-  if (!GlobalWorkerOptions.workerSrc) {
-    GlobalWorkerOptions.workerSrc = 'npm:pdfjs-dist@4.10.38/legacy/build/pdf.worker.mjs';
-  }
-} catch (_) {}
+import * as pdfjsLib from 'npm:pdfjs-dist@4.10.38/legacy/build/pdf.mjs';
+import { WorkerMessageHandler } from 'npm:pdfjs-dist@4.10.38/legacy/build/pdf.worker.mjs';
+const { getDocument, GlobalWorkerOptions, PDFWorker, LoopbackPort } = pdfjsLib;
+// pdfjs worker in this Deno runtime: dynamic import of npm specifiers is blocked
+// and there is no import.meta.resolve / createObjectURL / Worker thread. So we run
+// the pdfjs worker handler IN-PROCESS via a loopback port that speaks pdfjs's own
+// .on/.send protocol — no separate worker, no dynamic import, no binary stored.
+function makeLoopbackPort() {
+  const handlers = Object.create(null);
+  return {
+    on(name, cb) { (handlers[name] || (handlers[name] = [])).push(cb); },
+    off(name, cb) { const a = handlers[name] || []; const i = a.indexOf(cb); if (i >= 0) a.splice(i, 1); },
+    send(name, data, transfer) { queueMicrotask(() => { (handlers[name] || []).forEach((cb) => cb(data)); }); },
+    postMessage(msg, transfer) { this.send('message', msg, transfer); },
+    addEventListener(t, cb) { this.on(t, cb); },
+    removeEventListener(t, cb) { this.off(t, cb); },
+    start() {}, close() {}, terminate() {},
+  };
+}
+function getPdfjsWorker() {
+  const port = LoopbackPort ? new LoopbackPort() : makeLoopbackPort();
+  WorkerMessageHandler.setup(port);
+  // LoopbackPort queues messages until start() is called — flush so the
+  // in-process worker handler receives GetDocRequest and replies.
+  if (typeof port.start === 'function') port.start();
+  if (typeof port._start === 'function') port._start();
+  return new PDFWorker({ port });
+}
 
 // ═══════════════════════════════════════════════════════════════
 // MASTER PDF LIBRARY — BACKGROUND PROCESSING PIPELINE
@@ -172,18 +190,24 @@ Deno.serve(async (req) => {
     try {
       const _body = await req.clone().json().catch(() => ({}));
       if (_body && _body.debug === 'pdfjs') {
-        const probe = { workerSrc: GlobalWorkerOptions.workerSrc || '', numPages: 0, page1Text: '', extractError: '' };
-        // Minimal 1-page PDF (text "Hello PDFJS") to test extraction end-to-end.
-        const pdfStr = `%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj\n4 0 obj<</Length 44>>stream\nBT /F1 12 Tf 10 180 Td (Hello PDFJS) Tj ET\nendstream\nendobj\n5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\nstartxref\n0\n%%EOF`;
+        // Probe: in-process pdfjs worker via MessageChannel (no worker thread,
+        // no dynamic import). Verifies worker loads + text extraction + page
+        // boundaries on a minimal 1-page PDF. Touches no book state.
+        const r = { workerImportOk: false, channelOk: false, numPages: 0, page1Text: '', err: '' };
         try {
-          const pdf = await getDocument({ data: new TextEncoder().encode(pdfStr), disableFontFace: true, isEvalSupported: false, useSystemFonts: false }).promise;
-          probe.numPages = pdf.numPages;
-          const page = await pdf.getPage(1);
-          const tc = await page.getTextContent();
-          probe.page1Text = (tc.items || []).map((it) => it.str).join(' ');
+          r.workerImportOk = typeof WorkerMessageHandler?.setup === 'function';
+          const worker = getPdfjsWorker();
+          r.channelOk = !!worker;
+          const pdfStr = `%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj\n4 0 obj<</Length 44>>stream\nBT /F1 12 Tf 10 180 Td (Hello PDFJS) Tj ET\nendstream\nendobj\n5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\nstartxref\n0\n%%EOF`;
+          const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout ' + ms + 'ms')), ms))]);
+          const pdf = await withTimeout(getDocument({ data: new TextEncoder().encode(pdfStr), worker, disableFontFace: true, isEvalSupported: false, useSystemFonts: false }).promise, 20000);
+          r.numPages = pdf.numPages;
+          const page = await withTimeout(pdf.getPage(1), 10000);
+          const tc = await withTimeout(page.getTextContent(), 10000);
+          r.page1Text = (tc.items || []).map((it) => it.str).join(' ');
           await pdf.destroy();
-        } catch (e) { probe.extractError = String(e?.message || e); }
-        return Response.json({ probe });
+        } catch (e) { r.err = String(e?.message || e).slice(0, 300); }
+        return Response.json({ r });
       }
     } catch (_) {}
 
