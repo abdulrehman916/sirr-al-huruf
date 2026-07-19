@@ -1,8 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 import { getDocument, GlobalWorkerOptions } from 'npm:pdfjs-dist@4.10.38/legacy/build/pdf.mjs';
+// pdfjs worker: this Deno runtime has no import.meta.resolve, so point workerSrc
+// directly at the npm specifier. pdfjs's main-thread "fake worker" does a dynamic
+// import(workerSrc), which Deno CAN resolve for npm specifiers — so the worker
+// runs in-process (no separate Worker thread), and no binary is ever stored.
 try {
   if (!GlobalWorkerOptions.workerSrc) {
-    GlobalWorkerOptions.workerSrc = import.meta.resolve('npm:pdfjs-dist@4.10.38/legacy/build/pdf.worker.mjs');
+    GlobalWorkerOptions.workerSrc = 'npm:pdfjs-dist@4.10.38/legacy/build/pdf.worker.mjs';
   }
 } catch (_) {}
 
@@ -162,6 +166,26 @@ Deno.serve(async (req) => {
     if (user && user.role !== 'admin') {
       return Response.json({ error: 'Admin only' }, { status: 403 });
     }
+
+    // ── DEBUG PROBE: verify pdfjs worker resolution + spawn in this Deno runtime.
+    //    Touches NO book state. Invoke with payload { "debug": "pdfjs" }.
+    try {
+      const _body = await req.clone().json().catch(() => ({}));
+      if (_body && _body.debug === 'pdfjs') {
+        const probe = { workerSrc: GlobalWorkerOptions.workerSrc || '', numPages: 0, page1Text: '', extractError: '' };
+        // Minimal 1-page PDF (text "Hello PDFJS") to test extraction end-to-end.
+        const pdfStr = `%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj\n4 0 obj<</Length 44>>stream\nBT /F1 12 Tf 10 180 Td (Hello PDFJS) Tj ET\nendstream\nendobj\n5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\nstartxref\n0\n%%EOF`;
+        try {
+          const pdf = await getDocument({ data: new TextEncoder().encode(pdfStr), disableFontFace: true, isEvalSupported: false, useSystemFonts: false }).promise;
+          probe.numPages = pdf.numPages;
+          const page = await pdf.getPage(1);
+          const tc = await page.getTextContent();
+          probe.page1Text = (tc.items || []).map((it) => it.str).join(' ');
+          await pdf.destroy();
+        } catch (e) { probe.extractError = String(e?.message || e); }
+        return Response.json({ probe });
+      }
+    } catch (_) {}
 
     const sdk = base44.asServiceRole;
     const started = Date.now();
