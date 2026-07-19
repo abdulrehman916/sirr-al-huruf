@@ -191,11 +191,24 @@ Deno.serve(async (req) => {
       }
     } catch (_) {}
 
+    // ── BATCH + CHECKPOINT CONFIG (idempotent resume) ──
+    // The pipeline resumes from the natural checkpoint: every book already
+    // indexed (has MasterPdfPage records / pending_verification status) is
+    // skipped; only books still in pending/processing/partial are processed.
+    // Re-running is safe — per-page idempotency (existingSet) + per-book
+    // status filtering guarantee no duplication and no overwrite.
+    const runBody = await req.clone().json().catch(() => ({}));
+    const BATCH_SIZE = Math.min(Math.max(parseInt((runBody && runBody.batch_size) || 10, 10) || 10, 1), 50);
+    const checkpointOnly = runBody && runBody.mode === 'checkpoint';
+
     const sdk = base44.asServiceRole;
     const started = Date.now();
     let chunksProcessed = 0;
     let lastBookId = '';
     let lockedBookId = '';
+    let booksCompleted = 0;   // books fully handled this run (success or failure)
+    const booksFailed = [];    // [{ master_book_id, book_title, error }]
+    const failedIds = new Set();
 
     // ── ANTI-RACE MERGE HELPER ──────────────────────────────────
     // Reload the LATEST pdf_parts from the DB, patch the target part into
@@ -232,7 +245,28 @@ Deno.serve(async (req) => {
       }).catch(() => {});
     }
 
-    while (Date.now() - started < TIME_BUDGET_MS) {
+    // ── CHECKPOINT: compute the idempotent resume point BEFORE processing ──
+    const cpBooks = await sdk.entities.MasterPdfBook.list('upload_date', 500).catch(() => []);
+    const cpCompleted = (cpBooks || []).filter(b => ['pending_verification','completed'].includes(b.extraction_status)).length;
+    const cpFailedCount = (cpBooks || []).filter(b => b.extraction_status === 'failed').length;
+    const cpRemaining = (cpBooks || []).filter(b => ['pending','processing','partial'].includes(b.extraction_status)).length;
+    const cpNext = (cpBooks || []).find(b => ['pending','processing','partial'].includes(b.extraction_status));
+    const startCheckpoint = {
+      completed: cpCompleted,
+      failed: cpFailedCount,
+      remaining: cpRemaining,
+      next_book_id: cpNext?.master_book_id || null,
+      next_book_title: cpNext?.book_title || '',
+      batch_size: BATCH_SIZE,
+      resume_rule: 'skip every book already indexed (pending_verification/completed/failed); skip pages already having indexed_at + content_hash + search_text',
+    };
+    console.log('[CHECKPOINT] Resuming from:', JSON.stringify(startCheckpoint));
+    if (checkpointOnly) {
+      return Response.json({ status: 'checkpoint', checkpoint: startCheckpoint });
+    }
+
+    // Batch loop: stop when BATCH_SIZE books are handled OR time budget expires.
+    while (Date.now() - started < TIME_BUDGET_MS && booksCompleted < BATCH_SIZE) {
       // Find books with work remaining. Skip 'uploading' (Owner still
       // uploading), 'paused', 'pending_verification', 'completed', 'failed'.
       const books = await sdk.entities.MasterPdfBook.filter(
@@ -318,6 +352,26 @@ Deno.serve(async (req) => {
             cloudSource = 'googledrive';
             const conn = await sdk.connectors.getConnection('googledrive');
             if (!conn?.accessToken) throw new Error('Google Drive not connected');
+            // SIZE GUARD: fetch metadata first; skip oversized PDFs that would
+            // OOM-crash the worker during download/extraction (native crash, not
+            // catchable by try/catch). Flagged for Owner review.
+            const MAX_DRIVE_BYTES = 80 * 1024 * 1024; // 80 MB
+            let driveSize = 0;
+            try {
+              const metaRes = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(target.google_drive_file_id)}?fields=size,name`, { headers: { Authorization: `Bearer ${conn.accessToken}` } });
+              if (metaRes.ok) {
+                const meta = await metaRes.json().catch(() => ({}));
+                driveSize = Number(meta.size) || 0;
+              }
+            } catch (_) {}
+            if (driveSize > MAX_DRIVE_BYTES) {
+              const sizeMb = Math.round(driveSize / 1024 / 1024);
+              await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'failed', extraction_error: `PDF too large for in-memory extraction (${sizeMb} MB) — skipped, flagged for Owner review` }).catch(() => {});
+              await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `PDF too large (${sizeMb} MB) — skipped`, { page_range: '0' });
+              if (!failedIds.has(target.master_book_id)) { booksFailed.push({ master_book_id: target.master_book_id, book_title: target.book_title || '', error: `PDF too large (${sizeMb} MB) — skipped` }); failedIds.add(target.master_book_id); }
+              booksCompleted++;
+              continue;
+            }
             const r = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(target.google_drive_file_id)}?alt=media`, { headers: { Authorization: `Bearer ${conn.accessToken}` } });
             if (!r.ok) throw new Error(`Drive fetch ${r.status}`);
             fileRef = await r.arrayBuffer(); // in-memory PDF bytes; discarded after extraction
@@ -335,6 +389,8 @@ Deno.serve(async (req) => {
           const errMsg = String(e?.message || e);
           await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'partial', extraction_error: `Cloud read failed (${cloudSource}): ${errMsg.slice(0,300)}` }).catch(() => {});
           await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `Cloud read failed: ${errMsg.slice(0,200)}`, { page_range: `${page_start}-${page_end}` });
+          if (!failedIds.has(target.master_book_id)) { booksFailed.push({ master_book_id: target.master_book_id, book_title: target.book_title || '', error: `Cloud read failed: ${errMsg.slice(0,200)}` }); failedIds.add(target.master_book_id); }
+          booksCompleted++;
           continue;
         }
 
@@ -395,6 +451,8 @@ Return ONLY the JSON object. No commentary.`;
             const errMsg = String(e?.message || e);
             await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'partial', extraction_error: `Drive text extract failed: ${errMsg.slice(0,300)}` }).catch(() => {});
             await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `Drive unpdf extract failed: ${errMsg.slice(0,200)}`, { page_range: `${page_start}-${page_end}` });
+            if (!failedIds.has(target.master_book_id)) { booksFailed.push({ master_book_id: target.master_book_id, book_title: target.book_title || '', error: `Drive unpdf extract failed: ${errMsg.slice(0,200)}` }); failedIds.add(target.master_book_id); }
+            booksCompleted++;
             continue;
           }
           // ── Discard the PDF binary immediately (no persistence, ever) ──
@@ -403,6 +461,8 @@ Return ONLY the JSON object. No commentary.`;
           if (totalPages === 0 || pageTexts.length === 0) {
             await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'failed', extraction_error: 'Zero content extracted (Google Drive). Possible corrupt/scanned-only PDF.' }).catch(() => {});
             await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `Zero content from Drive PDF`, { page_range: `${page_start}-${page_end}` });
+            if (!failedIds.has(target.master_book_id)) { booksFailed.push({ master_book_id: target.master_book_id, book_title: target.book_title || '', error: 'Zero content extracted (Google Drive). Possible corrupt/scanned-only PDF.' }); failedIds.add(target.master_book_id); }
+            booksCompleted++;
             continue;
           }
 
@@ -412,63 +472,108 @@ Return ONLY the JSON object. No commentary.`;
           const driveExistingSet = new Set((driveExistingAll || []).map((p) => Number(p.page_number)));
 
           const now = new Date().toISOString();
-          const driveRecords = [];
-          for (let pnum = 1; pnum <= totalPages; pnum++) {
-            if (driveExistingSet.has(pnum)) continue;
-            const text = String(pageTexts[pnum - 1] || '');
-            const empty = text.trim().length === 0;
-            const ocr_confidence = empty ? 0 : 100;
-            const qf = empty ? { incomplete_ocr: true, low_quality_scan: true } : {};
-            const content_hash = await sha256(normalizeForHash(text));
-            const search_text = text.toLowerCase();
-            driveRecords.push({
-              page_record_id: `MPP-${target.master_book_id}-p${pnum}`,
-              master_book_id: target.master_book_id,
-              source_part_id: 'CLOUD-LIVE',
-              source_part_number: 1,
-              page_number: pnum,
-              page_label: '',
-              ocr_text: text,
-              ocr_text_ar: text,
-              ocr_text_en: '',
-              ocr_text_ml: '',
-              ocr_corrections: [],
-              original_scan_url: '',
-              extracted_images: [],
-              arabic_text: text,
-              english_text: '',
-              malayalam_text: '',
-              ai_classification: {},
-              ocr_confidence,
-              quality_flags: qf,
-              needs_owner_review: empty,
-              review_status: 'pending_review',
-              reviewed_by: '',
-              reviewed_at: '',
-              content_hash,
-              search_text,
-              indexed_at: now,
-            });
-          }
-          for (let i = 0; i < driveRecords.length; i += 100) {
-            await sdk.entities.MasterPdfPage.bulkCreate(driveRecords.slice(i, i + 100));
-          }
-
+          // SAFETY: cap pages indexed per book to bound memory on very large PDFs.
+          const PAGE_CAP = 1200;
+          const effectiveTotal = Math.min(totalPages, PAGE_CAP);
+          const truncated = totalPages > PAGE_CAP;
           let driveIndexedCount = 0;
-          try { driveIndexedCount = (await sdk.entities.MasterPdfPage.filter({ master_book_id: target.master_book_id })).length; } catch (_) {}
-          const driveReviewCount = driveRecords.filter((r) => r.needs_owner_review).length;
+          let driveReviewCount = 0;
+          let driveBatchRecords = [];
+          let driveTimeUp = false;
+          let driveLastPage = 0;
+          try {
+            for (let pnum = 1; pnum <= effectiveTotal; pnum++) {
+              if (driveExistingSet.has(pnum)) continue;
+              // Per-book time guard: if the run budget is nearly spent, stop
+              // indexing this book and mark it partial (resumable — the next
+              // run skips already-indexed pages via existingSet).
+              if (Date.now() - started > TIME_BUDGET_MS - 15000) { driveTimeUp = true; driveLastPage = pnum - 1; break; }
+              const text = String(pageTexts[pnum - 1] || '');
+              const empty = text.trim().length === 0;
+              const ocr_confidence = empty ? 0 : 100;
+              const qf = empty ? { incomplete_ocr: true, low_quality_scan: true } : {};
+              const content_hash = await sha256(normalizeForHash(text));
+              const search_text = text.toLowerCase();
+              driveBatchRecords.push({
+                page_record_id: `MPP-${target.master_book_id}-p${pnum}`,
+                master_book_id: target.master_book_id,
+                source_part_id: 'CLOUD-LIVE',
+                source_part_number: 1,
+                page_number: pnum,
+                page_label: '',
+                ocr_text: text,
+                ocr_text_ar: text,
+                ocr_text_en: '',
+                ocr_text_ml: '',
+                ocr_corrections: [],
+                original_scan_url: '',
+                extracted_images: [],
+                arabic_text: text,
+                english_text: '',
+                malayalam_text: '',
+                ai_classification: {},
+                ocr_confidence,
+                quality_flags: qf,
+                needs_owner_review: empty,
+                review_status: 'pending_review',
+                reviewed_by: '',
+                reviewed_at: '',
+                content_hash,
+                search_text,
+                indexed_at: now,
+              });
+              if (empty) driveReviewCount++;
+              // Flush every 100 records — bounds memory (never hold the whole book at once).
+              if (driveBatchRecords.length >= 100) {
+                await sdk.entities.MasterPdfPage.bulkCreate(driveBatchRecords);
+                driveIndexedCount += driveBatchRecords.length;
+                driveBatchRecords = [];
+              }
+            }
+            if (driveBatchRecords.length > 0) {
+              await sdk.entities.MasterPdfPage.bulkCreate(driveBatchRecords);
+              driveIndexedCount += driveBatchRecords.length;
+              driveBatchRecords = [];
+            }
+          } catch (recErr) {
+            // One book failed (likely OOM/timeout on a huge PDF). Log, mark failed,
+            // skip it, and continue the batch — never kill the whole run.
+            const recMsg = String(recErr?.message || recErr).slice(0, 300);
+            await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'failed', extraction_error: `Record build/create failed: ${recMsg}` }).catch(() => {});
+            await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `Record build/create failed: ${recMsg}`, { page_range: `1-${effectiveTotal}` });
+            if (!failedIds.has(target.master_book_id)) { booksFailed.push({ master_book_id: target.master_book_id, book_title: target.book_title || '', error: `Record build/create failed: ${recMsg}` }); failedIds.add(target.master_book_id); }
+            booksCompleted++;
+            pageTexts = null;
+            continue;
+          }
+          pageTexts = null;
+
+          if (driveTimeUp) {
+            // Time budget reached mid-book — mark partial (resumable on next run).
+            await sdk.entities.MasterPdfBook.update(bookRecordId, {
+              last_processed_page: driveLastPage,
+              total_pages: totalPages,
+              combined_total_pages: totalPages,
+              total_pages_indexed: driveIndexedCount,
+              extraction_status: 'partial',
+              extraction_error: `Time budget reached at page ${driveLastPage}/${totalPages} — resumable on next run`,
+            }).catch(() => {});
+            await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_chunk', 'partial', `Time budget reached at page ${driveLastPage}/${totalPages}. Indexed ${driveIndexedCount} page(s).`, { page_range: `1-${driveLastPage}`, entry_count: driveIndexedCount });
+            booksCompleted++;
+            break; // time is up — exit the batch loop
+          }
+          const driveErrNote = truncated ? ` (truncated to first ${PAGE_CAP} of ${totalPages} pages — book flagged for review)` : '';
           await sdk.entities.MasterPdfBook.update(bookRecordId, {
-            last_processed_page: totalPages,
+            last_processed_page: effectiveTotal,
             total_pages: totalPages,
             combined_total_pages: totalPages,
             total_pages_indexed: driveIndexedCount,
             extraction_status: 'pending_verification',
-            extraction_error: '',
+            extraction_error: driveErrNote,
           }).catch(() => {});
-          await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_chunk', 'success', `Indexed ${driveRecords.length} page(s) from Google Drive (in-memory text extraction, no binary stored). ${driveReviewCount} flagged for review.`, { page_range: `1-${totalPages}`, entry_count: driveRecords.length });
+          await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_chunk', 'success', `Indexed ${driveIndexedCount} page(s) from Google Drive (in-memory text extraction, no binary stored). ${driveReviewCount} flagged for review.${driveErrNote}`, { page_range: `1-${effectiveTotal}`, entry_count: driveIndexedCount });
           chunksProcessed++;
-          // Discard extracted texts (already persisted as page records)
-          pageTexts = null;
+          booksCompleted++;
           if (Date.now() - started > TIME_BUDGET_MS - 20000) break;
           continue; // Drive whole-book branch done; do not fall through to OneDrive logic
         } else {
@@ -909,10 +1014,31 @@ Return ONLY the JSON object. No commentary.`;
       if (lb[0]) await sdk.entities.MasterPdfBook.update(lb[0].id || lb[0]._id, { processing_lock_until: '' }).catch(() => {});
     }
 
+    // ── FINAL BATCH + CHECKPOINT REPORT ──
+    const finalBooks = await sdk.entities.MasterPdfBook.list('upload_date', 500).catch(() => []);
+    const fCompleted = (finalBooks || []).filter(b => ['pending_verification','completed'].includes(b.extraction_status)).length;
+    const fFailed = (finalBooks || []).filter(b => b.extraction_status === 'failed').length;
+    const fRemaining = (finalBooks || []).filter(b => ['pending','processing','partial'].includes(b.extraction_status)).length;
+    const avgPerBookMs = booksCompleted > 0 ? Math.round((Date.now() - started) / booksCompleted) : 0;
+    const etaSeconds = avgPerBookMs > 0 ? Math.round((fRemaining * avgPerBookMs) / 1000) : 0;
     return Response.json({
       status: chunksProcessed > 0 ? 'processed' : 'idle',
       chunks_processed: chunksProcessed,
       last_book_id: lastBookId,
+      batch: {
+        batch_size: BATCH_SIZE,
+        books_completed_this_batch: booksCompleted,
+        books_failed_this_batch: booksFailed.length,
+        failed_books: booksFailed,
+      },
+      checkpoint: {
+        completed: fCompleted,
+        failed: fFailed,
+        remaining: fRemaining,
+        current_checkpoint: lastBookId || 'none',
+        estimated_remaining_time_seconds: etaSeconds,
+        estimated_remaining_time_human: etaSeconds > 0 ? `${Math.floor(etaSeconds/60)}m ${etaSeconds%60}s` : 'unknown',
+      },
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
