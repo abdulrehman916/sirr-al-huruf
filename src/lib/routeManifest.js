@@ -81,6 +81,8 @@ const ROUTE_MANIFEST = [
   { path: '/admin/master-pdf-library', component: 'MasterPdfLibrary', chunk: 'MasterPdfLibrary' },
   // Owner Review & Approval — Owner-only gate (Knowledge Management). Gated by rbac + server-side.
   { path: '/admin/pending-reviews', component: 'OwnerPendingReviews', chunk: 'OwnerPendingReviews' },
+  // Unified Knowledge Search — Owner-only permanent knowledge gateway (Knowledge Management).
+  { path: '/admin/knowledge-search', component: 'UnifiedKnowledgeSearch', chunk: 'UnifiedKnowledgeSearch' },
 
   // Rules & Conditions — public
   { path: '/rules-conditions', component: 'RulesConditions', chunk: 'RulesConditions', flags: ['public'] },

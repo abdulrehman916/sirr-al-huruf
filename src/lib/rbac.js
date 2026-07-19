@@ -94,6 +94,11 @@ export const ROUTE_ACCESS = {
   // Approved pages are the ONLY pages that ever reach Holy Names / Sections
   // A·B·C / Abjad / Bast / Wafq / Vefk / Mizan / Khadim / Astrology.
   "/admin/pending-reviews":      { roles: [ROLES.OWNER] },
+  // Unified Knowledge Search — Owner-only permanent knowledge gateway.
+  // Searches Google Drive + OneDrive + Adobe + Uploaded PDFs + Master
+  // PDF Library simultaneously; AI compares all books before results.
+  // All future modules obtain knowledge only through this engine.
+  "/admin/knowledge-search":     { roles: [ROLES.OWNER] },
 };
 
 // Match a concrete path against ROUTE_ACCESS patterns (supports :param).
