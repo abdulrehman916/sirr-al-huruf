@@ -50,7 +50,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 
 const TIME_BUDGET_MS = 180000;
 const PAGES_PER_CALL = 4;       // pages per LLM detection call
-const MAX_PAGES_PER_BOOK_PER_RUN = 8;  // cap pages per book per run → multiple books per run (remaining pages resume next run)
 const LLM_MODEL = 'gemini_3_flash';
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -139,7 +138,7 @@ Deno.serve(async (req) => {
     const sdk = base44.asServiceRole;
 
     const body = await req.json().catch(() => ({}));
-    const maxBooks = Math.min(Math.max(parseInt(body.max_books, 10) || 3, 1), 20);
+    // Process ALL remaining books — no cap (continuous run until 100% complete)
     const checkpointOnly = body && body.mode === 'checkpoint';
 
     const started = Date.now();
@@ -216,7 +215,7 @@ Deno.serve(async (req) => {
     // ── Process books until time budget or maxBooks ──
     for (const book of remaining) {
       if (Date.now() - started > TIME_BUDGET_MS - 15000) break;
-      if (stats.booksScanned >= maxBooks) break;
+      // No book cap — process all remaining books continuously
 
       const bookId = book.master_book_id;
       const bookTitle = book.book_title || '';
@@ -253,7 +252,7 @@ Deno.serve(async (req) => {
       let allPagesScanned = true;
       for (let i = 0; i < pages.length; i += PAGES_PER_CALL) {
         if (Date.now() - started > TIME_BUDGET_MS - 10000) { allPagesScanned = false; break; }
-        if (i >= MAX_PAGES_PER_BOOK_PER_RUN) { allPagesScanned = false; break; }
+        // No per-book page cap — scan every page
         const chunk = pages.slice(i, i + PAGES_PER_CALL);
         const pageTextBlock = chunk.map(p => `--- PAGE ${p.page_number} ---\n${p.ocr_text || p.arabic_text || p.ocr_text_ar || ''}`).join('\n\n');
 
@@ -435,12 +434,44 @@ Deno.serve(async (req) => {
       if (!stats.categoriesCovered.has(c)) stats.categoriesMissing.push(c);
     }
 
-    // ── Existing data unchanged check ──
+    // ── Check completion: re-count 'done' markers vs total verified books ──
+    let markersAfter = [];
+    let mSkip = 0;
+    while (markersAfter.length < 2000) {
+      const mBatch = await sdk.entities.AstroClockKnowledge.filter({ rule_category: 'scan_marker' }, undefined, 500, mSkip).catch(() => []);
+      if (!mBatch || mBatch.length === 0) break;
+      markersAfter.push(...mBatch); mSkip += mBatch.length;
+      if (mBatch.length < 500) break;
+    }
+    const doneBooks = markersAfter.filter(m => m.source_page_number === 'done').length;
+    const totalBooks = (verifiedBooks || []).length;
+    const isComplete = doneBooks >= totalBooks;
+
+    // ── Not yet complete — return progress, no final report ──
+    if (!isComplete) {
+      return Response.json({
+        status: 'in_progress',
+        booksDone: doneBooks,
+        totalBooks,
+        booksRemaining: totalBooks - doneBooks,
+        pagesProcessed: stats.pagesProcessed,
+        pagesWithAstrology: stats.pagesWithAstrology,
+        findingsDetected: stats.findingsDetected,
+        recordsCreated: stats.recordsCreated,
+        recordsMerged: stats.recordsMerged,
+        crossLinksCreated: stats.crossLinksCreated,
+        citationsAdded: stats.citationsAdded,
+        timeMs: Date.now() - started,
+        reRunNeeded: true,
+      });
+    }
+
+    // ── 100% COMPLETE — generate the single final completion report ──
     const ackAfter = await sdk.entities.AstroClockKnowledge.list('-created_date', 500).catch(() => []);
     const ekAfter = await sdk.entities.EntityKnowledge.list('-created_date', 500).catch(() => []);
 
     return Response.json({
-      status: stats.booksScanned > 0 ? 'scanned' : 'idle',
+      status: 'complete',
       report: {
         existingAstroClockRecordsUnchanged: true,
         existingEntityKnowledgeUnchanged: true,
@@ -457,11 +488,13 @@ Deno.serve(async (req) => {
         findingsDetected: stats.findingsDetected,
         categoriesCovered: Array.from(stats.categoriesCovered),
         categoriesMissing: stats.categoriesMissing,
+        totalBooks,
+        booksDone: doneBooks,
         totalAstroClockRecordsAfter: ackAfter.length,
         totalEntityKnowledgeAfter: ekAfter.length,
       },
-      remaining: remaining.length - stats.booksScanned,
-      reRunNeeded: (remaining.length - stats.booksScanned) > 0,
+      remaining: 0,
+      reRunNeeded: false,
       timeMs: Date.now() - started,
     });
   } catch (error) {
