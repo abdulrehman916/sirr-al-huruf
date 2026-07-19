@@ -1,32 +1,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
-import * as pdfjsLib from 'npm:pdfjs-dist@4.10.38/legacy/build/pdf.mjs';
-import { WorkerMessageHandler } from 'npm:pdfjs-dist@4.10.38/legacy/build/pdf.worker.mjs';
-const { getDocument, GlobalWorkerOptions, PDFWorker, LoopbackPort } = pdfjsLib;
-// pdfjs worker in this Deno runtime: dynamic import of npm specifiers is blocked
-// and there is no import.meta.resolve / createObjectURL / Worker thread. So we run
-// the pdfjs worker handler IN-PROCESS via a loopback port that speaks pdfjs's own
-// .on/.send protocol — no separate worker, no dynamic import, no binary stored.
-function makeLoopbackPort() {
-  const handlers = Object.create(null);
-  return {
-    on(name, cb) { (handlers[name] || (handlers[name] = [])).push(cb); },
-    off(name, cb) { const a = handlers[name] || []; const i = a.indexOf(cb); if (i >= 0) a.splice(i, 1); },
-    send(name, data, transfer) { queueMicrotask(() => { (handlers[name] || []).forEach((cb) => cb(data)); }); },
-    postMessage(msg, transfer) { this.send('message', msg, transfer); },
-    addEventListener(t, cb) { this.on(t, cb); },
-    removeEventListener(t, cb) { this.off(t, cb); },
-    start() {}, close() {}, terminate() {},
-  };
-}
-function getPdfjsWorker() {
-  const port = LoopbackPort ? new LoopbackPort() : makeLoopbackPort();
-  WorkerMessageHandler.setup(port);
-  // LoopbackPort queues messages until start() is called — flush so the
-  // in-process worker handler receives GetDocRequest and replies.
-  if (typeof port.start === 'function') port.start();
-  if (typeof port._start === 'function') port._start();
-  return new PDFWorker({ port });
-}
+import { extractText as unpdfExtractText } from 'npm:unpdf@1.6.2';
+// unpdf ships a serverless pdfjs bundle that runs IN-PROCESS — no worker thread,
+// no dynamic import of npm specifiers, no binary stored. Used ONLY for Google Drive
+// PDFs (Drive has no server-side text export, and the backend SDK cannot pass a
+// binary to the vision model). Text is extracted per page IN MEMORY; the binary is
+// discarded immediately. OneDrive (pre-auth URL) and uploaded PDFs (file_url) keep
+// their existing vision path — unchanged. Page boundaries + page numbers preserved.
 
 // ═══════════════════════════════════════════════════════════════
 // MASTER PDF LIBRARY — BACKGROUND PROCESSING PIPELINE
@@ -185,27 +164,28 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Admin only' }, { status: 403 });
     }
 
-    // ── DEBUG PROBE: verify pdfjs worker resolution + spawn in this Deno runtime.
-    //    Touches NO book state. Invoke with payload { "debug": "pdfjs" }.
+    // ── DEBUG PROBE: verify unpdf in-memory per-page text extraction (page
+    //    boundaries preserved, no binary stored). Touches NO book state.
+    //    Invoke with payload { "debug": "unpdf" }.
     try {
       const _body = await req.clone().json().catch(() => ({}));
-      if (_body && _body.debug === 'pdfjs') {
-        // Probe: in-process pdfjs worker via MessageChannel (no worker thread,
-        // no dynamic import). Verifies worker loads + text extraction + page
-        // boundaries on a minimal 1-page PDF. Touches no book state.
-        const r = { workerImportOk: false, channelOk: false, numPages: 0, page1Text: '', err: '' };
+      if (_body && _body.debug === 'unpdf') {
+        const r = { totalPages: 0, pageCount: 0, page1Text: '', page2Text: '', boundariesOk: false, err: '' };
         try {
-          r.workerImportOk = typeof WorkerMessageHandler?.setup === 'function';
-          const worker = getPdfjsWorker();
-          r.channelOk = !!worker;
-          const pdfStr = `%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj\n4 0 obj<</Length 44>>stream\nBT /F1 12 Tf 10 180 Td (Hello PDFJS) Tj ET\nendstream\nendobj\n5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\nstartxref\n0\n%%EOF`;
+          // Real multi-page PDF with a text layer (pdf.js sample) — verifies
+          // page boundaries + per-page text extraction, not a hand-written PDF.
           const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout ' + ms + 'ms')), ms))]);
-          const pdf = await withTimeout(getDocument({ data: new TextEncoder().encode(pdfStr), worker, disableFontFace: true, isEvalSupported: false, useSystemFonts: false }).promise, 20000);
-          r.numPages = pdf.numPages;
-          const page = await withTimeout(pdf.getPage(1), 10000);
-          const tc = await withTimeout(page.getTextContent(), 10000);
-          r.page1Text = (tc.items || []).map((it) => it.str).join(' ');
-          await pdf.destroy();
+          const fres = await withTimeout(fetch('https://raw.githubusercontent.com/mozilla/pdf.js/master/web/compressed.tracemonkey-pldi-09.pdf'), 20000);
+          if (!fres.ok) throw new Error('fetch ' + fres.status);
+          const buf = new Uint8Array(await withTimeout(fres.arrayBuffer(), 20000));
+          const out = await withTimeout(unpdfExtractText(buf, { mergePages: false }), 30000);
+          r.totalPages = Number(out.totalPages) || 0;
+          r.pageCount = Array.isArray(out.text) ? out.text.length : 0;
+          r.page1Text = (Array.isArray(out.text) ? (out.text[0] || '') : '').slice(0, 120);
+          r.page2Text = (Array.isArray(out.text) ? (out.text[1] || '') : '').slice(0, 120);
+          // Boundaries preserved: totalPages >= 2 AND pageCount === totalPages
+          // AND page 1 and page 2 text differ (not flattened into one blob).
+          r.boundariesOk = r.totalPages >= 2 && r.pageCount === r.totalPages && r.page1Text !== r.page2Text;
         } catch (e) { r.err = String(e?.message || e).slice(0, 300); }
         return Response.json({ r });
       }
@@ -393,39 +373,104 @@ Return ONLY the JSON object. No commentary.`;
         let liveData = null;
 
         if (cloudSource === 'googledrive') {
-          // ── GOOGLE DRIVE: in-memory PDF text extraction (pdfjs). No binary is
-          //    ever persisted — the ArrayBuffer is discarded after extraction.
-          //    Only extracted text + page index + citations are stored. (Drive PDFs
-          //    are not text-exportable via the API, and the backend SDK cannot pass
-          //    a binary to the vision model, so the OCR engine for Drive is pdfjs
-          //    text-layer extraction instead of vision — a pipeline redesign, not a
-          //    storage change. Scanned/image-only pages yield empty text and are
-          //    flagged needs_owner_review rather than guessed.)
+          // ── GOOGLE DRIVE: in-memory PDF text extraction via unpdf (a
+          //    serverless pdfjs bundle that runs in-process — no worker thread,
+          //    no dynamic import, no binary stored). The ArrayBuffer is fetched
+          //    from Drive, per-page text is extracted IN MEMORY, and the binary
+          //    is discarded immediately. Only the per-page text + search index +
+          //    page-level citation live in MasterPdfPage. Page boundaries and
+          //    page numbers are preserved (ONE MasterPdfPage per page). The whole
+          //    book is indexed in one run (text-layer extraction is cheap and
+          //    in-memory, unlike the 3-page vision chunks). Append-only: already
+          //    indexed pages are skipped. Scanned/image-only pages yield empty
+          //    text and are flagged needs_owner_review rather than guessed.
+          let totalPages = 0;
+          let pageTexts = [];
           try {
-            const pdf = await getDocument({ data: new Uint8Array(fileRef), disableFontFace: true, isEvalSupported: false, useSystemFonts: false }).promise;
-            liveReturnedTotal = pdf.numPages || 0;
-            const pEnd = Math.min(page_end, liveReturnedTotal);
-            for (let pnum = page_start; pnum <= pEnd; pnum++) {
-              const page = await pdf.getPage(pnum);
-              const tc = await page.getTextContent();
-              let text = '';
-              for (const it of (tc.items || [])) { text += (it.str || '') + (it.hasEOL ? '\n' : ' '); }
-              const empty = text.trim().length === 0;
-              livePages.push({
-                page_number: pnum, page_label: '',
-                ocr_text: text, ocr_text_ar: text, ocr_text_en: '', ocr_text_ml: '',
-                ocr_confidence: empty ? 0 : 100,
-                quality_flags: empty ? { incomplete_ocr: true, low_quality_scan: true } : {},
-                classification: {}, images: [],
-              });
-            }
-            try { await pdf.destroy(); } catch (_) {}
+            const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout ' + ms + 'ms')), ms))]);
+            const out = await withTimeout(unpdfExtractText(new Uint8Array(fileRef), { mergePages: false }), 60000);
+            totalPages = Number(out.totalPages) || 0;
+            pageTexts = Array.isArray(out.text) ? out.text : [];
           } catch (e) {
             const errMsg = String(e?.message || e);
             await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'partial', extraction_error: `Drive text extract failed: ${errMsg.slice(0,300)}` }).catch(() => {});
-            await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `Drive pdfjs extract failed: ${errMsg.slice(0,200)}`, { page_range: `${page_start}-${page_end}` });
+            await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `Drive unpdf extract failed: ${errMsg.slice(0,200)}`, { page_range: `${page_start}-${page_end}` });
             continue;
           }
+          // ── Discard the PDF binary immediately (no persistence, ever) ──
+          fileRef = null;
+
+          if (totalPages === 0 || pageTexts.length === 0) {
+            await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'failed', extraction_error: 'Zero content extracted (Google Drive). Possible corrupt/scanned-only PDF.' }).catch(() => {});
+            await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `Zero content from Drive PDF`, { page_range: `${page_start}-${page_end}` });
+            continue;
+          }
+
+          // ── Existing pages for the whole book (append-only idempotency) ──
+          let driveExistingAll = [];
+          try { driveExistingAll = await sdk.entities.MasterPdfPage.filter({ master_book_id: target.master_book_id }); } catch (_) {}
+          const driveExistingSet = new Set((driveExistingAll || []).map((p) => Number(p.page_number)));
+
+          const now = new Date().toISOString();
+          const driveRecords = [];
+          for (let pnum = 1; pnum <= totalPages; pnum++) {
+            if (driveExistingSet.has(pnum)) continue;
+            const text = String(pageTexts[pnum - 1] || '');
+            const empty = text.trim().length === 0;
+            const ocr_confidence = empty ? 0 : 100;
+            const qf = empty ? { incomplete_ocr: true, low_quality_scan: true } : {};
+            const content_hash = await sha256(normalizeForHash(text));
+            const search_text = text.toLowerCase();
+            driveRecords.push({
+              page_record_id: `MPP-${target.master_book_id}-p${pnum}`,
+              master_book_id: target.master_book_id,
+              source_part_id: 'CLOUD-LIVE',
+              source_part_number: 1,
+              page_number: pnum,
+              page_label: '',
+              ocr_text: text,
+              ocr_text_ar: text,
+              ocr_text_en: '',
+              ocr_text_ml: '',
+              ocr_corrections: [],
+              original_scan_url: '',
+              extracted_images: [],
+              arabic_text: text,
+              english_text: '',
+              malayalam_text: '',
+              ai_classification: {},
+              ocr_confidence,
+              quality_flags: qf,
+              needs_owner_review: empty,
+              review_status: 'pending_review',
+              reviewed_by: '',
+              reviewed_at: '',
+              content_hash,
+              search_text,
+              indexed_at: now,
+            });
+          }
+          for (let i = 0; i < driveRecords.length; i += 100) {
+            await sdk.entities.MasterPdfPage.bulkCreate(driveRecords.slice(i, i + 100));
+          }
+
+          let driveIndexedCount = 0;
+          try { driveIndexedCount = (await sdk.entities.MasterPdfPage.filter({ master_book_id: target.master_book_id })).length; } catch (_) {}
+          const driveReviewCount = driveRecords.filter((r) => r.needs_owner_review).length;
+          await sdk.entities.MasterPdfBook.update(bookRecordId, {
+            last_processed_page: totalPages,
+            total_pages: totalPages,
+            combined_total_pages: totalPages,
+            total_pages_indexed: driveIndexedCount,
+            extraction_status: 'pending_verification',
+            extraction_error: '',
+          }).catch(() => {});
+          await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_chunk', 'success', `Indexed ${driveRecords.length} page(s) from Google Drive (in-memory text extraction, no binary stored). ${driveReviewCount} flagged for review.`, { page_range: `1-${totalPages}`, entry_count: driveRecords.length });
+          chunksProcessed++;
+          // Discard extracted texts (already persisted as page records)
+          pageTexts = null;
+          if (Date.now() - started > TIME_BUDGET_MS - 20000) break;
+          continue; // Drive whole-book branch done; do not fall through to OneDrive logic
         } else {
           // ── ONEDRIVE: vision OCR via the headerless pre-auth download URL.
           let liveExtracted, liveSuccess = false, liveErr = '';
