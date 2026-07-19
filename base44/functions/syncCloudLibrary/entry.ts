@@ -27,6 +27,19 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me().catch(() => null);
     if (user && user.role !== 'admin') return Response.json({ error: 'Admin only' }, { status: 403 });
+    // Owner-only when invoked by a person; no-user (system/scheduled) is allowed.
+    if (user) {
+      let isOwner = false;
+      try {
+        const profiles = await base44.asServiceRole.entities.AdminProfile.list(null, 500);
+        const profile = (profiles || []).find((p) =>
+          (p.user_id && p.user_id === user.id) ||
+          (p.email && user.email && p.email.toLowerCase() === user.email.toLowerCase())
+        );
+        isOwner = profile?.is_owner === true;
+      } catch { isOwner = false; }
+      if (!isOwner) return Response.json({ error: 'Only the Owner can run cloud sync' }, { status: 403 });
+    }
     const sdk = base44.asServiceRole;
     const now = new Date().toISOString();
 
