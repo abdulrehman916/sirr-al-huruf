@@ -1,15 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, Loader2, ShieldAlert, Sparkles } from "lucide-react";
+import { Search, Loader2, ShieldAlert, Sparkles, BookOpen } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import HolyNameEsotericResearchProfile from "@/components/holynameknowledge/HolyNameEsotericResearchProfile";
 
-// ── Section C — Barhatiyya / Esoteric Invocation Names ──
+// ── Section C — Birhatīya / Esoteric Invocation Names ──
 // INDEPENDENT module. Reads ONLY from HolyNameEsotericKnowledge.
 // No data from Section A or Section B is used here.
-// At this stage the database is structure-only; cards appear once
-// the owner supplies names (seeded via seedHolyNameEsoteric).
 
 const P = {
   border: "rgba(212,175,55,0.30)",
@@ -21,8 +19,6 @@ const P = {
   bg: "rgba(212,175,55,0.06)",
   bgHi: "rgba(212,175,55,0.14)",
 };
-
-const NOT_VERIFIED = "Not Verified";
 
 export default function SectionCPage() {
   const { toast } = useToast();
@@ -52,7 +48,7 @@ export default function SectionCPage() {
       (c.arabic_name || "").toLowerCase().includes(q) ||
       (c.arabic_normalized || "").toLowerCase().includes(q) ||
       (c.transliteration || "").toLowerCase().includes(q) ||
-      (c.esoteric_source_ref || "").toLowerCase().includes(q) ||
+      (c.exact_meaning || "").toLowerCase().includes(q) ||
       (c.name_id || "").toLowerCase().includes(q)
     );
   }, [cards, search]);
@@ -64,23 +60,23 @@ export default function SectionCPage() {
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-2 pt-4">
           <Sparkles className="w-7 h-7 mx-auto" style={{ color: P.text }} />
           <h1 className="font-amiri text-4xl font-bold" style={{ color: P.text, textShadow: `0 0 24px ${P.glow}` }} dir="rtl">
-            الأسماء البارھاتية
+            البرهتيّة
           </h1>
           <p className="font-inter text-[10px] uppercase tracking-[0.3em]" style={{ color: P.dim }}>
-            SECTION C · ESOTERIC INVOCATION NAMES
+            SECTION C · BIRHATĪYA · ESOTERIC INVOCATION NAMES
           </p>
           <p className="font-malayalam text-sm" style={{ color: "rgba(255,255,255,0.50)" }}>
-            ബർഹത്തിയ്യ / രൂഹാനിയ്യാത്ത് / ശാംസുൽ മആരിഫ് / ഖവാസ്സ് കൈയെഴുത്തുപ്രതികൾ — സ്വതന്ത്ര ഗൂഢ നാമ ശേഖരം
+            ബർഹത്തിയ്യ ഗൂഢ നാമ ജ്ഞാന ശേഖരം — സ്വതന്ത്ര പണ്ഡിതോപയോഗിയായ ഡാറ്റാബേസ്
           </p>
         </motion.div>
 
         {/* Status bar */}
         <div className="flex items-center justify-between flex-wrap gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(8,16,38,0.6)", border: `1px solid ${P.border}` }}>
           <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>
-            {cards.length} OF {cards.length} NAMES
+            {filtered.length} OF {cards.length} NAMES
           </span>
           <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: cards.length > 0 ? P.text : "rgba(148,163,184,0.7)" }}>
-            {cards.length === 0 ? "AWAITING NAMES" : "DATABASE STRUCTURE READY"}
+            {cards.length === 0 ? "AWAITING NAMES" : "SOURCE #1 SEEDED · 28 NAMES"}
           </span>
         </div>
 
@@ -91,7 +87,7 @@ export default function SectionCPage() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search names, transliteration, or source…"
+              placeholder="Search by Arabic name, transliteration, meaning, or ID…"
               className="w-full pl-10 pr-4 py-2.5 rounded-xl font-inter text-sm bg-transparent outline-none"
               style={{ background: "rgba(8,16,38,0.6)", border: `1px solid ${P.border}`, color: "rgba(255,255,255,0.90)" }}
             />
@@ -105,21 +101,16 @@ export default function SectionCPage() {
             <span className="ml-2 font-inter text-[10px] uppercase tracking-widest" style={{ color: P.dim }}>Loading Section C…</span>
           </div>
         ) : cards.length === 0 ? (
-          /* Empty state — structure ready, names pending */
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl p-8 text-center space-y-3" style={{ background: "rgba(8,16,38,0.55)", border: `1px solid ${P.faint}` }}>
             <ShieldAlert className="w-8 h-8 mx-auto" style={{ color: "rgba(148,163,184,0.7)" }} />
             <p className="font-inter text-[10px] uppercase tracking-widest font-bold" style={{ color: "rgba(148,163,184,0.85)" }}>
               DATABASE STRUCTURE READY · NO NAMES YET
             </p>
             <p className="font-malayalam text-sm leading-relaxed max-w-md mx-auto" style={{ color: "rgba(255,255,255,0.55)" }}>
-              ബർഹത്തിയ്യ, രൂഹാനിയ്യാത്ത്, ശാംസുൽ മആരിഫ് തുടങ്ങിയ ഗൂഢ കൈയെഴുത്തുപ്രതികളിൽ നിന്നുള്ള നാമങ്ങൾ ലഭിച്ചുകഴിഞ്ഞാൽ ഇവിടെ കാർഡുകൾ പ്രത്യക്ഷപ്പെടും. ഈ ഘട്ടത്തിൽ ഒരു നാമവും സൃഷ്ടിക്കപ്പെട്ടിട്ടില്ല — ഘടന മാത്രമേ തയ്യാറാക്കിയിട്ടുള്ളൂ.
-            </p>
-            <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>
-              All scholarly fields are prepared and empty · Awaiting owner-supplied names
+              ബർഹത്തിയ്യ നാമങ്ങൾ ലഭിച്ചുകഴിഞ്ഞാൽ ഇവിടെ കാർഡുകൾ പ്രത്യക്ഷപ്പെടും.
             </p>
           </motion.div>
         ) : (
-          /* Card grid — mirrors Section A architecture */
           <div className="space-y-2.5">
             {filtered.map((card) => {
               const isOpen = expandedId === card.id;
@@ -136,38 +127,43 @@ export default function SectionCPage() {
                     className="w-full text-left px-3 py-3 flex items-center gap-3"
                   >
                     <span className="font-inter text-[8px] uppercase tracking-widest flex-shrink-0" style={{ color: P.dim }}>
-                      #{card.original_static_id || card.order_index}
+                      #{String(card.order_index || card.original_static_id).padStart(2, "0")}
                     </span>
                     <span className="font-amiri text-xl flex-1 truncate selectable" style={{ color: P.text }} dir="rtl">
                       {card.arabic_name}
                     </span>
                     {card.transliteration && (
-                      <span className="font-inter text-[10px] flex-shrink-0" style={{ color: "rgba(255,255,255,0.65)" }}>
+                      <span className="font-inter text-[10px] flex-shrink-0 hidden sm:inline" style={{ color: "rgba(255,255,255,0.65)" }}>
                         {card.transliteration}
                       </span>
                     )}
-                    {card.abjad_value > 0 && (
+                    {card.total_abjad_value > 0 && (
                       <span className="font-inter text-[9px] flex-shrink-0 px-1.5 py-0.5 rounded" style={{ color: P.dim, background: P.bg, border: `1px solid ${P.faint}` }}>
-                        Abjad {card.abjad_value}
+                        {card.total_abjad_value}
                       </span>
                     )}
                     <span className="font-inter text-[8px] uppercase tracking-widest flex-shrink-0" style={{ color: "rgba(148,163,184,0.7)" }}>
-                      {NOT_VERIFIED}
+                      {card.verification_status || "unverified"}
                     </span>
                   </button>
                   {isOpen && (
                     <div className="px-3 pb-3">
-                      {card.esoteric_source_ref && (
-                        <p className="font-inter text-[9px] mb-2" style={{ color: P.dim }}>
-                          Source: {card.esoteric_source_ref}
-                        </p>
-                      )}
                       <HolyNameEsotericResearchProfile nameId={card.name_id} />
                     </div>
                   )}
                 </motion.div>
               );
             })}
+          </div>
+        )}
+
+        {/* Footer note */}
+        {!loading && cards.length > 0 && (
+          <div className="text-center pt-4">
+            <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "rgba(148,163,184,0.5)" }}>
+              <BookOpen className="w-3 h-3 inline mr-1" style={{ color: P.dim }} />
+              Source #1: N Wahid Azal · al-Būnī, Manbaʿ Uṣūl al-Ḥikma pp. 67–74 · No internet enrichment
+            </p>
           </div>
         )}
       </div>
