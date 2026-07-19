@@ -87,18 +87,15 @@ function TriField({ label, labelML, arabic, malayalam, english, arabicFirst }) {
 
 function SourceChip({ s }) {
   const title = s?.title || "Untitled source";
-  const url = s?.url;
-  const inner = (
+  return (
     <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border font-inter text-[8px] leading-tight" style={{ background: "rgba(8,16,38,0.6)", borderColor: P.border, color: "rgba(255,255,255,0.72)" }}>
       <BookMarked className="w-2.5 h-2.5 flex-shrink-0" style={{ color: P.dim }} />
       <span className="font-semibold" style={{ color: P.text }}>{title}</span>
       {s.author && <span>· {s.author}</span>}
       {s.page && <span>· p.{s.page}</span>}
-      {url && <span style={{ color: P.dim }}>↗</span>}
       {s.reliability_score ? <span style={{ color: "rgba(212,175,55,0.45)" }}>· {s.reliability_score}%</span> : null}
     </span>
   );
-  return url ? <a href={url} target="_blank" rel="noreferrer" className="inline-flex no-underline">{inner}</a> : <span className="inline-flex">{inner}</span>;
 }
 
 function SourcesList({ sources }) {
@@ -181,13 +178,12 @@ function InvocationCard({ inv }) {
         </span>
         {inv.evidence_level && <span className="font-inter text-[7px] uppercase tracking-widest px-1.5 py-0.5 rounded" style={{ color: P.dim, background: P.bg, border: `1px solid ${P.faint}` }}>Evidence: {inv.evidence_level}</span>}
       </div>
-      {(inv.source_book || inv.author || inv.chapter || inv.page || inv.edition || inv.manuscript_ref || inv.publication || inv.url) && (
+      {(inv.source_book || inv.author || inv.chapter || inv.page || inv.edition || inv.manuscript_ref || inv.publication) && (
         <div className="space-y-0.5 pt-1 border-t text-[10px] font-inter selectable" style={{ borderColor: "rgba(212,175,55,0.12)", color: "rgba(255,255,255,0.65)" }}>
           {inv.source_book && <div>📚 {inv.source_book}{inv.author ? ` — ${inv.author}` : ""}</div>}
           {(inv.chapter || inv.page || inv.edition) && <div>{[inv.chapter && `Ch. ${inv.chapter}`, inv.page && `p. ${inv.page}`, inv.edition && `Ed. ${inv.edition}`].filter(Boolean).join(" · ")}</div>}
           {inv.manuscript_ref && <div>📜 Manuscript: {inv.manuscript_ref}</div>}
           {inv.publication && <div>🏫 {inv.publication}</div>}
-          {inv.url && <a href={inv.url} target="_blank" rel="noreferrer" className="underline" style={{ color: P.dim }}>Source ↗</a>}
         </div>
       )}
       {lang === "en" && (
@@ -233,7 +229,7 @@ function RefList({ label, labelML, items }) {
 
 export default function HolyNameResearchProfile({ originalStaticId }) {
   const [rec, setRec] = useState(null);
-  const [pdfs, setPdfs] = useState([]);
+  // (source-PDF provenance state removed — filenames/URLs are private library artifacts)
   const [loading, setLoading] = useState(true);
   const [lang, setLang] = useState("en");
 
@@ -241,21 +237,10 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
     let alive = true;
     setLoading(true);
     const nameId = `HNK-MHN-${originalStaticId}`;
-    Promise.all([
-      base44.entities.HolyNameKnowledge.filter({ name_id: nameId }, null, 1).then(r => (r && r[0]) || null).catch(() => null),
-      base44.entities.HolyNameImportedSection.filter({ source_section: "section_a", source_name_key: String(originalStaticId) }, null, 500)
-        .then(r => (r || []).filter(s => s.source_pdf_file)).catch(() => []),
-    ]).then(([k, secs]) => {
-      if (!alive) return;
-      setRec(k);
-      const map = new Map();
-      for (const s of secs) {
-        const key = s.source_pdf_file;
-        if (!map.has(key)) map.set(key, { file: key, url: s.source_pdf_url || "", pages: new Set() });
-        if (s.source_pdf_page) map.get(key).pages.add(s.source_pdf_page);
-      }
-      setPdfs(Array.from(map.values()).map(g => ({ file: g.file, url: g.url, pageList: Array.from(g.pages).sort((a,b)=>a-b) })));
-    }).finally(() => { if (alive) setLoading(false); });
+    base44.entities.HolyNameKnowledge.filter({ name_id: nameId }, null, 1)
+      .then(r => { if (!alive) return; setRec((r && r[0]) || null); })
+      .catch(() => { if (alive) setRec(null); })
+      .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [originalStaticId]);
 
@@ -524,22 +509,7 @@ export default function HolyNameResearchProfile({ originalStaticId }) {
         )}
       </Section>
 
-      {/* Source PDFs */}
-      <Section icon={BookCopy} title={`Source PDFs${pdfs.length ? ` (${pdfs.length})` : ""}`} titleML="സ്രോതസ്സ് PDF-കൾ" defaultOpen={false}>
-        {pdfs.length === 0 ? (
-          <p className="font-inter text-xs italic" style={{ color: "rgba(255,255,255,0.40)" }}>No imported PDF paragraphs linked to this name yet.</p>
-        ) : (
-          <div className="space-y-1.5">
-            {pdfs.map((p, i) => (
-              <div key={i} className="flex items-center gap-2 rounded-lg p-2" style={{ background: "rgba(212,175,55,0.05)", border: `1px solid ${P.faint}` }}>
-                <FileText className="w-3 h-3 flex-shrink-0" style={{ color: P.dim }} />
-                {p.url ? <a href={p.url} target="_blank" rel="noreferrer" className="font-inter text-xs truncate flex-1 underline" style={{ color: P.text }}>{p.file}</a> : <span className="font-inter text-xs truncate flex-1" style={{ color: "rgba(255,255,255,0.75)" }}>{p.file}</span>}
-                <span className="font-inter text-[9px] flex-shrink-0" style={{ color: P.dim }}>{p.pageList.length} page{p.pageList.length > 1 ? "s" : ""}: {p.pageList[0]}{p.pageList.length > 1 ? `–${p.pageList[p.pageList.length-1]}` : ""}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </Section>
+      {/* Source PDFs section removed — filenames/URLs are private library artifacts */}
 
       {/* 29,30,31 — Verification + sources */}
       <Section icon={ShieldCheck} title="29–31 · Verification Status, Confidence & Sources" titleML="പരിശോധന നില, വിശ്വാസ്യത, സ്രോതസ്സുകൾ" defaultOpen={false} accent={st.c}>

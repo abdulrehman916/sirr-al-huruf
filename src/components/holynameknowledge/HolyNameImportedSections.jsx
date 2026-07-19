@@ -152,28 +152,12 @@ export default function HolyNameImportedSections({ sourceSection, sourceNameKey,
                 </details>
               )}
 
-              {s.images && s.images.length > 0 && (
-                <div className="space-y-1.5 pt-1 border-t" style={{ borderColor: "rgba(212,175,55,0.10)" }}>
-                  <span className="font-inter text-[7px] uppercase tracking-widest" style={{ color: "rgba(212,175,55,0.50)" }}>Visual content from page</span>
-                  <div className="grid grid-cols-1 gap-2">
-                    {s.images.map((imgUrl, imgIdx) => (
-                      <img
-                        key={imgIdx}
-                        src={imgUrl}
-                        alt={`Page ${s.source_pdf_page} visual content`}
-                        className="w-full rounded-lg border"
-                        style={{ borderColor: P.border, background: "rgba(8,16,38,0.4)" }}
-                        loading="lazy"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Page-scan images removed from public view (private library artifacts) */}
 
               <div className="flex items-center gap-1.5 pt-1 border-t flex-wrap" style={{ borderColor: "rgba(212,175,55,0.12)" }}>
                 <FileText className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(212,175,55,0.40)" }} />
                 <span className="font-inter text-[8px] truncate" style={{ color: "rgba(255,255,255,0.40)" }}>
-                  {s.source_pdf_file || "PDF"} · Page {s.source_pdf_page || "?"}
+                  Page {s.source_pdf_page || "?"}
                 </span>
                 {s.import_date && (
                   <span className="font-inter text-[8px] truncate" style={{ color: "rgba(255,255,255,0.30)" }}>

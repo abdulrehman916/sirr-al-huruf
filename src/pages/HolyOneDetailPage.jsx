@@ -412,7 +412,6 @@ export default function HolyOneDetailPage() {
             )}
             {source === "B" && (
               <>
-                <p>Source: {name.source_pdf_file || "PDF"}</p>
                 {name.source_pdf_page && <p>Page {name.source_pdf_page}</p>}
                 {name.surah_name && <p>Surah: {name.surah_name}</p>}
               </>

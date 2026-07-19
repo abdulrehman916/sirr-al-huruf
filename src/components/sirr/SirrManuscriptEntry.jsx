@@ -93,7 +93,7 @@ export default function SirrManuscriptEntry({ entry, book, heading, language }) 
 
   const arabic = entry.arabic_text || "";
   const malayalam = entry.malayalam_meaning || "";
-  const images = Array.isArray(entry.images) ? entry.images.filter(Boolean) : [];
+  // Page-scan image URLs are private library artifacts — not rendered publicly.
 
   return (
     <article className="rounded-xl overflow-hidden"
@@ -168,15 +168,7 @@ export default function SirrManuscriptEntry({ entry, book, heading, language }) 
           <FieldBlock key={f} entry={entry} field={f} language={language} />
         ))}
 
-        {/* ── Original manuscript images ── */}
-        {images.length > 0 && (
-          <div className="space-y-2">
-            {images.map((url, i) => (
-              <img key={i} src={url} alt={`manuscript image ${i + 1}`}
-                className="w-full rounded-lg" style={{ border: "1px solid rgba(212,175,55,0.18)" }} loading="lazy" />
-            ))}
-          </div>
-        )}
+        {/* Page-scan images removed from public view (private library artifacts) */}
       </div>
 
       {/* ── Reference footer: Book Name · Original Book Name · Page · Volume · Edition · Source ── */}

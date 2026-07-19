@@ -79,7 +79,7 @@ function EntryCard({ entry }) {
   const sourceBook = entry?.source_book || entry?.source_reference || "";
   const author = entry?.author || "";
   const page = entry?.page || entry?.source_page || "";
-  const url = entry?.url || "";
+  // Source URLs are private — citation (book/author/page) only.
   const lang = entry?.language || "";
   const conf = entry?.confidence || "";
   const cat = entry?.category || "";
@@ -114,14 +114,13 @@ function EntryCard({ entry }) {
           {warnings && <p className="text-white/60"><span className="text-gold-dim">Warnings:</span> {warnings}</p>}
         </div>
       )}
-      {(sourceBook || author || page || url || lang || conf || cat) && (
+      {(sourceBook || author || page || lang || conf || cat) && (
         <div className="text-[11px] text-white/45 border-t border-white/5 pt-2 flex flex-wrap gap-x-3 gap-y-1">
           {sourceBook && <span>📚 {sourceBook}{author ? ` — ${author}` : ""}</span>}
           {page && <span>📄 {page}</span>}
           {lang && <span>🌐 {lang}</span>}
           {conf && <span>⭐ {conf}</span>}
           {cat && <span>🏷 {cat}</span>}
-          {url && <a href={url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">🔗 link</a>}
         </div>
       )}
       {notes && (
@@ -135,7 +134,7 @@ function VariantCard({ entry, type }) {
   const value = entry?.arabic || entry?.meaning || entry?.pronunciation || entry?.text || "";
   const note = entry?.note || "";
   const sourceBook = entry?.source_book || entry?.source_reference || "";
-  const url = entry?.url || entry?.source_page || "";
+  const page = entry?.source_page || "";
   if (!value) return null;
   return (
     <div className="rounded-lg border p-3" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(212,175,55,0.22)" }}>
@@ -146,9 +145,9 @@ function VariantCard({ entry, type }) {
         <p className="text-white/85 text-sm mb-1">{value}</p>
       )}
       {note && <p className="text-white/55 text-xs mb-1">{note}</p>}
-      {(sourceBook || url) && (
+      {(sourceBook || page) && (
         <div className="text-[11px] text-white/45">
-          {sourceBook && <span>📚 {sourceBook}</span>} {url && <span> · {url}</span>}
+          {sourceBook && <span>📚 {sourceBook}</span>}{page && <span> · p.{page}</span>}
         </div>
       )}
     </div>
@@ -157,7 +156,7 @@ function VariantCard({ entry, type }) {
 
 function SourceCard({ src }) {
   const ref = src?.reference || src?.source_book || "";
-  const url = src?.url || "";
+  // Source URL removed from public view (private library artifact).
   const page = src?.page || src?.source_page || "";
   const notes = src?.notes || "";
   const added = src?.added_at || src?.imported_at || "";
@@ -165,10 +164,9 @@ function SourceCard({ src }) {
   return (
     <div className="rounded-lg border p-3 text-xs" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(212,175,55,0.22)" }}>
       <p className="text-white/80 font-medium">{ref}</p>
-      {(page || url) && (
+      {page && (
         <p className="text-white/45 mt-1">
-          {page && <span>📄 {page} </span>}
-          {url && <a href={url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">🔗 link</a>}
+          <span>📄 {page}</span>
         </p>
       )}
       {notes && <p className="text-white/40 mt-1">{notes}</p>}

@@ -109,7 +109,7 @@ export default function SirrBookCard({ book, entryCount, onOpen, onRefresh, lang
           ) : (
             <p className={`text-base font-bold truncate ${isMl ? "font-malayalam" : "font-inter"}`}
               style={{ color: "rgba(255,255,255,0.90)" }}>
-              {book.malayalam_book_name || book.book_title || book.sirr_book_id}
+              {book.malayalam_book_name || book.book_title || (isMl ? "പേരിടാത്ത ഗ്രന്ഥം" : "Untitled Book")}
             </p>
           )}
           {/* Original Book Name */}
