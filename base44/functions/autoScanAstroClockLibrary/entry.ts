@@ -49,7 +49,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 // ═══════════════════════════════════════════════════════════════
 
 const TIME_BUDGET_MS = 180000;
-const PAGES_PER_CALL = 4;       // pages per LLM detection call
+const PAGES_PER_CALL = 8;       // pages per LLM detection call
 const LLM_MODEL = 'gemini_3_flash';
 const EXTRACTION_VERSION = 'v1';
 const OCR_VERSION = 'v1';
