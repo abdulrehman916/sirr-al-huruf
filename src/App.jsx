@@ -41,6 +41,7 @@ const PAGE_IMPORTS = {
   PlantDetailPage:          () => import('./pages/PlantDetailPage'),
   EvilJinnPage:             () => import('./pages/EvilJinnPage'),
   MagicalHolyNamesPage:     () => import('./pages/MagicalHolyNamesPage'),
+  SectionCPage:             () => import('./pages/SectionCPage'),
   HolyOnePage:              () => import('./pages/HolyOnePage'),
   HolyOneDetailPage:        () => import('./pages/HolyOneDetailPage'),
   AstroClockPage:           () => import('./pages/AstroClockPage'),

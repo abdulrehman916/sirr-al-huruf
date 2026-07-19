@@ -26,6 +26,7 @@ const ROUTE_MANIFEST = [
   { path: '/evil-jinn', component: 'EvilJinnPage', chunk: 'EvilJinnPage' },
   { path: '/holy-names', component: 'MagicalHolyNamesPage', chunk: 'MagicalHolyNamesPage' },
   { path: '/holy-names/one', component: 'HolyOnePage', chunk: 'HolyOnePage', flags: ['public'] },
+  { path: '/section-c', component: 'SectionCPage', chunk: 'SectionCPage' },
   { path: '/holy-names/one/:nameId', component: 'HolyOneDetailPage', chunk: 'HolyOneDetailPage', flags: ['public'] },
 
   // Shop — public (user-facing storefront)
