@@ -89,6 +89,11 @@ export const ROUTE_ACCESS = {
   // functions (searchGoogleDrivePdfs, searchOneDrivePdfs, searchAdobeCloudPdfs) also
   // enforce Owner-only server-side. Entity RLS is admin-only as a second layer.
   "/admin/master-pdf-library":   { roles: [ROLES.OWNER] },
+  // Owner Review & Approval — the mandatory gate between the processing
+  // pipeline and the knowledge base. Only the Owner may approve knowledge.
+  // Approved pages are the ONLY pages that ever reach Holy Names / Sections
+  // A·B·C / Abjad / Bast / Wafq / Vefk / Mizan / Khadim / Astrology.
+  "/admin/pending-reviews":      { roles: [ROLES.OWNER] },
 };
 
 // Match a concrete path against ROUTE_ACCESS patterns (supports :param).

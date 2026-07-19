@@ -90,6 +90,7 @@ const PAGE_IMPORTS = {
   AdminAuditLog:            () => import('./pages/AdminAuditLog'),
   AdminPurposeDictionary:   () => import('./pages/AdminPurposeDictionary'),
   MasterPdfLibrary:         () => import('./pages/MasterPdfLibrary'),
+  OwnerPendingReviews:      () => import('./pages/OwnerPendingReviews'),
   };
 
 // ── Route factory — one lazy() + one <Route> per manifest entry ──────
