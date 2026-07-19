@@ -48,8 +48,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 // having AstroClockKnowledge findings).
 // ═══════════════════════════════════════════════════════════════
 
-const TIME_BUDGET_MS = 85000;
+const TIME_BUDGET_MS = 180000;
 const PAGES_PER_CALL = 4;       // pages per LLM detection call
+const MAX_PAGES_PER_BOOK_PER_RUN = 8;  // cap pages per book per run → multiple books per run (remaining pages resume next run)
 const LLM_MODEL = 'gemini_3_flash';
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -164,19 +165,49 @@ Deno.serve(async (req) => {
       100
     ).catch(() => []);
 
-    // Existing AstroClockKnowledge source_book_ids (to skip already-scanned books)
-    const existingAck = await sdk.entities.AstroClockKnowledge.list('-created_date', 500).catch(() => []);
-    const scannedBookIds = new Set();
+    // Marker records track per-book scan progress (page-level resumability).
+    // bookId → lastScannedPage (-1 = done, 0/N = resume from page N+1)
+    // Paginate to load all records (markers + findings).
+    const existingAck = [];
+    let ackSkip = 0;
+    while (existingAck.length < 5000) {
+      const batch = await sdk.entities.AstroClockKnowledge.list('-created_date', 500, ackSkip).catch(() => []);
+      if (!batch || batch.length === 0) break;
+      existingAck.push(...batch); ackSkip += batch.length;
+      if (batch.length < 500) break;
+    }
+    const bookProgress = new Map();
+    const bookMaxPageFromFindings = new Map();
     for (const r of existingAck) {
-      if (r.source_book_id) scannedBookIds.add(r.source_book_id);
+      if (!r.source_book_id) continue;
+      if (r.is_marker || r.rule_category === 'scan_marker') {
+        const pgs = String(r.source_page_number || '');
+        if (pgs === 'done') bookProgress.set(r.source_book_id, -1);
+        else { const last = parseInt(pgs, 10); bookProgress.set(r.source_book_id, isNaN(last) ? 0 : last); }
+      } else {
+        // Regular finding — track max page number for this book
+        if (r.source_page_number) {
+          for (const p of String(r.source_page_number).split(',')) {
+            const pn = parseInt(p.trim(), 10);
+            if (Number.isFinite(pn)) {
+              const cur = bookMaxPageFromFindings.get(r.source_book_id) || 0;
+              if (pn > cur) bookMaxPageFromFindings.set(r.source_book_id, pn);
+            }
+          }
+        }
+      }
+    }
+    // Books with existing findings but no marker → resume from max finding page (don't re-scan pages that already have findings)
+    for (const [bid, maxPg] of bookMaxPageFromFindings) {
+      if (!bookProgress.has(bid)) bookProgress.set(bid, maxPg);
     }
 
-    const remaining = (verifiedBooks || []).filter(b => !scannedBookIds.has(b.master_book_id));
+    const remaining = (verifiedBooks || []).filter(b => bookProgress.get(b.master_book_id) !== -1);
     if (checkpointOnly) {
       return Response.json({
         status: 'checkpoint',
         totalVerifiedBooks: (verifiedBooks || []).length,
-        booksAlreadyScanned: scannedBookIds.size,
+        booksDone: [...bookProgress.values()].filter(v => v === -1).length,
         booksRemaining: remaining.length,
         nextBookIds: remaining.slice(0, 5).map(b => b.master_book_id),
       });
@@ -201,28 +232,28 @@ Deno.serve(async (req) => {
         pSkip += batch.length;
         if (batch.length < 200) break;
       }
-      // Only pages with text
-      pages = pages.filter(p => (p.ocr_text || p.arabic_text || p.ocr_text_ar || '').trim().length > 0);
+      // Only pages with text AND not yet scanned (page-level resumability)
+      const lastPage = bookProgress.has(bookId) ? (bookProgress.get(bookId) || 0) : 0;
+      pages = pages.filter(p => (p.ocr_text || p.arabic_text || p.ocr_text_ar || '').trim().length > 0 && p.page_number > lastPage);
 
       if (pages.length === 0) {
-        // Marker so this book is not re-scanned (resumability)
+        // All pages already scanned or no text — mark as done
         try {
-          await sdk.entities.AstroClockKnowledge.create({
-            knowledge_id: `ACK-MARKER-AUTOSCAN-${bookId}`,
-            source_type: 'categorized', rule_category: 'scan_marker', rule_entity: bookId,
-            rule_record_key: `scan_marker|${bookId}`, knowledge_category: 'categorized_rule',
-            knowledge_text_en: '', content_hash: `cat-scan_marker-${bookId}`, is_marker: true,
-            source_book_id: bookId, source_book_title: bookTitle, source_page_number: '',
-          });
+          const em = await sdk.entities.AstroClockKnowledge.filter({ rule_record_key: `scan_marker|${bookId}` }, undefined, 1).catch(() => []);
+          if (em && em.length > 0) await sdk.entities.AstroClockKnowledge.update(em[0].id || em[0]._id, { source_page_number: 'done' }).catch(() => {});
+          else await sdk.entities.AstroClockKnowledge.create({ knowledge_id: `ACK-MARKER-AUTOSCAN-${bookId}`, source_type: 'categorized', rule_category: 'scan_marker', rule_entity: bookId, rule_record_key: `scan_marker|${bookId}`, knowledge_category: 'categorized_rule', knowledge_text_en: '', content_hash: `cat-scan_marker-${bookId}`, is_marker: true, source_book_id: bookId, source_book_title: bookTitle, source_page_number: 'done' });
         } catch (_) {}
         stats.booksSkipped++;
         continue;
       }
 
-      // Process pages in batches
+      // Process pages in batches (page-level resumable)
       let findingsForBook = 0;
+      let lastProcessedPage = lastPage;
+      let allPagesScanned = true;
       for (let i = 0; i < pages.length; i += PAGES_PER_CALL) {
-        if (Date.now() - started > TIME_BUDGET_MS - 10000) break;
+        if (Date.now() - started > TIME_BUDGET_MS - 10000) { allPagesScanned = false; break; }
+        if (i >= MAX_PAGES_PER_BOOK_PER_RUN) { allPagesScanned = false; break; }
         const chunk = pages.slice(i, i + PAGES_PER_CALL);
         const pageTextBlock = chunk.map(p => `--- PAGE ${p.page_number} ---\n${p.ocr_text || p.arabic_text || p.ocr_text_ar || ''}`).join('\n\n');
 
@@ -236,6 +267,7 @@ Deno.serve(async (req) => {
         } catch (_) { continue; }
 
         stats.pagesProcessed += chunk.length;
+        lastProcessedPage = chunk[chunk.length - 1].page_number;
         const findings = (result && Array.isArray(result.findings)) ? result.findings : [];
         if (findings.length > 0) stats.pagesWithAstrology++;
 
@@ -387,18 +419,13 @@ Deno.serve(async (req) => {
           findingsForBook++;
         }
       }
-      // Marker for books scanned with zero findings (resumability — not re-scanned)
-      if (findingsForBook === 0) {
-        try {
-          await sdk.entities.AstroClockKnowledge.create({
-            knowledge_id: `ACK-MARKER-AUTOSCAN-${bookId}`,
-            source_type: 'categorized', rule_category: 'scan_marker', rule_entity: bookId,
-            rule_record_key: `scan_marker|${bookId}`, knowledge_category: 'categorized_rule',
-            knowledge_text_en: '', content_hash: `cat-scan_marker-${bookId}`, is_marker: true,
-            source_book_id: bookId, source_book_title: bookTitle, source_page_number: '',
-          });
-        } catch (_) {}
-      }
+      // Update marker with scan progress (page-level resumability)
+      const markerPageNumber = allPagesScanned ? 'done' : String(lastProcessedPage);
+      try {
+        const em = await sdk.entities.AstroClockKnowledge.filter({ rule_record_key: `scan_marker|${bookId}` }, undefined, 1).catch(() => []);
+        if (em && em.length > 0) await sdk.entities.AstroClockKnowledge.update(em[0].id || em[0]._id, { source_page_number: markerPageNumber }).catch(() => {});
+        else await sdk.entities.AstroClockKnowledge.create({ knowledge_id: `ACK-MARKER-AUTOSCAN-${bookId}`, source_type: 'categorized', rule_category: 'scan_marker', rule_entity: bookId, rule_record_key: `scan_marker|${bookId}`, knowledge_category: 'categorized_rule', knowledge_text_en: '', content_hash: `cat-scan_marker-${bookId}`, is_marker: true, source_book_id: bookId, source_book_title: bookTitle, source_page_number: markerPageNumber });
+      } catch (_) {}
       stats.booksScanned++;
       }
 
