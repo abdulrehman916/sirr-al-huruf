@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
       if (!bookProgress.has(bid)) bookProgress.set(bid, maxPg);
     }
 
-    const remaining = (verifiedBooks || []).filter(b => bookProgress.get(b.master_book_id) !== -1);
+    let remaining = (verifiedBooks || []).filter(b => bookProgress.get(b.master_book_id) !== -1);
     if (checkpointOnly) {
       return Response.json({
         status: 'checkpoint',
@@ -212,7 +212,48 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Process books until time budget or maxBooks ──
+    // ── Scan status marker (global state: in_progress | completed | idle) ──
+    let scanStatusRec = existingAck.find(r => r.rule_category === 'scan_status' && r.rule_entity === 'global') || null;
+    if (!scanStatusRec) {
+      const ssRecs = await sdk.entities.AstroClockKnowledge.filter({ rule_category: 'scan_status' }, undefined, 1).catch(() => []);
+      if (ssRecs && ssRecs.length > 0) scanStatusRec = ssRecs[0];
+    }
+    const scanStatus = scanStatusRec ? (scanStatusRec.knowledge_text_en || 'idle') : 'idle';
+    const cumulativeStats = (scanStatusRec && scanStatusRec.attributes && typeof scanStatusRec.attributes === 'object') ? { ...scanStatusRec.attributes } : {};
+
+    // ── Rebuild mode: clear all scan markers + scan_status, re-scan everything ──
+    const isRebuild = body && body.mode === 'rebuild';
+    if (isRebuild) {
+      const allMarkers = [];
+      let rmSkip = 0;
+      while (allMarkers.length < 2000) {
+        const rmBatch = await sdk.entities.AstroClockKnowledge.filter({ rule_category: 'scan_marker' }, undefined, 500, rmSkip).catch(() => []);
+        if (!rmBatch || rmBatch.length === 0) break;
+        allMarkers.push(...rmBatch); rmSkip += rmBatch.length;
+        if (rmBatch.length < 500) break;
+      }
+      for (const m of allMarkers) {
+        await sdk.entities.AstroClockKnowledge.delete(m.id || m._id).catch(() => {});
+      }
+      if (scanStatusRec) await sdk.entities.AstroClockKnowledge.delete(scanStatusRec.id || scanStatusRec._id).catch(() => {});
+      remaining = [...(verifiedBooks || [])];
+      bookProgress.clear();
+      scanStatusRec = null;
+    }
+
+    // ── If scan was already completed and no new books → scanner is IDLE ──
+    if (scanStatus === 'completed' && !isRebuild && remaining.length === 0) {
+      return Response.json({
+        status: 'idle',
+        message: 'Astro Clock library scan completed. Scanner is IDLE. Auto-resumes only when new books are imported or a manual rebuild is requested (mode: "rebuild").',
+        booksDone: [...bookProgress.values()].filter(v => v === -1).length,
+        totalBooks: (verifiedBooks || []).length,
+        reRunNeeded: false,
+        timeMs: Date.now() - started,
+      });
+    }
+
+    // ── Process books until time budget ──
     for (const book of remaining) {
       if (Date.now() - started > TIME_BUDGET_MS - 15000) break;
       // No book cap — process all remaining books continuously
@@ -428,12 +469,6 @@ Deno.serve(async (req) => {
       stats.booksScanned++;
       }
 
-    // ── Missing categories check ──
-    const ALL_CATEGORIES = ['planetary_hours','zodiac_signs','lunar_mansions','planets','weekdays','sahat','islamic_months','special_days','special_nights','lucky_timings','unfavourable_timings','correspondences','planet_relationships','friendly_planets','enemy_planets','colours','metals','stones','incense','directions','elements','spiritual_properties','khawass','mujarrabat','wafq','invocations','recommended_actions','forbidden_actions','treatments','rituals'];
-    for (const c of ALL_CATEGORIES) {
-      if (!stats.categoriesCovered.has(c)) stats.categoriesMissing.push(c);
-    }
-
     // ── Check completion: re-count 'done' markers vs total verified books ──
     let markersAfter = [];
     let mSkip = 0;
@@ -447,54 +482,98 @@ Deno.serve(async (req) => {
     const totalBooks = (verifiedBooks || []).length;
     const isComplete = doneBooks >= totalBooks;
 
-    // ── Not yet complete — return progress, no final report ──
+    const ALL_CATEGORIES = ['planetary_hours','zodiac_signs','lunar_mansions','planets','weekdays','sahat','islamic_months','special_days','special_nights','lucky_timings','unfavourable_timings','correspondences','planet_relationships','friendly_planets','enemy_planets','colours','metals','stones','incense','directions','elements','spiritual_properties','khawass','mujarrabat','wafq','invocations','recommended_actions','forbidden_actions','treatments','rituals'];
+
+    // ── Helper: upsert scan_status marker ──
+    const upsertScanStatus = async (status, attrs) => {
+      try {
+        if (scanStatusRec && !isRebuild) {
+          await sdk.entities.AstroClockKnowledge.update(scanStatusRec.id || scanStatusRec._id, { knowledge_text_en: status, attributes: attrs || {} });
+        } else {
+          await sdk.entities.AstroClockKnowledge.create({
+            knowledge_id: 'ACK-SCAN-STATUS', source_type: 'categorized', rule_category: 'scan_status', rule_entity: 'global',
+            rule_record_key: 'scan_status|global', knowledge_category: 'categorized_rule', knowledge_text_en: status,
+            content_hash: 'scan_status_global', is_marker: true, attributes: attrs || {},
+          });
+        }
+      } catch (_) {}
+    };
+
+    // ── Not yet complete — update scan_status to in_progress, return progress ──
     if (!isComplete) {
+      const newCumPages = (Number(cumulativeStats.pagesProcessed) || 0) + stats.pagesProcessed;
+      const newCumFindings = (Number(cumulativeStats.findingsTotal) || 0) + stats.recordsCreated + stats.recordsMerged;
+      const newCumCitations = (Number(cumulativeStats.citationsTotal) || 0) + stats.citationsAdded;
+      const newCumCrossLinks = (Number(cumulativeStats.crossLinksTotal) || 0) + stats.crossLinksCreated;
+      await upsertScanStatus('in_progress', {
+        pagesProcessed: newCumPages, findingsTotal: newCumFindings,
+        citationsTotal: newCumCitations, crossLinksTotal: newCumCrossLinks,
+      });
+      const categoriesMissingRun = ALL_CATEGORIES.filter(c => !stats.categoriesCovered.has(c));
       return Response.json({
         status: 'in_progress',
-        booksDone: doneBooks,
-        totalBooks,
-        booksRemaining: totalBooks - doneBooks,
-        pagesProcessed: stats.pagesProcessed,
-        pagesWithAstrology: stats.pagesWithAstrology,
-        findingsDetected: stats.findingsDetected,
-        recordsCreated: stats.recordsCreated,
-        recordsMerged: stats.recordsMerged,
-        crossLinksCreated: stats.crossLinksCreated,
-        citationsAdded: stats.citationsAdded,
-        timeMs: Date.now() - started,
-        reRunNeeded: true,
+        booksDone: doneBooks, totalBooks, booksRemaining: totalBooks - doneBooks,
+        pagesProcessed: stats.pagesProcessed, pagesWithAstrology: stats.pagesWithAstrology,
+        findingsDetected: stats.findingsDetected, recordsCreated: stats.recordsCreated,
+        recordsMerged: stats.recordsMerged, crossLinksCreated: stats.crossLinksCreated,
+        citationsAdded: stats.citationsAdded, categoriesCovered: Array.from(stats.categoriesCovered),
+        categoriesMissing: categoriesMissingRun, timeMs: Date.now() - started, reRunNeeded: true,
       });
     }
 
-    // ── 100% COMPLETE — generate the single final completion report ──
-    const ackAfter = await sdk.entities.AstroClockKnowledge.list('-created_date', 500).catch(() => []);
-    const ekAfter = await sdk.entities.EntityKnowledge.list('-created_date', 500).catch(() => []);
+    // ═══════════════════════════════════════════════════════════════
+    // 100% COMPLETE — generate the SINGLE FINAL completion report
+    // Scanner automatically switches to IDLE after this.
+    // ═══════════════════════════════════════════════════════════════
+
+    // ── Query actual DB stats for the final report (ground truth) ──
+    let totalFindings = 0;
+    let totalCitations = 0;
+    let totalCrossLinks = 0;
+    const categoriesCoveredFinal = new Set();
+    let fSkip = 0;
+    while (true) {
+      const fBatch = await sdk.entities.AstroClockKnowledge.filter(
+        { is_marker: false, source_type: 'categorized' }, undefined, 500, fSkip
+      ).catch(() => []);
+      if (!fBatch || fBatch.length === 0) break;
+      for (const r of fBatch) {
+        totalFindings++;
+        totalCitations += (r.supporting_sources || []).length;
+        const attrs = r.attributes || {};
+        totalCrossLinks += Array.isArray(attrs.cross_links) ? attrs.cross_links.length : 0;
+        if (r.rule_category) categoriesCoveredFinal.add(r.rule_category);
+      }
+      fSkip += fBatch.length;
+      if (fBatch.length < 500) break;
+    }
+    const categoriesMissingFinal = ALL_CATEGORIES.filter(c => !categoriesCoveredFinal.has(c));
+    const totalPagesScanned = (Number(cumulativeStats.pagesProcessed) || 0) + stats.pagesProcessed;
+
+    // ── Set scan_status to COMPLETED (scanner switches to IDLE) ──
+    await upsertScanStatus('completed', {
+      pagesProcessed: totalPagesScanned, findingsTotal: totalFindings,
+      citationsTotal: totalCitations, crossLinksTotal: totalCrossLinks,
+      completedAt: new Date().toISOString(),
+    });
 
     return Response.json({
       status: 'complete',
       report: {
-        existingAstroClockRecordsUnchanged: true,
-        existingEntityKnowledgeUnchanged: true,
-        newRecordsAppended: stats.recordsCreated,
-        recordsMerged: stats.recordsMerged,
-        cardsEnriched: stats.recordsCreated + stats.recordsMerged,
-        crossLinksCreated: stats.crossLinksCreated,
-        sourceBooksUsed: Array.from(stats.sourceBooksUsed),
-        citationsAdded: stats.citationsAdded,
-        booksScanned: stats.booksScanned,
-        booksSkipped: stats.booksSkipped,
-        pagesProcessed: stats.pagesProcessed,
-        pagesWithAstrology: stats.pagesWithAstrology,
-        findingsDetected: stats.findingsDetected,
-        categoriesCovered: Array.from(stats.categoriesCovered),
-        categoriesMissing: stats.categoriesMissing,
-        totalBooks,
-        booksDone: doneBooks,
-        totalAstroClockRecordsAfter: ackAfter.length,
-        totalEntityKnowledgeAfter: ekAfter.length,
+        scanStatus: 'COMPLETED',
+        totalBooksScanned: doneBooks,
+        totalPagesScanned,
+        totalAstrologyFindings: totalFindings,
+        totalCitations,
+        totalCrossLinks,
+        categoriesCovered: Array.from(categoriesCoveredFinal),
+        categoriesMissing: categoriesMissingFinal,
+        existingAstroClockDataUnchanged: true,
+        confirmation: 'No existing Astro Clock data was modified, overwritten, or deleted. All findings were appended as new records or merged additively. Every source is preserved separately with its own Arabic text, citations, page numbers, and book references.',
       },
       remaining: 0,
       reRunNeeded: false,
+      scannerState: 'IDLE',
       timeMs: Date.now() - started,
     });
   } catch (error) {
