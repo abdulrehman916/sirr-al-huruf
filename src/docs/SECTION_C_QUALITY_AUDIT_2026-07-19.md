@@ -145,7 +145,7 @@ All citations carry author and page; the archive.org source carries a full URL. 
 - Confidence: **avg 90, min 90**
 - Verification status: **28 VERIFIED, 0 NEEDS REVIEW**
 
-**Section C is marked COMPLETE.**
+**Section C — Version 1 baseline is certified.** Section C is a *living* scholarly library, not a final version — it will continue to grow append-only per the permanent policy in `SECTION_C_LIVING_LIBRARY_LAW.md`.
 
 ---
 
