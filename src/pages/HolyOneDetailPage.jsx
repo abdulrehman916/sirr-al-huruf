@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ABJAD_VALUES } from "@/lib/abjadValues";
 import { usePageState } from "@/context/PageStateContext";
 import HolyNameImportedSections from "@/components/holynameknowledge/HolyNameImportedSections";
+import HolyOneScholarlySections from "@/components/holynameknowledge/HolyOneScholarlySections";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -427,6 +428,14 @@ export default function HolyOneDetailPage() {
             sourceNameKey={source === "B" ? (name.pdf_name_id || nameId) : nameId}
           />
         </div>
+
+        {/* Section B scholarly library — append-only research arrays.
+            Section-B-only; never shown for Section A. */}
+        {source === "B" && (
+          <div className="mt-6">
+            <HolyOneScholarlySections card={name} />
+          </div>
+        )}
 
       </motion.div>
     </PageLayout>
