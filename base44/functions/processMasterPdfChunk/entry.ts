@@ -366,8 +366,8 @@ Deno.serve(async (req) => {
             } catch (_) {}
             if (driveSize > MAX_DRIVE_BYTES) {
               const sizeMb = Math.round(driveSize / 1024 / 1024);
-              await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'failed', extraction_error: `PDF too large for in-memory extraction (${sizeMb} MB) — skipped, flagged for Owner review` }).catch(() => {});
-              await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `PDF too large (${sizeMb} MB) — skipped`, { page_range: '0' });
+              await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'failed', owner_review_status: 'needs_revision', extraction_error: `FAILED_CORRUPT_PDF — PDF too large for in-memory extraction (${sizeMb} MB). Skipped, flagged for Owner review. Re-upload or replace to retry.` }).catch(() => {});
+              await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `PDF too large (${sizeMb} MB) — skipped, flagged for Owner Review`, { page_range: '0' });
               if (!failedIds.has(target.master_book_id)) { booksFailed.push({ master_book_id: target.master_book_id, book_title: target.book_title || '', error: `PDF too large (${sizeMb} MB) — skipped` }); failedIds.add(target.master_book_id); }
               booksCompleted++;
               continue;
@@ -449,9 +449,9 @@ Return ONLY the JSON object. No commentary.`;
             pageTexts = Array.isArray(out.text) ? out.text : [];
           } catch (e) {
             const errMsg = String(e?.message || e);
-            await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'partial', extraction_error: `Drive text extract failed: ${errMsg.slice(0,300)}` }).catch(() => {});
-            await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `Drive unpdf extract failed: ${errMsg.slice(0,200)}`, { page_range: `${page_start}-${page_end}` });
-            if (!failedIds.has(target.master_book_id)) { booksFailed.push({ master_book_id: target.master_book_id, book_title: target.book_title || '', error: `Drive unpdf extract failed: ${errMsg.slice(0,200)}` }); failedIds.add(target.master_book_id); }
+            await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'failed', owner_review_status: 'needs_revision', extraction_error: `FAILED_CORRUPT_PDF — Drive text extract failed: ${errMsg.slice(0,300)}. Skipped (never auto-retried), flagged for Owner review. Re-upload or replace to retry.` }).catch(() => {});
+            await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `FAILED_CORRUPT_PDF — Drive unpdf extract failed: ${errMsg.slice(0,200)}`, { page_range: `${page_start}-${page_end}` });
+            if (!failedIds.has(target.master_book_id)) { booksFailed.push({ master_book_id: target.master_book_id, book_title: target.book_title || '', error: `FAILED_CORRUPT_PDF — Drive unpdf extract failed: ${errMsg.slice(0,200)}` }); failedIds.add(target.master_book_id); }
             booksCompleted++;
             continue;
           }
@@ -539,9 +539,9 @@ Return ONLY the JSON object. No commentary.`;
             // One book failed (likely OOM/timeout on a huge PDF). Log, mark failed,
             // skip it, and continue the batch — never kill the whole run.
             const recMsg = String(recErr?.message || recErr).slice(0, 300);
-            await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'failed', extraction_error: `Record build/create failed: ${recMsg}` }).catch(() => {});
-            await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `Record build/create failed: ${recMsg}`, { page_range: `1-${effectiveTotal}` });
-            if (!failedIds.has(target.master_book_id)) { booksFailed.push({ master_book_id: target.master_book_id, book_title: target.book_title || '', error: `Record build/create failed: ${recMsg}` }); failedIds.add(target.master_book_id); }
+            await sdk.entities.MasterPdfBook.update(bookRecordId, { extraction_status: 'failed', owner_review_status: 'needs_revision', extraction_error: `FAILED_CORRUPT_PDF — Record build/create failed: ${recMsg}. Skipped (never auto-retried), flagged for Owner review.` }).catch(() => {});
+            await writeAudit(target.master_book_id, 'CLOUD-LIVE', 1, 'extract_failed', 'failed', `FAILED_CORRUPT_PDF — Record build/create failed: ${recMsg}`, { page_range: `1-${effectiveTotal}` });
+            if (!failedIds.has(target.master_book_id)) { booksFailed.push({ master_book_id: target.master_book_id, book_title: target.book_title || '', error: `FAILED_CORRUPT_PDF — Record build/create failed: ${recMsg}` }); failedIds.add(target.master_book_id); }
             booksCompleted++;
             pageTexts = null;
             continue;
