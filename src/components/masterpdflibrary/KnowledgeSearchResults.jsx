@@ -6,8 +6,10 @@
  */
 import { useState } from "react";
 import {
-  BookOpen, Cloud, Sparkles, GitMerge, AlertTriangle, Tag, ChevronDown, ChevronRight, FileText, Languages, Hash,
+  BookOpen, Cloud, Sparkles, GitMerge, AlertTriangle, Tag, ChevronDown, ChevronRight, FileText, Languages, Hash, Network,
 } from "lucide-react";
+import CitationExplorer from "./CitationExplorer";
+import KnowledgeGraph from "./KnowledgeGraph";
 
 const G = {
   border: "rgba(212,175,55,0.40)", borderHi: "rgba(212,175,55,0.65)",
@@ -44,9 +46,17 @@ export default function KnowledgeSearchResults({ results }) {
   const se = results.scholarly_entries || null;
   const populatedCats = SCHOLARLY_CATEGORIES.filter((c) => Array.isArray(se?.[c.key]) && se[c.key].length > 0);
   const totalScholarly = populatedCats.reduce((n, c) => n + se[c.key].length, 0);
+  const query = results.query || "";
+  const [cite, setCite] = useState(null);
+  const [showGraph, setShowGraph] = useState(false);
 
   return (
     <div>
+      {db.length > 0 && (
+        <button onClick={() => setShowGraph(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 13px", borderRadius: 8, cursor: "pointer", background: "rgba(212,175,55,0.10)", border: `1px solid ${G.borderHi}`, color: G.text, fontFamily: "Inter, sans-serif", fontSize: 11, fontWeight: 700, marginBottom: 12 }}>
+          <Network style={{ width: 13, height: 13 }} /> Build Knowledge Graph for "{query}"
+        </button>
+      )}
       {/* AI comparison summary */}
       {se && (
         <div style={{ padding: 14, borderRadius: 10, background: "rgba(212,175,55,0.06)", border: `1px solid ${G.border}`, marginBottom: 16 }}>
@@ -87,7 +97,7 @@ export default function KnowledgeSearchResults({ results }) {
 
       {/* Matched Master Library pages */}
       <Section title={`Master PDF Library matches (${db.length})`} icon={Hash}>
-        {db.length === 0 ? <Empty text="No indexed matches." /> : db.map((r, i) => <PageResultCard key={r.page_id || i} r={r} />)}
+        {db.length === 0 ? <Empty text="No indexed matches." /> : db.map((r, i) => <PageResultCard key={r.page_id || i} r={r} query={query} onOpenCitation={setCite} />)}
       </Section>
 
       {/* Cloud matches */}
@@ -96,6 +106,21 @@ export default function KnowledgeSearchResults({ results }) {
         <CloudGroup label="OneDrive" files={cm.oneDrive} />
         {cm.adobe && <CloudGroup label="Adobe Document Cloud" note={cm.adobe.note} />}
       </Section>
+
+      {cite && (
+        <CitationExplorer
+          citation={cite.citation || {}}
+          ocr_text={cite.ocr_text || ""}
+          arabic_text={cite.arabic || cite.verified_arabic || ""}
+          original_scan_url={cite.original_scan_url || ""}
+          pdf_file_url={cite.pdf_file_url || ""}
+          query={query}
+          onClose={() => setCite(null)}
+        />
+      )}
+      {showGraph && (
+        <KnowledgeGraph query={query} dbResults={db} onClose={() => setShowGraph(false)} />
+      )}
     </div>
   );
 }
@@ -146,7 +171,7 @@ function ScholarlyEntryRow({ e }) {
   );
 }
 
-function PageResultCard({ r }) {
+function PageResultCard({ r, query, onOpenCitation }) {
   const [open, setOpen] = useState(false);
   const c = r.citation || {};
   return (
@@ -159,6 +184,9 @@ function PageResultCard({ r }) {
       </button>
       {open && (
         <div style={{ padding: "0 12px 12px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <button onClick={() => onOpenCitation && onOpenCitation(r)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 11px", borderRadius: 7, cursor: "pointer", background: "rgba(212,175,55,0.10)", border: `1px solid ${G.border}`, color: G.text, fontFamily: "Inter, sans-serif", fontSize: 11, fontWeight: 600, margin: "8px 0" }}>
+            <FileText style={{ width: 12, height: 12 }} /> Open citation explorer
+          </button>
           {r.arabic && <p className="font-amiri" style={{ direction: "rtl", textAlign: "right", color: G.text, fontSize: 16, margin: "8px 0", lineHeight: 1.9 }}>{r.arabic}</p>}
           <Row label="Verified Arabic"><span className="font-amiri" style={{ direction: "rtl", textAlign: "right", display: "block", color: G.text, fontSize: 15 }}>{r.verified_arabic || "—"}</span></Row>
           <Row label="English">{r.english || "—"}</Row>

@@ -132,6 +132,8 @@ Deno.serve(async (req) => {
         ai_classification: p.ai_classification || {},
         processing_date: p.indexed_at || '',
         review_status: p.review_status || '',
+        original_scan_url: p.original_scan_url || '',
+        pdf_file_url: part?.file_url || '',
       };
     });
 
