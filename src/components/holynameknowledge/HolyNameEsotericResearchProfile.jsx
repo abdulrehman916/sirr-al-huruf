@@ -30,7 +30,8 @@ const P = {
 };
 
 const NOT_VERIFIED = "Not Verified";
-const AWAITING = "Awaiting source material · No content yet";
+const AWAITING = "ഈ വിവരം നിലവിൽ അപ്‌ലോഡ് ചെയ്ത PDF-കളിൽ ലഭ്യമല്ല.";
+const SHARED_MARKER = "ഈ വിവരങ്ങൾ മുഴുവൻ ബിർഹതിയ്യ മന്ത്രസമുച്ചയത്തിന്റെയും പൊതുവായ നിർദ്ദേശങ്ങളാണ്; ഈ പേരിന് മാത്രം പ്രത്യേകമായ വിവരമല്ല.";
 
 const ADVANCED_SECTIONS = [
   { key: "invocation_wazifa", label: "Invocation (Wazifa)", ml: "പ്രാർഥന (വസീഫ)" },
@@ -102,14 +103,28 @@ function Block({ title, titleML, icon: Icon, children, accent, defaultOpen = tru
   );
 }
 
-function AdvancedBlock({ label, ml }) {
+function AdvancedBlock({ label, ml, entries }) {
+  const list = Array.isArray(entries) ? entries : [];
+  const isArabic = (t) => /[\u0600-\u06FF]/.test(t || "");
   return (
     <div className="rounded-lg px-3 py-2.5" style={{ background: "rgba(8,16,38,0.4)", border: `1px solid ${P.faint}` }}>
       <div className="flex items-baseline justify-between gap-2">
         <span className="font-inter text-[9px] uppercase tracking-widest font-semibold" style={{ color: "rgba(245,208,96,0.50)" }}>{label}</span>
         <span className="font-malayalam text-[10px]" style={{ color: "rgba(245,208,96,0.30)" }}>{ml}</span>
       </div>
-      <p className="font-inter text-[10px] italic mt-1" style={{ color: "rgba(148,163,184,0.50)" }}>{AWAITING}</p>
+      {list.length === 0 ? (
+        <p className="font-malayalam text-[11px] mt-1 leading-relaxed" style={{ color: "rgba(148,163,184,0.55)" }}>{AWAITING}</p>
+      ) : (
+        <div className="mt-2 space-y-2">
+          <p className="font-malayalam text-[10px] italic leading-relaxed" style={{ color: "rgba(212,175,55,0.62)" }}>{SHARED_MARKER}</p>
+          {list.map((e, i) => (
+            <div key={i} className="rounded-md px-2 py-1.5" style={{ background: "rgba(8,16,38,0.55)", border: `1px solid ${P.faint}` }}>
+              <p className={`selectable leading-relaxed ${isArabic(e.text) ? "font-amiri text-base" : "font-inter text-[11px]"}`} style={{ color: "rgba(255,255,255,0.85)" }} dir={isArabic(e.text) ? "rtl" : "auto"}>{e.text}</p>
+              <p className="font-inter text-[8px] mt-1" style={{ color: "rgba(212,175,55,0.45)" }}>{e.source_reference}{e.source_page ? ` · p. ${e.source_page}` : ""}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -274,11 +289,8 @@ export default function HolyNameEsotericResearchProfile({ nameId }) {
 
       {/* 3 — ADVANCED KNOWLEDGE SECTIONS (all empty until approved) */}
       <Block title="Advanced Knowledge Sections" titleML="വിപുലമായ വിജ്ഞാന വിഭാഗങ്ങൾ" icon={BookCopy} accent="rgba(245,208,96,0.60)" defaultOpen={false}>
-        <p className="font-inter text-[9px] italic" style={{ color: "rgba(148,163,184,0.55)" }}>
-          All sections below are empty until the owner explicitly approves them. No content is fabricated or inferred.
-        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {ADVANCED_SECTIONS.map(s => <AdvancedBlock key={s.key} label={s.label} ml={s.ml} />)}
+          {ADVANCED_SECTIONS.map(s => <AdvancedBlock key={s.key} label={s.label} ml={s.ml} entries={rec[s.key]} />)}
         </div>
       </Block>
 
