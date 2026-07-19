@@ -92,6 +92,7 @@ const PAGE_IMPORTS = {
   MasterPdfLibrary:         () => import('./pages/MasterPdfLibrary'),
   OwnerPendingReviews:      () => import('./pages/OwnerPendingReviews'),
   UnifiedKnowledgeSearch:   () => import('./pages/UnifiedKnowledgeSearch'),
+  AstroClockLibraryStatus:  () => import('./pages/AstroClockLibraryStatus'),
   };
 
 // ── Route factory — one lazy() + one <Route> per manifest entry ──────

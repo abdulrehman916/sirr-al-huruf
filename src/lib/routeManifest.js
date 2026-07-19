@@ -83,6 +83,8 @@ const ROUTE_MANIFEST = [
   { path: '/admin/pending-reviews', component: 'OwnerPendingReviews', chunk: 'OwnerPendingReviews' },
   // Unified Knowledge Search — Owner-only permanent knowledge gateway (Knowledge Management).
   { path: '/admin/knowledge-search', component: 'UnifiedKnowledgeSearch', chunk: 'UnifiedKnowledgeSearch' },
+  // Astro Clock Library Status — Owner-only dashboard (Knowledge Management).
+  { path: '/admin/astro-library-status', component: 'AstroClockLibraryStatus', chunk: 'AstroClockLibraryStatus' },
 
   // Rules & Conditions — public
   { path: '/rules-conditions', component: 'RulesConditions', chunk: 'RulesConditions', flags: ['public'] },

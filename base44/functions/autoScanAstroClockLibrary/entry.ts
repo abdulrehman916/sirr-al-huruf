@@ -51,6 +51,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 const TIME_BUDGET_MS = 180000;
 const PAGES_PER_CALL = 4;       // pages per LLM detection call
 const LLM_MODEL = 'gemini_3_flash';
+const EXTRACTION_VERSION = 'v1';
+const OCR_VERSION = 'v1';
 
 // ── Helpers ────────────────────────────────────────────────────
 async function sha256(s) {
@@ -60,6 +62,13 @@ async function sha256(s) {
 }
 function slug(s) {
   return String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60);
+}
+function computeFingerprint(book) {
+  const partsHash = (book.pdf_parts || []).map(p => p.file_hash || '').join('|');
+  const totalPages = book.combined_total_pages || 0;
+  const modifiedTime = book.google_drive_modified_time || '';
+  const importDate = book.import_date || book.upload_date || '';
+  return `${partsHash}||${totalPages}||${modifiedTime}||${importDate}`;
 }
 
 // ── Detection schema ───────────────────────────────────────────
@@ -161,7 +170,7 @@ Deno.serve(async (req) => {
     const verifiedBooks = await sdk.entities.MasterPdfBook.filter(
       { extraction_status: { $in: ['pending_verification', 'completed'] } },
       'upload_date',
-      100
+      500
     ).catch(() => []);
 
     // Marker records track per-book scan progress (page-level resumability).
@@ -177,12 +186,14 @@ Deno.serve(async (req) => {
     }
     const bookProgress = new Map();
     const bookMaxPageFromFindings = new Map();
+    const markerAttrs = new Map();
     for (const r of existingAck) {
       if (!r.source_book_id) continue;
       if (r.is_marker || r.rule_category === 'scan_marker') {
         const pgs = String(r.source_page_number || '');
         if (pgs === 'done') bookProgress.set(r.source_book_id, -1);
         else { const last = parseInt(pgs, 10); bookProgress.set(r.source_book_id, isNaN(last) ? 0 : last); }
+        if (r.attributes && typeof r.attributes === 'object') markerAttrs.set(r.source_book_id, r.attributes);
       } else {
         // Regular finding — track max page number for this book
         if (r.source_page_number) {
@@ -202,12 +213,31 @@ Deno.serve(async (req) => {
     }
 
     let remaining = (verifiedBooks || []).filter(b => bookProgress.get(b.master_book_id) !== -1);
+
+    // ── Detect UPDATED books: done books whose content fingerprint changed ──
+    const rescanBooks = [];
+    for (const book of (verifiedBooks || [])) {
+      const bid = book.master_book_id;
+      if (bookProgress.get(bid) === -1) {
+        const storedAttrs = markerAttrs.get(bid) || {};
+        const currentFp = computeFingerprint(book);
+        if (storedAttrs.content_fingerprint && storedAttrs.content_fingerprint !== currentFp) {
+          rescanBooks.push(book);
+          bookProgress.set(bid, 0);
+        }
+      }
+    }
+    if (rescanBooks.length > 0) remaining = [...remaining, ...rescanBooks];
+
     if (checkpointOnly) {
+      const doneCount = [...bookProgress.values()].filter(v => v === -1).length;
       return Response.json({
         status: 'checkpoint',
         totalVerifiedBooks: (verifiedBooks || []).length,
-        booksDone: [...bookProgress.values()].filter(v => v === -1).length,
+        booksDone: doneCount,
         booksRemaining: remaining.length,
+        booksNeedingRescan: rescanBooks.length,
+        inProgress: remaining.length - rescanBooks.length,
         nextBookIds: remaining.slice(0, 5).map(b => b.master_book_id),
       });
     }
@@ -277,11 +307,27 @@ Deno.serve(async (req) => {
       pages = pages.filter(p => (p.ocr_text || p.arabic_text || p.ocr_text_ar || '').trim().length > 0 && p.page_number > lastPage);
 
       if (pages.length === 0) {
-        // All pages already scanned or no text — mark as done
+        // All pages already scanned or no text — mark as done with metadata
+        const now0 = new Date().toISOString();
+        const storedAttrs0 = markerAttrs.get(bookId) || {};
+        const scanMeta0 = {
+          first_scan_date: storedAttrs0.first_scan_date || now0,
+          last_scan_date: now0,
+          last_modified_detected: book.google_drive_modified_time || storedAttrs0.last_modified_detected || now0,
+          scan_version: (Number(storedAttrs0.scan_version) || 0) + 1,
+          extraction_version: EXTRACTION_VERSION,
+          ocr_version: OCR_VERSION,
+          file_hash: (book.pdf_parts || []).map(p => p.file_hash || '').join('|'),
+          content_fingerprint: computeFingerprint(book),
+          combined_total_pages: book.combined_total_pages || 0,
+          pages_scanned: book.combined_total_pages || 0,
+          pages_remaining: 0,
+          completion_percentage: 100,
+        };
         try {
           const em = await sdk.entities.AstroClockKnowledge.filter({ rule_record_key: `scan_marker|${bookId}` }, undefined, 1).catch(() => []);
-          if (em && em.length > 0) await sdk.entities.AstroClockKnowledge.update(em[0].id || em[0]._id, { source_page_number: 'done' }).catch(() => {});
-          else await sdk.entities.AstroClockKnowledge.create({ knowledge_id: `ACK-MARKER-AUTOSCAN-${bookId}`, source_type: 'categorized', rule_category: 'scan_marker', rule_entity: bookId, rule_record_key: `scan_marker|${bookId}`, knowledge_category: 'categorized_rule', knowledge_text_en: '', content_hash: `cat-scan_marker-${bookId}`, is_marker: true, source_book_id: bookId, source_book_title: bookTitle, source_page_number: 'done' });
+          if (em && em.length > 0) await sdk.entities.AstroClockKnowledge.update(em[0].id || em[0]._id, { source_page_number: 'done', attributes: scanMeta0 }).catch(() => {});
+          else await sdk.entities.AstroClockKnowledge.create({ knowledge_id: `ACK-MARKER-AUTOSCAN-${bookId}`, source_type: 'categorized', rule_category: 'scan_marker', rule_entity: bookId, rule_record_key: `scan_marker|${bookId}`, knowledge_category: 'categorized_rule', knowledge_text_en: '', content_hash: `cat-scan_marker-${bookId}`, is_marker: true, source_book_id: bookId, source_book_title: bookTitle, source_page_number: 'done', attributes: scanMeta0 });
         } catch (_) {}
         stats.booksSkipped++;
         continue;
@@ -461,10 +507,26 @@ Deno.serve(async (req) => {
       }
       // Update marker with scan progress (page-level resumability)
       const markerPageNumber = allPagesScanned ? 'done' : String(lastProcessedPage);
+      const nowMeta = new Date().toISOString();
+      const storedAttrsMeta = markerAttrs.get(bookId) || {};
+      const scanMeta = {
+        first_scan_date: storedAttrsMeta.first_scan_date || nowMeta,
+        last_scan_date: nowMeta,
+        last_modified_detected: book.google_drive_modified_time || storedAttrsMeta.last_modified_detected || nowMeta,
+        scan_version: (Number(storedAttrsMeta.scan_version) || 0) + 1,
+        extraction_version: EXTRACTION_VERSION,
+        ocr_version: OCR_VERSION,
+        file_hash: (book.pdf_parts || []).map(p => p.file_hash || '').join('|'),
+        content_fingerprint: computeFingerprint(book),
+        combined_total_pages: book.combined_total_pages || 0,
+        pages_scanned: allPagesScanned ? (book.combined_total_pages || 0) : lastProcessedPage,
+        pages_remaining: allPagesScanned ? 0 : Math.max((book.combined_total_pages || 0) - lastProcessedPage, 0),
+        completion_percentage: allPagesScanned ? 100 : Math.round((lastProcessedPage / Math.max(book.combined_total_pages || 1, 1)) * 100),
+      };
       try {
         const em = await sdk.entities.AstroClockKnowledge.filter({ rule_record_key: `scan_marker|${bookId}` }, undefined, 1).catch(() => []);
-        if (em && em.length > 0) await sdk.entities.AstroClockKnowledge.update(em[0].id || em[0]._id, { source_page_number: markerPageNumber }).catch(() => {});
-        else await sdk.entities.AstroClockKnowledge.create({ knowledge_id: `ACK-MARKER-AUTOSCAN-${bookId}`, source_type: 'categorized', rule_category: 'scan_marker', rule_entity: bookId, rule_record_key: `scan_marker|${bookId}`, knowledge_category: 'categorized_rule', knowledge_text_en: '', content_hash: `cat-scan_marker-${bookId}`, is_marker: true, source_book_id: bookId, source_book_title: bookTitle, source_page_number: markerPageNumber });
+        if (em && em.length > 0) await sdk.entities.AstroClockKnowledge.update(em[0].id || em[0]._id, { source_page_number: markerPageNumber, attributes: scanMeta }).catch(() => {});
+        else await sdk.entities.AstroClockKnowledge.create({ knowledge_id: `ACK-MARKER-AUTOSCAN-${bookId}`, source_type: 'categorized', rule_category: 'scan_marker', rule_entity: bookId, rule_record_key: `scan_marker|${bookId}`, knowledge_category: 'categorized_rule', knowledge_text_en: '', content_hash: `cat-scan_marker-${bookId}`, is_marker: true, source_book_id: bookId, source_book_title: bookTitle, source_page_number: markerPageNumber, attributes: scanMeta });
       } catch (_) {}
       stats.booksScanned++;
       }
@@ -517,7 +579,8 @@ Deno.serve(async (req) => {
         findingsDetected: stats.findingsDetected, recordsCreated: stats.recordsCreated,
         recordsMerged: stats.recordsMerged, crossLinksCreated: stats.crossLinksCreated,
         citationsAdded: stats.citationsAdded, categoriesCovered: Array.from(stats.categoriesCovered),
-        categoriesMissing: categoriesMissingRun, timeMs: Date.now() - started, reRunNeeded: true,
+        categoriesMissing: categoriesMissingRun, booksNeedingRescan: rescanBooks.length,
+        timeMs: Date.now() - started, reRunNeeded: true,
       });
     }
 
