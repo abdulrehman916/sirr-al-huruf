@@ -45,9 +45,11 @@ Deno.serve(async (req) => {
 
     const books = await sdk.entities.MasterPdfBook.list('-upload_date', 300);
     const byOneDriveId = {};
+    const byGoogleDriveId = {};
     const byFileName = {};
     (books || []).forEach((b) => {
       if (b.onedrive_file_id) byOneDriveId[b.onedrive_file_id] = b;
+      if (b.google_drive_file_id) byGoogleDriveId[b.google_drive_file_id] = b;
       (Array.isArray(b.pdf_parts) ? b.pdf_parts : []).forEach((pt) => {
         if (pt.file_name) byFileName[pt.file_name] = b;
       });
@@ -105,20 +107,87 @@ Deno.serve(async (req) => {
       }
     } catch (_) {}
 
-    // ── Google Drive (new-file detection; per-file update needs schema field) ──
+    // ── Google Drive — full add/update/rename/move/delete (mirrors OneDrive).
+    //    Each PDF is a LIVE-INDEX book linked by google_drive_file_id. No binary
+    //    is copied. Matching is by file ID only (no name matching → no duplicates).
     try {
       const conn = await sdk.connectors.getConnection('googledrive');
       if (conn?.accessToken) {
-        const res = await fetch(
-          `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent("mimeType='application/pdf' and trashed=false")}&fields=files(id,name,modifiedTime,size,webViewLink)&pageSize=200&orderBy=modifiedTime desc`,
-          { headers: { Authorization: `Bearer ${conn.accessToken}` } }
-        );
-        if (res.ok) {
+        let pageToken = '';
+        const driveIds = new Set();
+        const driveFiles = [];
+        do {
+          const q = encodeURIComponent("mimeType='application/pdf' and trashed=false");
+          const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,modifiedTime,size,webViewLink,parents),nextPageToken&pageSize=200${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
+          const res = await fetch(url, { headers: { Authorization: `Bearer ${conn.accessToken}` } });
+          if (!res.ok) break;
           const data = await res.json();
-          for (const f of (data.files || [])) {
-            const matched = byFileName[f.name];
-            if (!matched) {
-              events.push({ type: 'add', source: 'Google Drive', file_name: f.name, file_id: f.id, detail: 'New PDF in Google Drive — awaiting import' });
+          (data.files || []).forEach((f) => { driveFiles.push(f); driveIds.add(f.id); });
+          pageToken = data.nextPageToken || '';
+        } while (pageToken);
+
+        for (const f of driveFiles) {
+          const existing = byGoogleDriveId[f.id];
+          const parent = (f.parents && f.parents[0]) || '';
+          if (!existing) {
+            // ADD — create a live-index book linked by Google Drive file ID (no binary copied)
+            const bookId = `MPB-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            await sdk.entities.MasterPdfBook.create({
+              master_book_id: bookId,
+              library_type: 'master_library',
+              import_source: 'googledrive',
+              book_title: f.name,
+              google_drive_file_id: f.id,
+              google_drive_name: f.name,
+              google_drive_modified_time: f.modifiedTime || '',
+              google_drive_parent_id: parent,
+              google_drive_view_link: f.webViewLink || '',
+              upload_date: now,
+              import_date: now,
+              extraction_status: 'pending',
+              extraction_error: 'Live index — awaiting indexing',
+              combined_total_pages: 0,
+              total_pages_indexed: 0,
+              pdf_parts: [],
+              version_history: [{ version_id: `V-${Date.now()}`, timestamp: now, action: 'cloud_sync', change_summary: 'Detected in Google Drive (live index created)' }],
+            }).catch(() => {});
+            events.push({ type: 'add', source: 'Google Drive', book_id: bookId, file_name: f.name, file_id: f.id, detail: 'New PDF — live index created' });
+          } else {
+            const modChanged = f.modifiedTime && existing.google_drive_modified_time && f.modifiedTime !== existing.google_drive_modified_time;
+            const renamed = f.name && existing.google_drive_name && f.name !== existing.google_drive_name;
+            const moved = parent && existing.google_drive_parent_id && parent !== existing.google_drive_parent_id;
+            if (modChanged || renamed || moved) {
+              const patch = {
+                google_drive_modified_time: f.modifiedTime || existing.google_drive_modified_time,
+                google_drive_name: f.name,
+                google_drive_parent_id: parent,
+                google_drive_view_link: f.webViewLink || existing.google_drive_view_link,
+              };
+              if (renamed) patch.book_title = f.name;
+              if (modChanged) { patch.extraction_status = 'pending'; patch.extraction_error = 'Google Drive file updated — pending re-index'; }
+              await sdk.entities.MasterPdfBook.update(existing.id || existing._id, patch).catch(() => {});
+              if (modChanged) await flagForReindex(sdk, existing, now, user);
+              if (modChanged) events.push({ type: 'update', source: 'Google Drive', book_id: existing.master_book_id, file_name: f.name, detail: 'Modified — flagged for re-index' });
+              if (renamed) events.push({ type: 'rename', source: 'Google Drive', book_id: existing.master_book_id, file_name: f.name, detail: `Renamed → '${f.name}'` });
+              if (moved) events.push({ type: 'move', source: 'Google Drive', book_id: existing.master_book_id, file_name: f.name, detail: 'Moved (parent folder changed)' });
+            }
+          }
+        }
+        // DELETE — Google Drive file_ids in DB but no longer in Drive (trashed or permanently deleted)
+        for (const id of Object.keys(byGoogleDriveId)) {
+          if (!driveIds.has(id)) {
+            const b = byGoogleDriveId[id];
+            if (b.import_source === 'googledrive') {
+              const indexedPages = Number(b.total_pages_indexed || 0);
+              if (indexedPages === 0) {
+                // Pure live index (no extracted knowledge) — remove to avoid orphan/stale
+                await sdk.entities.MasterPdfBook.delete(b.id || b._id).catch(() => {});
+                events.push({ type: 'delete', source: 'Google Drive', book_id: b.master_book_id, file_name: b.book_title, detail: 'Removed from Drive — live-index record deleted (no indexed pages)' });
+              } else {
+                // Knowledge already extracted — preserve (append-only), mark source-deleted (never stale)
+                await sdk.entities.MasterPdfBook.update(b.id || b._id, { extraction_status: 'cloud_deleted', extraction_error: 'Source file removed from Google Drive' }).catch(() => {});
+                events.push({ type: 'delete', source: 'Google Drive', book_id: b.master_book_id, file_name: b.book_title, detail: 'Removed from Drive — marked cloud_deleted (indexed knowledge preserved)' });
+              }
             }
           }
         }

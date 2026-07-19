@@ -1,7 +1,7 @@
 {
   "name": "MasterPdfBook",
   "type": "object",
-  "description": "MASTER PDF LIBRARY \u2014 Owner-only permanent research repository for the Sirr al-Huruf project. Extends the SIRR module's proven append-only architecture (multi-part PDF storage, OCR, verification, audit, backup) into a central, Owner-confidential library. COMPLETELY OWNER-ONLY: entity RLS is admin-only (blocks public/low-role API access); every backend function that reads/writes this entity additionally verifies the caller is the Owner (is_owner === true or OWNER_EMAIL) before serving data. No Admin, Moderator, Editor, Contributor, or API may access Master Library content. SEPARATE from SirrManuscriptBook (the public SIRR archive) because SirrManuscriptBook is public-read for the SIRR page and cannot hold Owner-confidential content. This entity reuses the same architecture (pdf_parts multi-part permanent storage, append-only, verification_report, processing_lock, backup tracking, SirrAuditLog integration) so future integration with Sections A/B/C requires no redesign. IMPORT SOURCES (extensible): upload, multi_upload, folder, zip, onedrive, adobe, future. Adobe Document Cloud provenance stored in adobe_* fields; OneDrive in onedrive_* fields. APPEND-ONLY: original OCR is never overwritten; every modification creates a version_history entry; nothing is ever deleted. PERMANENT: every pdf_part's file_url, file_hash, file_size stored at upload time. FUTURE: in Phase 2+ this library becomes the primary research engine enriching Sections A, B, and C.",
+  "description": "MASTER PDF LIBRARY \u2014 Owner-only permanent research repository for the Sirr al-Huruf project. Extends the SIRR module's proven append-only architecture (multi-part PDF storage, OCR, verification, audit, backup) into a central, Owner-confidential library. COMPLETELY OWNER-ONLY: entity RLS is admin-only (blocks public/low-role API access); every backend function that reads/writes this entity additionally verifies the caller is the Owner (is_owner === true or OWNER_EMAIL) before serving data. No Admin, Moderator, Editor, Contributor, or API may access Master Library content. SEPARATE from SirrManuscriptBook (the public SIRR archive) because SirrManuscriptBook is public-read for the SIRR page and cannot hold Owner-confidential content. This entity reuses the same architecture (pdf_parts multi-part permanent storage, append-only, verification_report, processing_lock, backup tracking, SirrAuditLog integration) so future integration with Sections A/B/C requires no redesign. IMPORT SOURCES (extensible): upload, multi_upload, folder, zip, onedrive, googledrive, adobe, future. Adobe Document Cloud provenance stored in adobe_* fields; OneDrive in onedrive_* fields; Google Drive in google_drive_* fields (the Google Drive file ID is the permanent link used by the Live Cloud Auto-Sync to detect add/update/rename/move/delete \u2014 the library mirrors the live state of Google Drive; no PDF binary is copied, only the live index). APPEND-ONLY: original OCR is never overwritten; every modification creates a version_history entry; nothing is ever deleted EXCEPT a pure live-index book (google_drive_file_id set, import_source='googledrive', total_pages_indexed=0) whose source file was removed from Google Drive \u2014 such an index record is deleted to avoid orphan/stale records (no knowledge had been extracted from it). PERMANENT: every pdf_part's file_url, file_hash, file_size stored at upload time. FUTURE: in Phase 2+ this library becomes the primary research engine enriching Sections A, B, and C.",
   "properties": {
     "master_book_id": {
       "type": "string",
@@ -23,11 +23,12 @@
         "folder",
         "zip",
         "onedrive",
+        "googledrive",
         "adobe",
         "future"
       ],
       "default": "upload",
-      "description": "How this book entered the Master Library. Extensible \u2014 new cloud providers add new enum values without redesign. 'upload' = single local PDF; 'multi_upload' = multiple local PDFs into one book; 'folder' = folder upload; 'zip' = ZIP archive; 'onedrive' = Microsoft OneDrive; 'adobe' = Adobe Document Cloud; 'future' = reserved for future cloud providers."
+      "description": "How this book entered the Master Library. Extensible \u2014 new cloud providers add new enum values without redesign. 'upload' = single local PDF; 'multi_upload' = multiple local PDFs into one book; 'folder' = folder upload; 'zip' = ZIP archive; 'onedrive' = Microsoft OneDrive; 'googledrive' = Google Drive (live-index linked by google_drive_file_id); 'adobe' = Adobe Document Cloud; 'future' = reserved for future cloud providers."
     },
     "malayalam_book_name": {
       "type": "string",
@@ -36,7 +37,7 @@
     },
     "book_title": {
       "type": "string",
-      "description": "Original book title exactly as imported (original language preserved \u2014 never translated). Extracted from the PDF title page."
+      "description": "Original book title exactly as imported (original language preserved \u2014 never translated). Extracted from the PDF title page. For Google Drive live-index books, mirrors the Drive file name (updated on rename)."
     },
     "book_title_ar": {
       "type": "string",
@@ -187,7 +188,7 @@
         ]
       },
       "default": [],
-      "description": "ORDERED LIST of every uploaded PDF part for this book. The background engine processes parts in order. Every part's file_url, part_id, file_hash, file_size permanently stored at upload time. SOLE source of truth for what to process \u2014 never chat history."
+      "description": "ORDERED LIST of every uploaded PDF part for this book. The background engine processes parts in order. Every part's file_url, part_id, file_hash, file_size permanently stored at upload time. SOLE source of truth for what to process \u2014 never chat history. Empty for Google Drive live-index books (no binary is copied; indexing fetches via the Drive API on demand)."
     },
     "upload_date": {
       "type": "string",
@@ -208,10 +209,11 @@
         "completed",
         "failed",
         "partial",
-        "paused"
+        "paused",
+        "cloud_deleted"
       ],
       "default": "pending",
-      "description": "Book-level content extraction status. 'uploading' = Owner still uploading parts (engine ignores). 'pending' = all parts uploaded, waiting for processor. 'processing' = a part is being extracted. 'pending_verification' = ALL parts processed, awaiting Owner verification. 'completed' = Owner-verified. 'partial' = interrupted, resumable. 'paused' = paused by Owner."
+      "description": "Book-level content extraction status. 'uploading' = Owner still uploading parts (engine ignores). 'pending' = all parts uploaded, waiting for processor. 'processing' = a part is being extracted. 'pending_verification' = ALL parts processed, awaiting Owner verification. 'completed' = Owner-verified. 'partial' = interrupted, resumable. 'paused' = paused by Owner. 'cloud_deleted' = the cloud source file was removed (Google Drive trash/permanent delete); for a pure live-index book with no indexed pages the record is deleted, otherwise it is preserved (append-only) and flagged so it is never stale."
     },
     "extraction_error": {
       "type": "string",
@@ -273,7 +275,7 @@
     "total_pages_indexed": {
       "type": "integer",
       "default": 0,
-      "description": "Total number of MasterPdfPage records indexed from this book (across all parts)."
+      "description": "Total number of MasterPdfPage records indexed from this book (across all parts). Used by Live Cloud Auto-Sync to decide whether a deleted Google Drive source can be hard-removed (0 indexed pages) or must be preserved (append-only) and marked cloud_deleted."
     },
     "version_history": {
       "type": "array",
@@ -350,6 +352,31 @@
       "default": "",
       "description": "OneDrive ETag at import time. Detects if the original PDF changed since import."
     },
+    "google_drive_file_id": {
+      "type": "string",
+      "default": "",
+      "description": "GOOGLE DRIVE file ID (permanent link). The Live Cloud Auto-Sync matches Drive files to books by this ID to detect add/update/rename/move/delete. Empty for non-Google-Drive books. Unique per book."
+    },
+    "google_drive_name": {
+      "type": "string",
+      "default": "",
+      "description": "Google Drive file name at last sync. Renames are detected by comparing this to the current Drive name (book_title is updated to match)."
+    },
+    "google_drive_modified_time": {
+      "type": "string",
+      "default": "",
+      "description": "Google Drive modifiedTime at last sync (ISO 8601). Updates are detected by comparing this to the current Drive modifiedTime; a changed file is flagged for re-index."
+    },
+    "google_drive_parent_id": {
+      "type": "string",
+      "default": "",
+      "description": "Google Drive parent folder ID at last sync. Moves are detected by comparing this to the current parent (parents[0])."
+    },
+    "google_drive_view_link": {
+      "type": "string",
+      "default": "",
+      "description": "Google Drive webViewLink (Owner-only, never public). Used by the Owner to open the source in Drive."
+    },
     "notes": {
       "type": "string",
       "default": "",
@@ -409,6 +436,12 @@
       "name": "idx_onedrive_file_id",
       "fields": [
         "onedrive_file_id"
+      ]
+    },
+    {
+      "name": "idx_google_drive_file_id",
+      "fields": [
+        "google_drive_file_id"
       ]
     }
   ],
