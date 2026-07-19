@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, ChevronDown, Loader2, ShieldAlert } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import HolyNameEsotericResearchProfile from "@/components/holynameknowledge/HolyNameEsotericResearchProfile";
+import HolyNameVerifiedKnowledge from "@/components/holynameknowledge/HolyNameVerifiedKnowledge";
 
 // ── Section C — Birhatīya / Esoteric Invocation Names ──
 // INDEPENDENT module. Reads ONLY from HolyNameEsotericKnowledge.
@@ -169,7 +170,8 @@ export default function SectionCNames() {
                         transition={{ duration: 0.22, ease: "easeInOut" }}
                         style={{ overflow: "hidden" }}
                       >
-                        <div className="px-4 pb-4 pt-1" style={{ borderTop: "1px solid " + P.faint }}>
+                        <div className="px-4 pb-4 pt-1 space-y-3" style={{ borderTop: "1px solid " + P.faint }}>
+                          <HolyNameVerifiedKnowledge arabicName={card.arabic_name} nameId={card.name_id} />
                           <HolyNameEsotericResearchProfile nameId={card.name_id} />
                         </div>
                       </motion.div>

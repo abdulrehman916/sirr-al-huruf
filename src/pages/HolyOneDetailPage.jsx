@@ -10,6 +10,7 @@ import { ABJAD_VALUES } from "@/lib/abjadValues";
 import { usePageState } from "@/context/PageStateContext";
 import HolyNameImportedSections from "@/components/holynameknowledge/HolyNameImportedSections";
 import HolyOneScholarlySections from "@/components/holynameknowledge/HolyOneScholarlySections";
+import HolyNameVerifiedKnowledge from "@/components/holynameknowledge/HolyNameVerifiedKnowledge";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -341,6 +342,17 @@ export default function HolyOneDetailPage() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Verified Knowledge Cache — checked first (zero AI on hit) */}
+        {name.arabic_name && (
+          <div className="mb-4">
+            <HolyNameVerifiedKnowledge
+              arabicName={name.arabic_name}
+              nameId={name.name_id || nameId}
+              englishName={name.malayalam_pronunciation}
+            />
           </div>
         )}
 
