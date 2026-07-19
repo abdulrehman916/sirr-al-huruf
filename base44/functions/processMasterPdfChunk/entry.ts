@@ -1,5 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
-import { getDocument } from 'npm:pdfjs-dist@4.10.38/legacy/build/pdf.mjs';
+import { getDocument, GlobalWorkerOptions } from 'npm:pdfjs-dist@4.10.38/legacy/build/pdf.mjs';
+try {
+  if (!GlobalWorkerOptions.workerSrc) {
+    GlobalWorkerOptions.workerSrc = import.meta.resolve('npm:pdfjs-dist@4.10.38/legacy/build/pdf.worker.mjs');
+  }
+} catch (_) {}
 
 // ═══════════════════════════════════════════════════════════════
 // MASTER PDF LIBRARY — BACKGROUND PROCESSING PIPELINE
