@@ -561,6 +561,67 @@
       "type": "integer",
       "default": 1,
       "description": "Total manuscript/screenshot sources. 0 for markers."
+    },
+    "attached_visuals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "visual_url": {
+            "type": "string",
+            "description": "URL of the cropped visual image (wafq, magic square, seal, symbol, table, diagram) extracted from the source screenshot. Displayed inside this card alongside the Arabic text and Malayalam explanation."
+          },
+          "visual_type": {
+            "type": "string",
+            "enum": [
+              "magic_square",
+              "wafq",
+              "table",
+              "symbol",
+              "seal",
+              "diagram",
+              "figure",
+              "grid",
+              "handwritten_chart",
+              "talisman",
+              "other"
+            ],
+            "default": "other",
+            "description": "Type of visual content."
+          },
+          "description": {
+            "type": "string",
+            "default": "",
+            "description": "English description of what the visual depicts."
+          },
+          "description_ar": {
+            "type": "string",
+            "default": "",
+            "description": "Arabic caption printed on the visual, preserved verbatim. Empty if none."
+          },
+          "source_screenshot_url": {
+            "type": "string",
+            "default": "",
+            "description": "URL of the ORIGINAL full screenshot this visual was cropped from. Preserved permanently as provenance."
+          },
+          "source_page": {
+            "type": "string",
+            "default": "",
+            "description": "Page number in the source, if visible."
+          },
+          "imported_at": {
+            "type": "string",
+            "default": "",
+            "description": "ISO 8601 timestamp when this visual was attached."
+          }
+        },
+        "required": [
+          "visual_url",
+          "visual_type"
+        ]
+      },
+      "default": [],
+      "description": "VISUAL CONTENT \u2014 individually cropped visuals (wafq, magic squares, seals, symbols, tables, diagrams, figures) extracted from the source screenshot and displayed inside this card together with the related Arabic text and Malayalam explanation. APPEND-ONLY: new visuals are appended, never overwritten. Deduplicated by visual_url \u2014 the same crop is never attached twice to the same card. The original full screenshot remains preserved in source_screenshot_url / supporting_sources as provenance."
     }
   },
   "required": [

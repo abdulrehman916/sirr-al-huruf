@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { useAstroClockContextKnowledge } from "@/hooks/useAstroClockContextKnowledge";
+import AstroClockVisuals from "@/components/astroclock/AstroClockVisuals";
 
 const CATEGORY_CONFIG = {
   recommended: {
@@ -237,6 +238,10 @@ export default function AstroContextKnowledgePanel({ context, qualityTier }) {
         screenshot_url: rec.source_screenshot_url
       });
     }
+    // Collect cropped visuals attached to these AstroClockKnowledge records
+    if (Array.isArray(rec.attached_visuals) && rec.attached_visuals.length > 0) {
+      acc.visuals = [...(acc.visuals || []), ...rec.attached_visuals];
+    }
     return acc;
   }, {});
 
@@ -341,6 +346,8 @@ export default function AstroContextKnowledgePanel({ context, qualityTier }) {
             {(SECTION_ORDER[qualityTier] || SECTION_ORDER[3]).map((key) => renderSection(key))}
             {/* All supporting sources */}
             <SourceList sources={merged.sources} language={language} txt={txt} />
+            {/* Cropped source visuals (wafq, tables, diagrams) — displayed inside the card */}
+            <AstroClockVisuals visuals={merged.visuals} />
           </div>
         </motion.div>
       )}
