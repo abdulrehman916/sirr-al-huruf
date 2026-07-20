@@ -86,3 +86,4 @@ Deno.serve(async (req) => {
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+// Generate visual integration status report for all 28 Birhatīya cards.

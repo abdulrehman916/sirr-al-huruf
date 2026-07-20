@@ -206,3 +206,4 @@ Also report:
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+// Scan PDF for visual content — identifies pages with magic squares, wafq, tables, symbols, seals, diagrams.

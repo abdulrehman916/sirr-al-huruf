@@ -125,15 +125,104 @@ export default function SectionCVisualIntegrator() {
       const uploadRes = await base44.integrations.Core.UploadFile({ file: pdfFile });
       const uploadedUrl = uploadRes?.file_url || "";
 
-      // Step 2: Call scanSectionCVisuals to identify pages with visual content
+      // Step 2: Call InvokeLLM directly to identify pages with visual content
       setProgress({ current: 1, total: 1, current_page: 0, description: "Scanning PDF for visual content…" });
-      const scanRes = await base44.functions.invoke("scanSectionCVisuals", {
-        pdf_url: uploadedUrl,
-        source_label: sourceLabel || pdfFile.name,
-      });
-      const scanData = scanRes?.data || scanRes;
+      const NAMES_28_LIST = [
+        "HNK-MHC-001 = برهتية (Birhatya)", "HNK-MHC-002 = كريم (Karīr)",
+        "HNK-MHC-003 = تتليه (Tatlīyah)", "HNK-MHC-004 = طوران (Ṭawrān)",
+        "HNK-MHC-005 = مزجل (Mazjal)", "HNK-MHC-006 = بزجل (Bazjal)",
+        "HNK-MHC-007 = ترقب (Tarqab)", "HNK-MHC-008 = برهش (Barhash)",
+        "HNK-MHC-009 = غلمش (Ghalmash)", "HNK-MHC-010 = خوطير (Khawtayr)",
+        "HNK-MHC-011 = قلنهود (Qalnahuwd)", "HNK-MHC-012 = برشان (Barshān)",
+        "HNK-MHC-013 = كظيمر (Katẓīr)", "HNK-MHC-014 = نموشلخ (Namūshalakh)",
+        "HNK-MHC-015 = برهيولا (Barhayūlā)", "HNK-MHC-016 = بشكيلخ (Bashkīlakh)",
+        "HNK-MHC-017 = قزمز (Qazmaz)", "HNK-MHC-018 = انغلليط (Anghalalīt)",
+        "HNK-MHC-019 = قبرات (Qabarāt)", "HNK-MHC-020 = غياها (Ghayāhā)",
+        "HNK-MHC-021 = كيدهولا (Kaydhūlā)", "HNK-MHC-022 = سماخر (Simākhir)",
+        "HNK-MHC-023 = شمحاهيمر (Shimkhāhīr)", "HNK-MHC-024 = شمحاهيمر (Shimhāhīr)",
+        "HNK-MHC-025 = بكهطونيه (Bakhaṭūnīya)", "HNK-MHC-026 = بشارش (Bashārish)",
+        "HNK-MHC-027 = طونش (Ṭawnish)", "HNK-MHC-028 = شمخاباروخ (Shamkhābārūkh)",
+      ];
+      const VISUAL_TYPES_LIST = "magic_square, wafq, table, symbol, seal, diagram, figure, grid, handwritten_chart, other";
+      const scanPrompt = `You are a meticulous manuscript archivist scanning a scholarly PDF for VISUAL CONTENT related to the Birhatīya (Barhatiah / برهتية) conjuration oath.
 
-      if (scanData?.error) throw new Error(scanData.error);
+Scan the ENTIRE PDF, every page.
+
+For EVERY page, carefully examine it for VISUAL CONTENT. Visual content includes ANY of these:
+- Magic Square (Wafq / Awfaq — a grid of letters or numbers, typically 3x3, 4x4, 5x5, etc.)
+- Wafq (letter grid / magic square variant)
+- Table (structured rows and columns of text or data)
+- Symbol (a drawn symbol, sigil, or mark)
+- Seal (Khatam — a circular or geometric seal design)
+- Diagram (any explanatory diagram or schematic)
+- Figure (a drawn figure or illustration)
+- Grid (any grid layout — letters, numbers, or symbols)
+- Handwritten chart (handwritten numerical or letter chart)
+- Any other visual illustration, drawing, or mark
+
+The 28 Birhatīya names to match visuals to:
+${NAMES_28_LIST.join("\n")}
+
+For EACH page that contains visual content, output ONE item:
+- page_number: the PDF page number (1-based) where the visual appears
+- name_id: the matching Birhatīya name ID from the list above. Use "" (empty string) if the visual is general/whole-conjuration content not specific to one name.
+- visual_type: exactly one of: ${VISUAL_TYPES_LIST}
+- description: a brief description of the visual content (what it shows, e.g. "3x3 magic square with Arabic letters for the name Birhatya", "circular seal with the name Karir in the center", "table of Abjad values for all 28 names")
+
+ABSOLUTE RULES:
+1. ONLY report visuals that are ACTUALLY VISIBLE on the page. Never fabricate or guess.
+2. If a page has NO visual content (only text), do NOT output an item for it.
+3. If a page has MULTIPLE distinct visuals, output ONE item per distinct visual (they can share the same page_number).
+4. Match each visual to the correct Birhatīya name by examining the surrounding text context (headings, labels, chapter titles).
+5. If you cannot determine which name a visual relates to, set name_id to "" and describe it as general.
+
+Also report:
+- total_pages: total page count of the PDF
+- book_title: the title of the book/document as printed`;
+
+      const llmRes = await base44.integrations.Core.InvokeLLM({
+        prompt: scanPrompt,
+        file_urls: [uploadedUrl],
+        model: "gemini_3_flash",
+        response_json_schema: {
+          type: "object",
+          properties: {
+            total_pages: { type: "integer" },
+            book_title: { type: "string" },
+            visuals: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  page_number: { type: "integer" },
+                  name_id: { type: "string" },
+                  visual_type: { type: "string" },
+                  description: { type: "string" },
+                },
+                required: ["page_number", "visual_type", "description"],
+              },
+            },
+          },
+          required: ["visuals"],
+        },
+      });
+
+      const scanData = llmRes && typeof llmRes === "object" ? llmRes : {};
+      const resolvedSource = sourceLabel || scanData.book_title || "Section C PDF";
+      const validVisualTypes = new Set(VISUAL_TYPES_LIST.split(", ").map((t) => t.trim()));
+      const validVisuals = (Array.isArray(scanData.visuals) ? scanData.visuals : [])
+        .filter((v) => Number(v.page_number) > 0 && v.visual_type && v.description)
+        .map((v) => ({
+          page_number: Number(v.page_number),
+          name_id: String(v.name_id || "").trim(),
+          visual_type: validVisualTypes.has(v.visual_type) ? v.visual_type : "other",
+          description: String(v.description || "").trim(),
+        }));
+
+      scanData.visuals = validVisuals;
+      scanData.total_visuals_found = validVisuals.length;
+      scanData.pages_with_visuals = new Set(validVisuals.map((v) => v.page_number)).size;
+      scanData.source_label = resolvedSource;
       setScanResults(scanData);
 
       if (!scanData?.visuals || scanData.visuals.length === 0) {
@@ -198,24 +287,47 @@ export default function SectionCVisualIntegrator() {
           const imgUploadRes = await base44.integrations.Core.UploadFile({ file: imageFile });
           const imageUrl = imgUploadRes?.file_url || "";
 
-          // Attach each visual on this page to the matching card
+          // Attach each visual on this page to the matching card — direct SDK update
           for (const v of pageVisuals) {
             try {
-              const attachRes = await base44.functions.invoke("attachSectionCVisual", {
-                name_id: v.name_id || "",
+              const targetNameId = v.name_id || "HNK-MHC-001";
+              const cards = await base44.entities.HolyNameEsotericKnowledge.filter(
+                { name_id: targetNameId }, null, 1
+              );
+              const card = cards?.[0];
+              if (!card) throw new Error(`Card ${targetNameId} not found`);
+
+              const existing = Array.isArray(card.attached_visuals) ? card.attached_visuals : [];
+              if (existing.some((ev) => ev.visual_url === imageUrl)) {
+                results.push({
+                  page_number: v.page_number,
+                  name_id: v.name_id || card.name_id,
+                  visual_type: v.visual_type,
+                  description: v.description,
+                  status: "duplicate",
+                  visual_url: imageUrl,
+                });
+                continue;
+              }
+
+              const newVisual = {
                 visual_url: imageUrl,
                 visual_type: v.visual_type,
+                description: v.description,
                 source_reference: scanData.source_label || sourceLabel,
                 source_page: String(v.page_number),
-                description: v.description,
+                name_id: card.name_id,
+                imported_at: new Date().toISOString(),
+              };
+              await base44.entities.HolyNameEsotericKnowledge.update(card.id, {
+                attached_visuals: [...existing, newVisual],
               });
-              const attachData = attachRes?.data || attachRes;
               results.push({
                 page_number: v.page_number,
-                name_id: v.name_id || attachData?.name_id || "",
+                name_id: v.name_id || card.name_id,
                 visual_type: v.visual_type,
                 description: v.description,
-                status: attachData?.status || "attached",
+                status: "attached",
                 visual_url: imageUrl,
               });
             } catch (e) {

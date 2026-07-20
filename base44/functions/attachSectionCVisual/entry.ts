@@ -100,3 +100,4 @@ Deno.serve(async (req) => {
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+// Attach visual to Section C card — append-only, dedup by visual_url.

@@ -1108,6 +1108,66 @@
       },
       "default": [],
       "description": "ADVANCED \u00b7 Cross references. Empty until approved."
+    },
+    "attached_visuals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "visual_url": {
+            "type": "string",
+            "description": "URL of the rendered page image showing the visual content exactly as it appears in the source book."
+          },
+          "visual_type": {
+            "type": "string",
+            "enum": [
+              "magic_square",
+              "wafq",
+              "table",
+              "symbol",
+              "seal",
+              "diagram",
+              "figure",
+              "grid",
+              "handwritten_chart",
+              "other"
+            ],
+            "default": "other",
+            "description": "Type of visual content: magic_square (wafq/awfaq), wafq (letter grid), table, symbol, seal, diagram, figure, grid, handwritten_chart, other."
+          },
+          "description": {
+            "type": "string",
+            "default": "",
+            "description": "Description of what the visual contains, generated during the scan."
+          },
+          "source_reference": {
+            "type": "string",
+            "default": "",
+            "description": "Book title / source reference where this visual appears."
+          },
+          "source_page": {
+            "type": "string",
+            "default": "",
+            "description": "Page number in the source PDF where this visual appears."
+          },
+          "name_id": {
+            "type": "string",
+            "default": "",
+            "description": "Which Birhat\u012bya name this visual relates to (HNK-MHC-001..028), or empty for general/whole-conjuration visuals."
+          },
+          "imported_at": {
+            "type": "string",
+            "default": "",
+            "description": "ISO 8601 timestamp when this visual was attached."
+          }
+        },
+        "required": [
+          "visual_url",
+          "visual_type"
+        ]
+      },
+      "default": [],
+      "description": "VISUAL CONTENT \u2014 rendered page images showing magic squares, wafq, tables, symbols, seals, diagrams, figures, grids from the source PDFs. Each visual is displayed underneath the related text content so the user can see the original square, symbol or figure exactly as it appears in the source book. APPEND-ONLY: new visuals are appended, never overwritten. Multiple versions from different books are preserved with their own citations. Populated by scanSectionCVisuals + attachSectionCVisual."
     }
   },
   "required": [
