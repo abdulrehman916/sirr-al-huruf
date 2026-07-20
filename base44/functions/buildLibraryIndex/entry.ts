@@ -20,8 +20,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 // ═══════════════════════════════════════════════════════════════
 
 const TIME_BUDGET_MS = 180000;
-const SAMPLE_PAGES = 5;
-const TEXT_SLICE = 700;
+const SAMPLE_PAGES = 3;      // FAST PASS 1: first 3 pages only
+const TEXT_SLICE = 300;       // tiny text sample per page (~1KB total)
+const LOAD_FIRST_N = 8;       // load only first 8 pages (1 DB call)
+const BOOKS_PER_CALL = 10;    // batch 10 books per LLM call (10x throughput)
 const LLM_MODEL = 'gemini_3_flash';
 
 const CLASSIFICATION_SCHEMA = {
@@ -111,51 +113,112 @@ Deno.serve(async (req) => {
     }
 
     // ── Determine remaining books to classify ──
+    // Skip 'classified' and 'not_applicable'. RETRY 'failed' books with the faster approach.
     const remaining = forceReclassify
       ? books
-      : books.filter(b => !indexedMap.has(b.master_book_id));
+      : books.filter(b => {
+          const idx = indexedMap.get(b.master_book_id);
+          if (!idx) return true;                       // never indexed
+          if (idx.classification_status === 'failed') return true;  // retry failed
+          return false;                                // classified / not_applicable -> skip
+        });
 
-    const stats = { classified: 0, failed: 0, skipped: 0 };
+    const stats = { classified: 0, failed: 0, skipped: 0, batchesRun: 0 };
 
-    for (const book of remaining) {
+    // ── BATCH MODE: classify BOOKS_PER_CALL books in one LLM call ──
+    for (let bi = 0; bi < remaining.length; bi += BOOKS_PER_CALL) {
       if (Date.now() - started > TIME_BUDGET_MS - 20000) break;
-      const bookId = book.master_book_id;
+      const batch = remaining.slice(bi, bi + BOOKS_PER_CALL);
 
-      // Sample pages: load only the first batch (fast) — enough to classify
-      let pages = await sdk.entities.MasterPdfPage.filter({ master_book_id: bookId }, 'page_number', 60, 0).catch(() => []);
-      if (!pages) pages = [];
-      const textPages = pages.filter(p => (p.ocr_text || p.arabic_text || p.ocr_text_ar || '').trim().length > 0);
-      const sample = samplePages(textPages, SAMPLE_PAGES);
+      // Pre-fetch first pages for each book in the batch (parallel)
+      const bookPreviews = [];
+      await Promise.all(batch.map(async (book) => {
+        const bookId = book.master_book_id;
+        let pages = await sdk.entities.MasterPdfPage.filter({ master_book_id: bookId }, 'page_number', LOAD_FIRST_N, 0).catch(() => []);
+        if (!pages) pages = [];
+        const textPages = pages.filter(p => (p.ocr_text || p.arabic_text || p.ocr_text_ar || '').trim().length > 0);
+        const sample = samplePages(textPages, SAMPLE_PAGES);
+        const textBlock = sample.map(p => String(p.ocr_text || p.arabic_text || p.ocr_text_ar || '').slice(0, TEXT_SLICE)).join('\n');
+        bookPreviews.push({
+          book,
+          hasText: sample.length > 0,
+          samplePages: sample.map(p => p.page_number).join(','),
+          textBlock: textBlock.slice(0, 1000),
+        });
+      }));
 
-      if (sample.length === 0) {
-        // No OCR text — mark not_applicable
-        await upsertIndex(sdk, indexedMap, book, [], {}, 'Book has no OCR text to sample.', 'none', 'not_applicable');
-        stats.skipped++;
-        continue;
+      // Separate: books with no OCR text → mark not_applicable immediately (no LLM)
+      const withText = [];
+      for (const pv of bookPreviews) {
+        if (!pv.hasText) {
+          await upsertIndex(sdk, indexedMap, pv.book, [], {}, 'Book has no OCR text to sample.', 'none', 'not_applicable');
+          stats.skipped++;
+        } else {
+          withText.push(pv);
+        }
       }
 
-      const textBlock = sample.map(p => `--- PAGE ${p.page_number} ---\n${String(p.ocr_text || p.arabic_text || p.ocr_text_ar || '').slice(0, TEXT_SLICE)}`).join('\n\n');
-      const titleAuthor = `Title: ${book.book_title || ''}\nAuthor: ${book.author || ''}\nImport source: ${book.import_source || ''}`;
+      if (withText.length === 0) { stats.batchesRun++; continue; }
+
+      // Build ONE batch prompt
+      const batchSchema = {
+        type: 'object',
+        properties: {
+          results: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                book_index: { type: 'integer', description: 'The 1-based index of the book in the batch.' },
+                modules: { type: 'array', items: { type: 'string', enum: ['astrology', 'holy_names', 'wafq', 'khawass', 'mujarrabat', 'abjad', 'nine_mizan', 'general_esoteric'] } },
+                module_confidence: { type: 'object', additionalProperties: { type: 'number' } },
+                classification_summary: { type: 'string' },
+              },
+              required: ['book_index', 'modules', 'classification_summary'],
+            },
+          },
+        },
+        required: ['results'],
+      };
+
+      const booksBlock = withText.map((pv, i) => {
+        return `=== BOOK ${i + 1} ===\nTitle: ${pv.book.book_title || ''}\nAuthor: ${pv.book.author || ''}\nSource: ${pv.book.import_source || ''}\n--- FIRST PAGES ---\n${pv.textBlock}`;
+      }).join('\n\n');
 
       let result = null;
       try {
         result = await sdk.integrations.Core.InvokeLLM({
-          prompt: PROMPT + '\n\n=== BOOK ===\n' + titleAuthor + '\n\n=== SAMPLE PAGES ===\n' + textBlock,
-          response_json_schema: CLASSIFICATION_SCHEMA,
+          prompt: PROMPT + '\n\nYou are classifying ' + withText.length + ' books at once. For EACH book, return its classification in the results array with the matching book_index.\n\n' + booksBlock,
+          response_json_schema: batchSchema,
           model: LLM_MODEL,
         });
       } catch (_) {
-        await upsertIndex(sdk, indexedMap, book, [], {}, 'LLM classification call failed.', sample.map(p => p.page_number).join(','), 'failed');
-        stats.failed++;
+        // Whole batch failed — mark each as failed
+        for (const pv of withText) {
+          await upsertIndex(sdk, indexedMap, pv.book, [], {}, 'LLM batch classification call failed.', pv.samplePages, 'failed');
+          stats.failed++;
+        }
+        stats.batchesRun++;
         continue;
       }
 
-      const modules = Array.isArray(result?.modules) ? result.modules.filter(m => typeof m === 'string') : [];
-      const summary = String(result?.classification_summary || '').slice(0, 1000);
-      const confidence = (result?.module_confidence && typeof result.module_confidence === 'object') ? result.module_confidence : {};
-
-      await upsertIndex(sdk, indexedMap, book, modules, confidence, summary, sample.map(p => p.page_number).join(','), 'classified');
-      stats.classified++;
+      const results = (result && Array.isArray(result.results)) ? result.results : [];
+      const byIndex = new Map(results.map(r => [Number(r.book_index), r]));
+      for (let i = 0; i < withText.length; i++) {
+        const pv = withText[i];
+        const r = byIndex.get(i + 1);
+        if (!r) {
+          await upsertIndex(sdk, indexedMap, pv.book, [], {}, 'No classification returned for this book in batch.', pv.samplePages, 'failed');
+          stats.failed++;
+          continue;
+        }
+        const modules = Array.isArray(r.modules) ? r.modules.filter(m => typeof m === 'string') : [];
+        const summary = String(r.classification_summary || '').slice(0, 1000);
+        const confidence = (r.module_confidence && typeof r.module_confidence === 'object') ? r.module_confidence : {};
+        await upsertIndex(sdk, indexedMap, pv.book, modules, confidence, summary, pv.samplePages, 'classified');
+        stats.classified++;
+      }
+      stats.batchesRun++;
     }
 
     const totalIndexed = existingIndex.length + stats.classified;
@@ -244,6 +307,7 @@ async function upsertIndex(sdk, indexedMap, book, modules, confidence, summary, 
   try {
     if (existing) {
       await sdk.entities.LibraryBookIndex.update(existing.id || existing._id, payload);
+      indexedMap.set(bookId, { ...payload, index_id: indexId, id: existing.id });
     } else {
       await sdk.entities.LibraryBookIndex.create({ index_id: indexId, ...payload });
       indexedMap.set(bookId, { ...payload, index_id: indexId });
