@@ -72,25 +72,30 @@ const DIVINE_NAME_MAP: Record<string, string> = {
   'ya_sabir': 'يا صبر',
 };
 
-// Section D entities — Islamic practices, Qur'an references, figures
+// Section D entities — Holy Names content ONLY (Islamic practices, Qur'an
+// references, spiritual practices related to Divine Names). Jinn/Occult
+// entities are NOT here — they are checked separately and marked RESERVED.
 const SECTION_D_ENTITIES = new Set([
-  'bismillah', 'basmala', 'basmalah', 'muhammad', 'salawat', 'tasbih',
-  'dua_al_saifi', 'jawshan_kabir', 'adhan', 'quran', 'istikhara',
-  'shifa', 'fatihah', 'ayat_al_kursi', 'surah_al_jinn', 'surah_yasin',
-  'surah_al_ikhlas', 'berhatiah', 'barhatiah', 'berhatyah', 'doa_akasyah',
-  'sheikh_abdul_qadir', 'imam_ali', 'ja_far_al_sadiq', 'idris',
+  // Islamic invocations & general wazifas
+  'bismillah', 'basmala', 'basmalah', 'salawat', 'tasbih', 'adhan',
+  'salat', 'prayer_times', 'morning_and_evening', 'last_third_of_night',
+  // Long du'as
+  'dua_al_saifi', 'jawshan_kabir', 'doa_akasyah', 'shifa', 'fatihah',
+  // Qur'an references
+  'quran', 'ayat_al_kursi', 'surah_al_jinn', 'surah_yasin', 'surah_al_ikhlas',
+  // Islamic figures (scholars, prophets, angels)
+  'muhammad', 'sheikh_abdul_qadir', 'imam_ali', 'ja_far_al_sadiq', 'idris',
   'prophet_yunus', 'sulaiman', 'gabriel', 'gibra_iil', 'metatron',
-  'israf_al_ammar', 'ali', 'hirz_al_sayfi_al_yamani', 'hirz_al_jawsyan',
-  'hirz_al_jawad', 'harz', 'kashf', 'jafr', 'abjad_al_kabir', 'names',
-  'divine_names', 'salafi', 'morning_and_evening', 'last_third_of_night',
-  'prayer_times', 'maghrib', 'salat', 'ruqyah', 'amulet', 'talisman',
-  'protection', 'healing', 'marriage', 'love', 'sustenance', 'fear',
-  'cleansing', 'divination', 'magic', 'snake', 'lost_items', 'insomnia',
-  'fever', 'heart_disease', 'menorrhagia', 'child_protection',
-  'consecration', 'ritual_space_consecration', 'illumination_wash',
-  'arwaah', 'spirits', 'salamanders', 'undines', 'sylphs', 'gnomes',
-  'sebitti', 'sihr', 'sorcery', 'evileye', 'evil_eye', 'satan',
-  'shaitan', 'iblis', 'afrit', 'jinn',
+  'israf_al_ammar', 'ali', 'salafi',
+  // Holy Names spiritual practices & hirz
+  'berhatiah', 'barhatiah', 'berhatyah', 'hirz_al_sayfi_al_yamani',
+  'hirz_al_jawsyan', 'hirz_al_jawad', 'harz', 'kashf', 'jafr',
+  'abjad_al_kabir', 'istikhara',
+  // General Divine Names references (not a specific name)
+  'names', 'divine_names',
+  // Divine Name entities that may not have a matching HolyNameKnowledge card
+  // — when unmatched, they go to Section D as miscellaneous Holy Names content
+  'allah', 'ism_al_azam', 'al_halim', 'al_hayy_al_qayyum', 'al_hafiz', 'ya_sabir',
 ]);
 
 // Jinn/Occult entities — RESERVED_FOR_FUTURE_MODULE
@@ -284,8 +289,27 @@ Deno.serve(async (req) => {
         }
       }
 
-      // ── 2. Check for Section D entity (Islamic practices, Qur'an, figures) ──
-      if (SECTION_D_ENTITIES.has(ent) && !divineNameArabic) {
+      // ── 2. Check for Jinn/Occult FIRST — mark RESERVED (before Section D) ──
+      if (JINN_OCCULT_ENTITIES.has(ent)) {
+        try {
+          const attrs = { ...(r.attributes || {}), module_assignment: 'reserved_jinn_occult' };
+          await sdk.entities.AstroClockKnowledge.update(r.id || r._id, { attributes: attrs });
+          stats.jinnOccultReserved++;
+          report.jinnOccultReserved.push({
+            original_id: r.knowledge_id,
+            entity: ent,
+            category: cat,
+          });
+        } catch (_) {
+          stats.errors++;
+        }
+        continue;
+      }
+
+      // ── 3. Check for Section D entity (Holy Names content only) ──
+      // Note: divineNameArabic entities that were NOT matched to a
+      // HolyNameKnowledge card also land here (unmatched Divine Names).
+      if (SECTION_D_ENTITIES.has(ent)) {
         const textContent = [
           r.knowledge_text_en || '',
           r.knowledge_text_ar || '',
@@ -342,23 +366,6 @@ Deno.serve(async (req) => {
           const attrs = { ...(r.attributes || {}), module_assignment: 'moved_to_section_d' };
           await sdk.entities.AstroClockKnowledge.update(r.id || r._id, { attributes: attrs });
         } catch (_) {}
-        continue;
-      }
-
-      // ── 3. Check for Jinn/Occult — mark RESERVED ──
-      if (JINN_OCCULT_ENTITIES.has(ent)) {
-        try {
-          const attrs = { ...(r.attributes || {}), module_assignment: 'reserved_jinn_occult' };
-          await sdk.entities.AstroClockKnowledge.update(r.id || r._id, { attributes: attrs });
-          stats.jinnOccultReserved++;
-          report.jinnOccultReserved.push({
-            original_id: r.knowledge_id,
-            entity: ent,
-            category: cat,
-          });
-        } catch (_) {
-          stats.errors++;
-        }
         continue;
       }
 
