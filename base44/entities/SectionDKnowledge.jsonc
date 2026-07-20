@@ -1,0 +1,139 @@
+{
+  "name": "SectionDKnowledge",
+  "type": "object",
+  "description": "SECTION D \u2014 Authenticated miscellaneous Holy Names knowledge that does not belong to Sections A, B, or C. Contains long du'as, general wazifas, general khawass, general mujarrabat, spiritual practices related to Divine Names, and miscellaneous authenticated Holy Names content. APPEND-ONLY: records are never overwritten or deleted. Each record preserves original Arabic, Malayalam translation, explanation, book name, page number, and citation. Migrated from AstroClockKnowledge findings that contained Holy Names content (Islamic invocations, Qur'an references, spiritual practices) but were not about a specific Divine Name in HolyNameKnowledge. ISOLATED \u2014 only separateExtractedKnowledge writes to this entity.",
+  "properties": {
+    "section_d_id": {
+      "type": "string",
+      "description": "Permanent unique identifier. Format: SD-MIG-<original_knowledge_id> or SD-<timestamp>-<rand>. Never changes."
+    },
+    "content_type": {
+      "type": "string",
+      "enum": [
+        "long_dua",
+        "general_wazifa",
+        "general_khawass",
+        "general_mujarrabat",
+        "spiritual_practice",
+        "quran_reference",
+        "islamic_figure",
+        "miscellaneous"
+      ],
+      "description": "Type of Section D content. long_dua = extended supplications; general_wazifa = general devotional practices; general_khawass = general properties not tied to a specific Divine Name; general_mujarrabat = general tested/efficacious practices; spiritual_practice = spiritual practices related to Divine Names; quran_reference = Qur'an verses/surahs referenced in Holy Names context; islamic_figure = references to Islamic scholars/prophets/angels; miscellaneous = other authenticated Holy Names content."
+    },
+    "arabic_text": {
+      "type": "string",
+      "default": "",
+      "description": "Original Arabic text verbatim. Every letter and harakah preserved exactly as printed in the source. Never normalized, rewritten, or invented."
+    },
+    "malayalam_translation": {
+      "type": "string",
+      "default": "",
+      "description": "Malayalam translation of the Arabic text. Faithful rendering of the meaning. Empty when no Malayalam is available in the source."
+    },
+    "explanation": {
+      "type": "string",
+      "default": "",
+      "description": "Explanation or commentary on the content. Preserved verbatim from the source. Empty when the source provides no explanation."
+    },
+    "knowledge_text_en": {
+      "type": "string",
+      "default": "",
+      "description": "English summary for reference and citation tracking. Not the primary display text."
+    },
+    "source_book_title": {
+      "type": "string",
+      "default": "",
+      "description": "Title of the source book from which this content was originally extracted."
+    },
+    "source_page_number": {
+      "type": "string",
+      "default": "",
+      "description": "Page number(s) in the source book. Stored as string for ranges (e.g. '12,13,14')."
+    },
+    "citation": {
+      "type": "string",
+      "default": "",
+      "description": "Full human-readable citation string combining book title, author, page, and any other provenance metadata."
+    },
+    "original_knowledge_id": {
+      "type": "string",
+      "default": "",
+      "description": "FK traceability: the original AstroClockKnowledge.knowledge_id this record was migrated from. Empty for non-migrated records."
+    },
+    "original_rule_category": {
+      "type": "string",
+      "default": "",
+      "description": "Traceability: the original AstroClockKnowledge.rule_category this record was migrated from."
+    },
+    "original_rule_entity": {
+      "type": "string",
+      "default": "",
+      "description": "Traceability: the original AstroClockKnowledge.rule_entity (e.g. 'bismillah', 'ayat_al_kursi') this record was migrated from."
+    },
+    "migrated_at": {
+      "type": "string",
+      "default": "",
+      "description": "ISO 8601 timestamp when this record was migrated from AstroClockKnowledge."
+    },
+    "content_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of (content_type + '|' + original_rule_entity + '|' + normalized arabic_text + knowledge_text_en). Used for dedup \u2014 a record with the same hash already exists and is skipped."
+    }
+  },
+  "required": [
+    "section_d_id",
+    "content_type",
+    "content_hash"
+  ],
+  "indexes": [
+    {
+      "name": "idx_section_d_id",
+      "fields": [
+        "section_d_id"
+      ]
+    },
+    {
+      "name": "idx_content_type",
+      "fields": [
+        "content_type"
+      ]
+    },
+    {
+      "name": "idx_content_hash",
+      "fields": [
+        "content_hash"
+      ]
+    },
+    {
+      "name": "idx_original_knowledge_id",
+      "fields": [
+        "original_knowledge_id"
+      ]
+    },
+    {
+      "name": "idx_original_rule_entity",
+      "fields": [
+        "original_rule_entity"
+      ]
+    }
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": true,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

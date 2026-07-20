@@ -33,6 +33,17 @@ const WRONG_SLUG_CATEGORIES = new Set([
   "scan_marker", "general astrology", "nine_mizan",
 ]);
 
+// Module assignments that exclude a finding from Astro Clock display.
+// These findings have been migrated to another module (Holy Names, Section D)
+// or are reserved/archived (Jinn/Occult, Kabbalah). They remain in the
+// database but are hidden from all Astro Clock entity cards.
+const EXCLUDED_MODULE_ASSIGNMENTS = new Set([
+  "moved_to_holy_names",
+  "moved_to_section_d",
+  "reserved_jinn_occult",
+  "archived_kabbalah",
+]);
+
 export function useEntityKnowledge(entityType, entityKey) {
   const [knowledge, setKnowledge] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -66,7 +77,8 @@ export function useEntityKnowledge(entityType, entityKey) {
         // Filter out wrong-slug / legacy categories (consolidated into
         // correct-slug counterparts) to prevent duplicate sections.
         const filtered = (records || []).filter(r =>
-          !WRONG_SLUG_CATEGORIES.has(r.rule_category)
+          !WRONG_SLUG_CATEGORIES.has(r.rule_category) &&
+          !(r.attributes && EXCLUDED_MODULE_ASSIGNMENTS.has(r.attributes.module_assignment))
         );
         // Map ACK categorized records → EntityKnowledgePanel shape.
         const mapped = filtered.map(r => ({
