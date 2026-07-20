@@ -1,0 +1,265 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
+
+// ═══════════════════════════════════════════════════════════════
+// buildLibraryIndex — STAGE 1 OF THE TWO-STAGE PIPELINE
+//
+// Fast library-wide classification. Scans EVERY verified book in
+// the Master PDF Library (which already mirrors Google Drive
+// live-index and OneDrive imports) and classifies each book into
+// one or more modules:
+//   astrology, holy_names, wafq, khawass, mujarrabat, abjad,
+//   nine_mizan, general_esoteric
+//
+// NO knowledge cards are populated here. This stage ONLY builds a
+// complete index (LibraryBookIndex) so Stage 2 can process ONLY the
+// books classified as astrology — fast, safe, no missed books, no
+// module mixing.
+//
+// Time-budgeted + resumable (skips books already indexed).
+// ADMIN/OWNER ONLY.
+// ═══════════════════════════════════════════════════════════════
+
+const TIME_BUDGET_MS = 180000;
+const SAMPLE_PAGES = 5;
+const TEXT_SLICE = 700;
+const LLM_MODEL = 'gemini_3_flash';
+
+const CLASSIFICATION_SCHEMA = {
+  type: 'object',
+  properties: {
+    modules: {
+      type: 'array',
+      description: 'Modules this book contains content for. Empty array if the sampled text shows no relevant content.',
+      items: { type: 'string', enum: ['astrology', 'holy_names', 'wafq', 'khawass', 'mujarrabat', 'abjad', 'nine_mizan', 'general_esoteric'] }
+    },
+    module_confidence: {
+      type: 'object',
+      description: 'Per-module confidence 0-1. Only include modules that are in the modules array.',
+      additionalProperties: { type: 'number' }
+    },
+    classification_summary: { type: 'string', description: '1-2 sentence summary of what the book contains.' }
+  },
+  required: ['modules', 'classification_summary']
+};
+
+const PROMPT = `You are a librarian classifying occult/esoteric manuscripts for the Sirr al-Huruf project. You are given the title, author, and a sample of OCR text from several pages of a book. Classify which modules the book contains content for.
+
+MODULES:
+- astrology: planetary hours, zodiac signs, lunar mansions, planets, weekdays, sahat/planetary hours, astrological timings, astrological correspondences, khawass of planets/celestial bodies, moon phases, zodiacal properties.
+- holy_names: Divine Names (Asma al-Husna / Asma' Allah), invocations of Names, wazifas of Names, properties of specific Holy Names, Birhatiyya/esoteric Names.
+- wafq: magic squares (awfaq), wafq construction, talismans, seals (khatam), numerical grids, da'irah.
+- khawass: specific properties (khawass) of Quran verses, surahs, Holy Names (as a distinct topic from Holy Names invocations).
+- mujarrabat: tested/efficacious practices (mujarrabat), amal, ritual procedures, ruqyah, conditions/timings for practices.
+- abjad: abjad/ebced numerical calculations, letter values, numerical methods, bast al-huroof calculations.
+- nine_mizan: the Nine Mizan system, ruba'i, bast huroof methods, mizaan calculation pipeline.
+- general_esoteric: general occult, jinn, spirits, ruqyah not fitting other modules, dream interpretation, spiritual development, prayers/dhikr not tied to a specific module.
+
+RULES:
+1. A book may belong to MULTIPLE modules — include every module the sampled text clearly supports.
+2. Only include a module if the sampled text clearly contains content for it. Do not guess from the title alone if the text contradicts.
+3. module_confidence: 0-1 per included module (how confident the sampled text supports it).
+4. classification_summary: 1-2 sentences describing the book's actual content.
+
+Return ONLY the JSON object { modules, module_confidence, classification_summary }. No commentary.`;
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me().catch(() => null);
+    if (!user || (user.role !== 'admin' && user.role !== 'owner')) {
+      return Response.json({ error: 'Admin/Owner only' }, { status: 403 });
+    }
+    const sdk = base44.asServiceRole;
+
+    const body = await req.json().catch(() => ({}));
+    const checkpointOnly = body && body.mode === 'checkpoint';
+    const reportOnly = body && body.mode === 'report';
+    const forceReclassify = !!(body && body.mode === 'reclassify');
+    const started = Date.now();
+
+    // ── Load all verified Master Library books ──
+    const books = await loadAllBooks(sdk);
+
+    // ── Load existing index ──
+    const existingIndex = await loadAllIndex(sdk);
+    const indexedMap = new Map(existingIndex.map(i => [i.source_book_id, i]));
+
+    if (checkpointOnly) {
+      const astroBooks = existingIndex.filter(i => (i.modules || []).includes('astrology'));
+      return Response.json({
+        status: 'checkpoint',
+        totalBooks: books.length,
+        booksIndexed: existingIndex.length,
+        booksRemaining: books.length - existingIndex.length,
+        astrologyBooks: astroBooks.length,
+        moduleBreakdown: moduleBreakdown(existingIndex),
+      });
+    }
+
+    if (reportOnly) {
+      return Response.json({
+        status: 'report',
+        totalBooks: books.length,
+        booksIndexed: existingIndex.length,
+        coverageComplete: existingIndex.length >= books.length,
+        moduleBreakdown: moduleBreakdown(existingIndex),
+        astrologyBooks: existingIndex.filter(i => (i.modules || []).includes('astrology')).map(i => ({
+          book_id: i.source_book_id, title: i.book_title, modules: i.modules,
+          extraction_status: i.astrology_extraction_status,
+        })),
+      });
+    }
+
+    // ── Determine remaining books to classify ──
+    const remaining = forceReclassify
+      ? books
+      : books.filter(b => !indexedMap.has(b.master_book_id));
+
+    const stats = { classified: 0, failed: 0, skipped: 0 };
+
+    for (const book of remaining) {
+      if (Date.now() - started > TIME_BUDGET_MS - 20000) break;
+      const bookId = book.master_book_id;
+
+      // Sample pages: load only the first batch (fast) — enough to classify
+      let pages = await sdk.entities.MasterPdfPage.filter({ master_book_id: bookId }, 'page_number', 60, 0).catch(() => []);
+      if (!pages) pages = [];
+      const textPages = pages.filter(p => (p.ocr_text || p.arabic_text || p.ocr_text_ar || '').trim().length > 0);
+      const sample = samplePages(textPages, SAMPLE_PAGES);
+
+      if (sample.length === 0) {
+        // No OCR text — mark not_applicable
+        await upsertIndex(sdk, indexedMap, book, [], {}, 'Book has no OCR text to sample.', 'none', 'not_applicable');
+        stats.skipped++;
+        continue;
+      }
+
+      const textBlock = sample.map(p => `--- PAGE ${p.page_number} ---\n${String(p.ocr_text || p.arabic_text || p.ocr_text_ar || '').slice(0, TEXT_SLICE)}`).join('\n\n');
+      const titleAuthor = `Title: ${book.book_title || ''}\nAuthor: ${book.author || ''}\nImport source: ${book.import_source || ''}`;
+
+      let result = null;
+      try {
+        result = await sdk.integrations.Core.InvokeLLM({
+          prompt: PROMPT + '\n\n=== BOOK ===\n' + titleAuthor + '\n\n=== SAMPLE PAGES ===\n' + textBlock,
+          response_json_schema: CLASSIFICATION_SCHEMA,
+          model: LLM_MODEL,
+        });
+      } catch (_) {
+        await upsertIndex(sdk, indexedMap, book, [], {}, 'LLM classification call failed.', sample.map(p => p.page_number).join(','), 'failed');
+        stats.failed++;
+        continue;
+      }
+
+      const modules = Array.isArray(result?.modules) ? result.modules.filter(m => typeof m === 'string') : [];
+      const summary = String(result?.classification_summary || '').slice(0, 1000);
+      const confidence = (result?.module_confidence && typeof result.module_confidence === 'object') ? result.module_confidence : {};
+
+      await upsertIndex(sdk, indexedMap, book, modules, confidence, summary, sample.map(p => p.page_number).join(','), 'classified');
+      stats.classified++;
+    }
+
+    const totalIndexed = existingIndex.length + stats.classified;
+    return Response.json({
+      status: 'in_progress',
+      totalBooks: books.length,
+      booksIndexed: totalIndexed,
+      booksRemaining: books.length - totalIndexed,
+      classifiedThisRun: stats.classified,
+      failedThisRun: stats.failed,
+      skippedThisRun: stats.skipped,
+      moduleBreakdown: moduleBreakdown([...existingIndex, ...recentlyClassified(remaining, indexedMap)]),
+      reRunNeeded: totalIndexed < books.length,
+      timeMs: Date.now() - started,
+    });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});
+
+// ── Helpers ────────────────────────────────────────────────────
+async function loadAllBooks(sdk) {
+  const all = [];
+  let skip = 0;
+  while (all.length < 2000) {
+    const batch = await sdk.entities.MasterPdfBook.filter(
+      { extraction_status: { $in: ['pending_verification', 'completed'] } },
+      'upload_date', 500, skip
+    ).catch(() => []);
+    if (!batch || batch.length === 0) break;
+    all.push(...batch); skip += batch.length;
+    if (batch.length < 500) break;
+  }
+  return all;
+}
+
+async function loadAllIndex(sdk) {
+  const all = [];
+  let skip = 0;
+  while (all.length < 2000) {
+    const batch = await sdk.entities.LibraryBookIndex.list('-indexed_at', 500, skip).catch(() => []);
+    if (!batch || batch.length === 0) break;
+    all.push(...batch); skip += batch.length;
+    if (batch.length < 500) break;
+  }
+  return all;
+}
+
+function samplePages(pages, n) {
+  if (pages.length <= n) return pages;
+  const sorted = [...pages].sort((a, b) => a.page_number - b.page_number);
+  const out = [];
+  // first few + evenly spread
+  const headCount = Math.min(3, n);
+  for (let i = 0; i < headCount; i++) out.push(sorted[i]);
+  const rest = sorted.slice(headCount);
+  const restNeeded = n - headCount;
+  if (rest.length > 0 && restNeeded > 0) {
+    const step = Math.max(1, Math.floor(rest.length / restNeeded));
+    for (let i = 0; i < rest.length && out.length < n; i += step) out.push(rest[i]);
+  }
+  // dedup by page_number
+  const seen = new Set();
+  return out.filter(p => (p.page_number != null && !seen.has(p.page_number) && seen.add(p.page_number)));
+}
+
+async function upsertIndex(sdk, indexedMap, book, modules, confidence, summary, basis, status) {
+  const bookId = book.master_book_id;
+  const indexId = `LBI-ML-${bookId}`;
+  const existing = indexedMap.get(bookId);
+  const payload = {
+    source: 'master_library',
+    source_book_id: bookId,
+    book_title: book.book_title || '',
+    author: book.author || '',
+    import_source: book.import_source || '',
+    combined_total_pages: book.combined_total_pages || 0,
+    modules,
+    module_confidence: confidence,
+    classification_summary: summary,
+    classification_basis: `Sampled pages: ${basis}`,
+    classification_status: status,
+    indexed_at: new Date().toISOString(),
+    astrology_extraction_status: modules.includes('astrology') ? 'pending' : 'skipped',
+  };
+  try {
+    if (existing) {
+      await sdk.entities.LibraryBookIndex.update(existing.id || existing._id, payload);
+    } else {
+      await sdk.entities.LibraryBookIndex.create({ index_id: indexId, ...payload });
+      indexedMap.set(bookId, { ...payload, index_id: indexId });
+    }
+  } catch (_) {}
+}
+
+function moduleBreakdown(indexRecords) {
+  const counts = {};
+  for (const i of indexRecords) {
+    for (const m of (i.modules || [])) counts[m] = (counts[m] || 0) + 1;
+  }
+  return counts;
+}
+
+function recentlyClassified(remaining, indexedMap) {
+  // Returns the freshly classified records that are now in indexedMap
+  return remaining.map(b => indexedMap.get(b.master_book_id)).filter(Boolean);
+}
