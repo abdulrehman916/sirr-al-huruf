@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/AuthContext";
+import SectionBVisualIntegrator from "@/components/sectionb/SectionBVisualIntegrator";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -19,6 +21,8 @@ const G = {
 export default function HolyOnePage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { role } = useAuth();
+  const isAdmin = role === "admin" || role === "owner";
   const [names, setNames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -171,6 +175,9 @@ export default function HolyOnePage() {
           {showFavoritesOnly && <span>• Favorites only</span>}
           {search && <span>• Search: "{search}"</span>}
         </div>
+
+        {/* Admin-only: Tilimsani source-page visual renderer (Section B) */}
+        {isAdmin && <SectionBVisualIntegrator />}
 
         {/* Names List */}
         <div className="grid grid-cols-1 gap-3">
