@@ -31,7 +31,7 @@ const ReferenceLibrary = lazy(() => import("@/components/astroclock/dashboard/Re
 const ImportHistory = lazy(() => import("@/components/astroclock/dashboard/ImportHistory"));
 const EntityKnowledgeReviewQueue = lazy(() => import("@/components/astroclock/dashboard/EntityKnowledgeReviewQueue"));
 const AstroVerifiedKnowledge = lazy(() => import("@/components/astroclock/AstroVerifiedKnowledge"));
-const CategoryKnowledgePanel = lazy(() => import("@/components/astroclock/dashboard/CategoryKnowledgePanel"));
+
 
 function LangSelector() {
   const { language, setLanguage, txt } = useAstroClockLanguage();
@@ -275,14 +275,6 @@ function AstroClockContent() {
           </DashboardSection>
         </AstroClockErrorBoundary>
 
-        <AstroClockErrorBoundary label="Correspondences & Extracted Knowledge">
-          <DashboardSection icon="🔮" title={txt("പൊരുത്തങ്ങൾ & എക്സ്ട്രാക്റ്റ് വിജ്ഞാനം", "Correspondences & Extracted Knowledge", "المقابلات والمعرفة المستخرجة")}
-            subtitle={txt("ആചാരങ്ങൾ, പ്രാർത്ഥനകൾ, ഖവാസ്, വഫ്ഖ്, ധൂപം, നിറങ്ങൾ, രത്നങ്ങൾ, ലോഹങ്ങൾ", "Rituals, Invocations, Khawass, Wafq, Incense, Colours, Stones, Metals", "الطقوس، الأدعية، الخواص، الوفق، البخور، الألوان، الأحجار، المعادن")}>
-            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
-              <CategoryKnowledgePanel />
-            </Suspense>
-          </DashboardSection>
-        </AstroClockErrorBoundary>
 
         <AstroClockErrorBoundary label="Import History">
           <DashboardSection icon="📥" title={txt("ഇറക്കുമതി ചരിത്രം", "Import History", "İçe Aktarma Geçmişi")}
