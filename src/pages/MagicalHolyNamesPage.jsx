@@ -18,6 +18,7 @@ import HolyNameImportedSections from "@/components/holynameknowledge/HolyNameImp
 import HolyNameResearchProfile from "@/components/holynameknowledge/HolyNameResearchProfile";
 import HolyNameVerifiedKnowledge from "@/components/holynameknowledge/HolyNameVerifiedKnowledge";
 import SectionCNames from "@/components/holynameknowledge/SectionCNames";
+import SectionDLibrary from "@/components/sectiond/SectionDLibrary";
 import { useAuth } from "@/lib/AuthContext";
 
 const PAGE_PATH = "/holy-names";
@@ -536,6 +537,7 @@ function TabSwitcher({ activeTab, onTabChange }) {
     { id: "section-a", label: "Current Holy Names", arabic: "الأسماء أ", subtitle: "Section A" },
     { id: "section-b", label: "PDF Holy Names", arabic: "الأسماء ب", subtitle: "Section B" },
     { id: "section-c", label: "Birhatīya Names", arabic: "البرهتيّة", subtitle: "Section C" },
+    { id: "section-d", label: "Holy Names Library", arabic: "القسم د", subtitle: "Section D" },
   ];
 
   return (
@@ -639,8 +641,10 @@ export default function MagicalHolyNamesPage() {
                   <SectionA importRefreshKey={importRefreshKey} />
                 ) : activeTab === "section-b" ? (
                   <SectionB />
-                ) : (
+                ) : activeTab === "section-c" ? (
                   <SectionCNames />
+                ) : (
+                  <SectionDLibrary />
                 )}
               </motion.div>
             </AnimatePresence>
