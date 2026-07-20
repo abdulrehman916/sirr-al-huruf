@@ -107,7 +107,48 @@ The full per-record dump (~75 KB) is produced by the **read-only** backend funct
 
 ---
 
-## 6. Permanent-rule compliance note
+## 6. Source validation (2026-07-21) — approved-library check
+
+**Method:** each flagged title was matched (title-normalized) against the Master PDF Library (`MasterPdfBook`, 268 books — the central index that mirrors approved OneDrive + Google Drive live-index). Approval is decided **only** by owner approval (`owner_review_status = "approved"`) on the matching library record. Book title alone is never sufficient.
+
+| # | Flagged source | In Master Library? | Library approval | Records affected | Verdict |
+|---|---|---|---|---|---|
+| 1 | de Lafayette — "How to Summon and Command" (2010) | Yes (Google Drive live-index) | `pending_review` (NOT approved) | 58 | **Not Approved** |
+| 2 | Greco-Egyptian Magical Formularies (Faraone) | No | — | 57 | **Not Approved** |
+| 3 | Hedgewitch's Little Book of Spells (Tudorbeth) | No | — | 52 | **Not Approved** |
+| 4 | Real Witches' Book of Spells and Rituals (Kate West) | No | — | 24 | **Not Approved** |
+| 5 | Magia experimental práctica (Gian Piero Bona) | No | — | 23 | **Not Approved** |
+
+### Approved sources
+**None.** Zero of the 5 flagged sources carry owner approval. (Source #1 exists in the Drive live-index but is still `pending_review` — never approved.)
+
+### Not approved sources
+All 5 flagged sources are **Not Approved**:
+1. de Lafayette — present in Master PDF Library as a Google Drive live-index book, but `owner_review_status = pending_review` → never owner-approved.
+2. Greco-Egyptian Magical Formularies — not in Master PDF Library at all.
+3. Hedgewitch's Little Book of Spells — not in Master PDF Library at all.
+4. Real Witches' Book of Spells and Rituals — not in Master PDF Library at all.
+5. Magia experimental práctica — not in Master PDF Library at all.
+
+### Records affected by each source
+| Source | Records (AstroClockKnowledge) |
+|---|---|
+| de Lafayette | 58 |
+| Greco-Egyptian Magical Formularies | 57 |
+| Hedgewitch's Little Book of Spells | 52 |
+| Real Witches' Book of Spells and Rituals | 24 |
+| Magia experimental práctica | 23 |
+| **Total affected** | **214** |
+
+### Recommended action
+- **No warning flag is removed** — zero sources were approved, so nothing is un-flagged.
+- **No record is deleted, quarantined, moved, disabled, or modified.** All 214 records remain exactly as they are, pending owner review.
+- Because all 5 sources are **Not Approved**, every flagged record stays flagged for owner decision. The owner may choose, per record: keep as a general-esoteric/ritual note, or remove.
+- Per constitution: Astro Clock must operate ONLY from approved astrology sources. None of these 5 qualify as approved.
+
+**No change will be made until the owner reviews and explicitly approves an action.**
+
+## 7. Permanent-rule compliance note
 
 This audit changes nothing. The following remain enforced:
 1. Astro Clock works ONLY from approved astrology sources.
