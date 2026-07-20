@@ -326,12 +326,6 @@ Deno.serve(async (req) => {
       // Note: divineNameArabic entities that were NOT matched to a
       // HolyNameKnowledge card also land here (unmatched Divine Names).
       if (SECTION_D_ENTITIES.has(ent)) {
-        const textContent = [
-          r.knowledge_text_en || '',
-          r.knowledge_text_ar || '',
-          r.knowledge_text_ml || '',
-        ].filter(Boolean).join('\n---\n');
-
         // Determine content_type
         let contentType = 'miscellaneous';
         if (['dua_al_saifi', 'doa_akasyah', 'jawshan_kabir', 'fatihah'].includes(ent)) contentType = 'long_dua';
@@ -342,38 +336,69 @@ Deno.serve(async (req) => {
         else if (r.rule_category === 'khawass') contentType = 'general_khawass';
         else if (r.rule_category === 'mujarrabat') contentType = 'general_mujarrabat';
 
+        const canonicalKey = `${contentType}|${ent}`;
         const hashInput = `${contentType}|${ent}|${normalizeArabic(r.knowledge_text_ar || '')}|${(r.knowledge_text_en || '').slice(0, 200)}`;
         const contentHash = await sha256(hashInput);
-
         const citation = `${r.source_book_title || 'Unknown'}${r.source_page_number ? ' p.' + r.source_page_number : ''}`;
 
-        try {
-          await sdk.entities.SectionDKnowledge.create({
-            section_d_id: `SD-MIG-${(await sha256(r.knowledge_id || contentHash)).slice(0, 16)}`,
-            content_type: contentType,
+        const existingCard = existingSD.get(canonicalKey);
+
+        if (existingCard) {
+          // ── APPEND to existing card's additional_sources (never overwrite) ──
+          const newSource = {
             arabic_text: r.knowledge_text_ar || '',
             malayalam_translation: r.knowledge_text_ml || '',
             explanation: r.knowledge_text_en || '',
-            knowledge_text_en: r.knowledge_text_en || '',
             source_book_title: r.source_book_title || '',
             source_page_number: r.source_page_number || '',
-            citation: citation,
-            original_knowledge_id: r.knowledge_id || '',
-            original_rule_category: cat,
-            original_rule_entity: ent,
-            migrated_at: now,
-            content_hash: contentHash,
-          });
+            citation,
+            imported_at: now,
+          };
+          const additionalSources = Array.isArray(existingCard.additional_sources) ? [...existingCard.additional_sources] : [];
+          if (!additionalSources.some(s => (s.citation || '') === citation)) {
+            additionalSources.push(newSource);
+            try {
+              await sdk.entities.SectionDKnowledge.update(existingCard.id || existingCard._id, {
+                additional_sources: additionalSources,
+              });
+              existingCard.additional_sources = additionalSources;
+            } catch (_) { stats.errors++; }
+          }
           stats.sectionD++;
-          report.sectionDCreated.push({
-            original_id: r.knowledge_id,
-            entity: ent,
-            content_type: contentType,
-          });
-        } catch (e: any) {
-          if (!String(e.message || '').includes('duplicate') && !String(e.message || '').includes('already')) {
-            stats.errors++;
-            report.errors.push(`SectionDKnowledge create failed for ${ent}: ${e.message}`);
+        } else {
+          // ── CREATE new card ──
+          try {
+            const newRec = {
+              section_d_id: `SD-MIG-${(await sha256(r.knowledge_id || contentHash)).slice(0, 16)}`,
+              canonical_key: canonicalKey,
+              title: ent,
+              content_type: contentType,
+              arabic_text: r.knowledge_text_ar || '',
+              malayalam_translation: r.knowledge_text_ml || '',
+              explanation: r.knowledge_text_en || '',
+              knowledge_text_en: r.knowledge_text_en || '',
+              source_book_title: r.source_book_title || '',
+              source_page_number: r.source_page_number || '',
+              citation,
+              original_knowledge_id: r.knowledge_id || '',
+              original_rule_category: cat,
+              original_rule_entity: ent,
+              migrated_at: now,
+              content_hash: contentHash,
+            };
+            const created = await sdk.entities.SectionDKnowledge.create(newRec);
+            existingSD.set(canonicalKey, { ...newRec, id: created?.id || created?._id });
+            stats.sectionD++;
+            report.sectionDCreated.push({
+              original_id: r.knowledge_id,
+              entity: ent,
+              content_type: contentType,
+            });
+          } catch (e: any) {
+            if (!String(e.message || '').includes('duplicate') && !String(e.message || '').includes('already')) {
+              stats.errors++;
+              report.errors.push(`SectionDKnowledge create failed for ${ent}: ${e.message}`);
+            }
           }
         }
 
