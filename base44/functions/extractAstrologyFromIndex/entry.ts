@@ -8,18 +8,31 @@ import {
 // extractAstrologyFromIndex — STAGE 2 OF THE TWO-STAGE PIPELINE
 //
 // Runs ONLY after Stage 1 (buildLibraryIndex) is complete. Reads
-// LibraryBookIndex and processes ONLY books classified with the
-// 'astrology' module. Extracts every astrology-related passage from
-// every classified book and APPENDS it into AstroClockKnowledge.
+// LibraryBookIndex, SCREENS each astrology-classified book to
+// determine if it contains genuine Astro Clock content, and
+// processes ONLY genuine Astro Clock books.
+//
+// SCREENING: A batch LLM call evaluates each book's metadata (title,
+// author, keywords, TOC, summary, first pages) against strict
+// Astro Clock criteria. Non-genuine books (general holy names,
+// general wazifas, jinn conjuration, dream interpretation, etc.)
+// are marked 'skipped' and never processed.
+//
+// EXTRACTION: For each genuine book, reads every page, detects
+// astrology findings, and APPENDS them into AstroClockKnowledge.
+// Never overwrites, never deletes. Every source kept separate with
+// its own Arabic text (harakat preserved), Malayalam explanation,
+// citation, page number, and book reference.
 //
 // LAWS (non-negotiable):
 //   - NEVER overwrite or delete existing AstroClockKnowledge records
 //   - APPEND-ONLY — every source kept separate with its own citation
 //   - Preserve every Arabic letter + harakat EXACTLY as printed
 //   - Never merge different scholarly methods — each kept separate
-//   - Never touch Astro Clock engines, Holy Names engines, or UI
+//   - Never touch Holy Names (HolyNameKnowledge / HolyNameImportedSection)
 //   - Every magic square kept separately with its own citation
-//   - Only astrology books are processed (no module mixing)
+//   - Only genuine Astro Clock books are processed
+//   - Malayalam is the primary explanation language
 //
 // Resumable: tracks astrology_pages_processed per book. Time-budgeted.
 // ADMIN/OWNER ONLY.
@@ -41,14 +54,14 @@ const DETECTION_SCHEMA = {
           rule_category: { type: 'string', description: 'lowercase slug: planetary_hours, zodiac_signs, lunar_mansions, planets, weekdays, sahat, islamic_months, special_days, special_nights, lucky_timings, unfavourable_timings, correspondences, planet_relationships, friendly_planets, enemy_planets, colours, metals, stones, incense, directions, elements, spiritual_properties, khawass, mujarrabat, wafq, invocations, recommended_actions, forbidden_actions, treatments, rituals' },
           rule_entity: { type: 'string', description: 'canonical lowercase entity key, e.g. sun, moon, mars, aries, leo, mansion-15, sunday, jumada-al-awwal, hour-3' },
           entity_raw: { type: 'string', description: 'original-language name exactly as printed' },
-          knowledge_text_en: { type: 'string', description: 'faithful English summary of the finding' },
+          knowledge_text_en: { type: 'string', description: 'faithful English summary of the finding — keep short, for citation reference only' },
           knowledge_text_ar: { type: 'string', description: 'VERBATIM Arabic from the page — every letter and harakah exactly as printed. Empty if no Arabic.' },
-          knowledge_text_ml: { type: 'string', description: 'Malayalam text from the page if present. Empty if none.' },
+          knowledge_text_ml: { type: 'string', description: 'Malayalam explanation of the finding. PRIMARY explanation language. Empty only if source has no Malayalam and meaning cannot be faithfully rendered.' },
           recommended_actions: { type: 'array', items: { type: 'object', properties: { en: { type: 'string' }, ar: { type: 'string' }, ml: { type: 'string' } }, required: ['en'] } },
           forbidden_actions: { type: 'array', items: { type: 'object', properties: { en: { type: 'string' }, ar: { type: 'string' }, ml: { type: 'string' } }, required: ['en'] } },
           warnings_list: { type: 'array', items: { type: 'object', properties: { en: { type: 'string' }, ar: { type: 'string' }, ml: { type: 'string' } }, required: ['en'] } },
           notes_list: { type: 'array', items: { type: 'object', properties: { en: { type: 'string' }, ar: { type: 'string' }, ml: { type: 'string' } }, required: ['en'] } },
-          attributes: { type: 'object', additionalProperties: true, description: 'structured key-values: colours, metals, stones, incense, directions, elements, spiritual_properties. For lunar_mansions: birth_characteristics, personality_traits, strengths, weaknesses, suitable_professions, marriage_compatibility, health_tendencies, spiritual_recommendations, scholarly_opinions (each an array of strings).' },
+          attributes: { type: 'object', additionalProperties: true, description: 'structured key-values: colours, metals, stones, incense, herbs, directions, elements, spiritual_properties. For lunar_mansions: birth_characteristics, personality_traits, strengths, weaknesses, suitable_professions, marriage_compatibility, health_tendencies, spiritual_recommendations, scholarly_opinions (each an array of strings).' },
           magic_squares: { type: 'array', description: 'Magic squares / wafq for this entity. Each kept SEPARATELY with its own citation. NEVER omit.', items: { type: 'object', properties: { name: { type: 'string' }, grid: { type: 'array', items: { type: 'array', items: { type: 'number' } } }, grid_text: { type: 'string' }, purpose: { type: 'string' }, repetitions: { type: 'string' }, conditions: { type: 'string' }, timing: { type: 'string' } }, required: ['name'] } },
           ritual_suitability: { type: 'string' },
           cross_links: { type: 'array', items: { type: 'object', properties: { module: { type: 'string' }, card_id: { type: 'string' }, reason: { type: 'string' } }, required: ['module', 'card_id'] } },
@@ -70,9 +83,10 @@ ABSOLUTE RULES (never break):
 4. Never merge different scholarly methods — each distinct method/opinion is a SEPARATE finding.
 5. Preserve page number, citation, book, author implicitly (the caller attaches them).
 6. NEVER omit a magic square / wafq. If the page contains one, store it in magic_squares with its grid and citation.
+7. Malayalam is the PRIMARY explanation language — fill knowledge_text_ml with faithful Malayalam. Use English (knowledge_text_en) only for brief citation reference.
 
 CATEGORIES (rule_category — lowercase slug):
-planetary_hours, zodiac_signs, lunar_mansions, planets, weekdays, sahat, islamic_months, special_days, special_nights, lucky_timings, unfavourable_timings, correspondences, planet_relationships, friendly_planets, enemy_planets, colours, metals, stones, incense, directions, elements, spiritual_properties, khawass, mujarrabat, wafq, invocations, recommended_actions, forbidden_actions, treatments, rituals
+planetary_hours, zodiac_signs, lunar_mansions, planets, weekdays, sahat, islamic_months, special_days, special_nights, lucky_timings, unfavourable_timings, correspondences, planet_relationships, friendly_planets, enemy_planets, colours, metals, stones, incense, herbs, directions, elements, spiritual_properties, khawass, mujarrabat, wafq, invocations, recommended_actions, forbidden_actions, treatments, rituals
 
 ENTITY (rule_entity — canonical lowercase):
 - planets: sun, moon, mars, mercury, jupiter, venus, saturn
@@ -85,6 +99,8 @@ ENTITY (rule_entity — canonical lowercase):
 LUNAR MANSION EXTRA (when rule_category is lunar_mansions, populate attributes with any that apply):
 birth_characteristics, personality_traits, strengths, weaknesses, suitable_professions, marriage_compatibility, health_tendencies, spiritual_recommendations, scholarly_opinions — each an array of strings, VERBATIM from the source.
 
+ATTRIBUTES: populate attributes with what the page gives — colours, metals, stones, incense, herbs, directions, elements, spiritual_properties (each an array of strings or a string).
+
 MAGIC SQUARES: if the page contains a magic square / wafq for this entity, store it in magic_squares:
 { name: "<label as printed>", grid: [[numbers...],...], grid_text: "<if Arabic-letter square>", purpose, repetitions, conditions, timing }
 NEVER omit a square. Keep every version separately.
@@ -92,6 +108,58 @@ NEVER omit a square. Keep every version separately.
 CROSS-LINKS: { module: "holy_names"|"dua"|"wafq"|"khawass"|"mujarrabat"|"nine_mizan"|"abjad", card_id: "<entity name or id>", reason } — only when the page EXPLICITLY mentions the related entity.
 
 Return ONLY the JSON object { findings: [...] }. No commentary.`;
+
+// ── Book-level screening: genuine Astro Clock vs general occult ──
+const SCREENING_SCHEMA = {
+  type: 'object',
+  properties: {
+    results: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          book_index: { type: 'integer', description: '1-based index of the book in the batch.' },
+          is_genuine_astro: { type: 'boolean', description: 'True if this book is PRIMARILY about Astro Clock / traditional astrology. False if it is primarily about general occult, holy names, jinn, talismans, or spiritual practices (even if it mentions astrology in passing).' },
+          reason: { type: 'string', description: 'Brief reason for the classification.' },
+          topics_found: { type: 'array', items: { type: 'string' }, description: 'Astro Clock topics found (if genuine).' },
+        },
+        required: ['book_index', 'is_genuine_astro', 'reason'],
+      },
+    },
+  },
+  required: ['results'],
+};
+
+const SCREENING_PROMPT = `You are a strict Astro Clock librarian screening books. You must determine which books are PRIMARILY about traditional Astro Clock / classical astrology, and which are general occult books that merely mention astrology in passing.
+
+GENUINE Astro Clock — classify as genuine ONLY if Astro Clock / traditional astrology is the PRIMARY focus of the book. The book must be substantially about:
+- Sun (Shams), Moon (Qamar), Planets (Mercury, Venus, Mars, Jupiter, Saturn) and their properties
+- Zodiac Signs (Buruj) — their meanings, correspondences, timings
+- Lunar Mansions (Manazil al-Qamar) — their characteristics, birth traits, rituals
+- Planetary Hours (Saat / Sa'at) — calculation, rulership, timing
+- Astrological weekdays and Islamic months — their planetary rulers, auspicious/inauspicious times
+- Planetary correspondences (khawass of planets/celestial bodies)
+- Planetary friends and enemies
+- Astrology-based Wafq / Magic Squares — squares tied to specific planets/zodiac/mansions
+- Astrology timings (lucky/unlucky times based on planetary positions)
+- Astrology rituals (tied to planetary hours or celestial events)
+- Astrology Khawass, Mujarrabat, treatments
+- Colours, stones, metals, incense, herbs attributed to planets/zodiac/mansions
+- Ancient Arabic astrology, Ottoman/Turkish astrology
+
+NOT genuine — classify as NOT genuine if the book is PRIMARILY about any of these, even if it mentions astrology or planetary timing in passing:
+- General Holy Names / Divine Names / Wazifas (the book is about Names, not about astrology)
+- General Talismans / general magic (not specifically tied to planetary hours/zodiac)
+- General Magic Squares (not specifically astrology-based)
+- Jinn conjuration / summoning (even if it mentions planetary hours for timing)
+- Dream interpretation (physiognomy)
+- General spiritual practices / Sufi dhikr / daily devotionals
+- General occult / "magic for beginners" / love spells / prosperity spells
+- Ruqyah / protection practices (unless primarily astrology-based)
+
+STRICT RULE: If the book's TITLE, main subject, or primary content is about jinn, holy names, general magic, love spells, prosperity, spiritual devotionals, or dream interpretation — classify it as NOT genuine, even if it contains some astrological timing references. A few planetary-hour references inside a jinn-conjuration book do NOT make it an Astro Clock book.
+
+Return ONLY the JSON { results: [...] }. No commentary.`;
 
 Deno.serve(async (req) => {
   try {
@@ -105,37 +173,98 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const checkpointOnly = body && body.mode === 'checkpoint';
     const reportOnly = body && body.mode === 'report';
+    const rescreenOnly = body && body.mode === 'rescreen';
     const started = Date.now();
 
     // ── Load the library index ──
-    const index = await loadAllIndex(sdk);
+    let index = await loadAllIndex(sdk);
 
     // ── Astrology books only ──
-    const astroBooks = index.filter(i => (i.modules || []).includes('astrology') && i.classification_status === 'classified');
-    const pending = astroBooks.filter(i => i.astrology_extraction_status !== 'completed');
+    let astroBooks = index.filter(i => (i.modules || []).includes('astrology') && i.classification_status === 'classified');
+
+    // ── Rescreen mode: clear old markers and re-run with stricter criteria ──
+    if (rescreenOnly) {
+      for (const idx of astroBooks) {
+        const basis = String(idx.classification_basis || '');
+        if (basis.includes('SCREENED:')) {
+          const cleanBasis = basis.split(' | SCREENED:')[0].trim();
+          const updates = { classification_basis: cleanBasis };
+          if (idx.astrology_extraction_status === 'skipped') {
+            updates.astrology_extraction_status = 'pending';
+          }
+          try { await sdk.entities.LibraryBookIndex.update(idx.id || idx._id, updates); } catch (_) {}
+        }
+      }
+      index = await loadAllIndex(sdk);
+      astroBooks = index.filter(i => (i.modules || []).includes('astrology') && i.classification_status === 'classified');
+      await screenAstroBooks(sdk, astroBooks);
+      index = await loadAllIndex(sdk);
+      astroBooks = index.filter(i => (i.modules || []).includes('astrology') && i.classification_status === 'classified');
+      const skipped = astroBooks.filter(i => i.astrology_extraction_status === 'skipped');
+      const genuine = astroBooks.filter(i => i.astrology_extraction_status !== 'skipped');
+      return Response.json({
+        status: 'rescreened',
+        totalAstrologyBooks: astroBooks.length,
+        genuineAstroBooks: genuine.length,
+        booksSkipped: skipped.length,
+        skippedBooks: skipped.map(i => {
+          const basis = String(i.classification_basis || '');
+          const reason = basis.includes('SCREENED: skip —') ? basis.split('SCREENED: skip —')[1].trim() : 'Not genuine Astro Clock';
+          return { book_id: i.source_book_id, title: i.book_title, reason };
+        }),
+        genuineBooks: genuine.map(i => {
+          const basis = String(i.classification_basis || '');
+          const reason = basis.includes('SCREENED: genuine —') ? basis.split('SCREENED: genuine —')[1].trim() : 'Genuine Astro Clock';
+          return { book_id: i.source_book_id, title: i.book_title, reason, extraction_status: i.astrology_extraction_status };
+        }),
+      });
+    }
+
+    // ── Screen books: identify genuine Astro Clock vs general occult ──
+    // Non-genuine books are marked 'skipped' and excluded from extraction.
+    if (!checkpointOnly && !reportOnly) {
+      await screenAstroBooks(sdk, astroBooks);
+      index = await loadAllIndex(sdk);
+      astroBooks = index.filter(i => (i.modules || []).includes('astrology') && i.classification_status === 'classified');
+    }
+
+    const pending = astroBooks.filter(i => i.astrology_extraction_status !== 'completed' && i.astrology_extraction_status !== 'skipped');
 
     if (checkpointOnly) {
       const completed = astroBooks.filter(i => i.astrology_extraction_status === 'completed').length;
       const inProgress = astroBooks.filter(i => i.astrology_extraction_status === 'in_progress').length;
+      const skipped = astroBooks.filter(i => i.astrology_extraction_status === 'skipped').length;
       return Response.json({
         status: 'checkpoint',
         totalAstrologyBooks: astroBooks.length,
+        genuineAstroBooks: astroBooks.length - skipped,
         extractionCompleted: completed,
         extractionInProgress: inProgress,
         extractionPending: pending.length,
-        stage1Complete: index.length >= 1, // informational
+        booksSkipped: skipped,
+        stage1Complete: index.length >= 1,
       });
     }
 
     if (reportOnly) {
       const completed = astroBooks.filter(i => i.astrology_extraction_status === 'completed');
+      const skipped = astroBooks.filter(i => i.astrology_extraction_status === 'skipped');
+      const inProgress = astroBooks.filter(i => i.astrology_extraction_status === 'in_progress');
       return Response.json({
         status: 'report',
         totalAstrologyBooks: astroBooks.length,
+        genuineAstroBooks: astroBooks.length - skipped.length,
         extractionCompleted: completed.length,
         extractionRemaining: pending.length,
-        completedBooks: completed.map(i => ({ book_id: i.source_book_id, title: i.book_title })),
-        confirmation: 'No existing Astro Clock data was modified, overwritten, or deleted. All findings appended additively. Every source preserved separately with its own Arabic text, citations, page numbers, and book references.',
+        booksSkipped: skipped.length,
+        processedBooks: completed.map(i => ({ book_id: i.source_book_id, title: i.book_title, pages_processed: i.astrology_pages_processed || 0 })),
+        skippedBooks: skipped.map(i => {
+          const basis = String(i.classification_basis || '');
+          const reason = basis.includes('SCREENED: skip —') ? basis.split('SCREENED: skip —')[1].trim() : 'Not genuine Astro Clock content';
+          return { book_id: i.source_book_id, title: i.book_title, reason };
+        }),
+        inProgressBooks: inProgress.map(i => ({ book_id: i.source_book_id, title: i.book_title, pages_processed: i.astrology_pages_processed || 0 })),
+        confirmation: 'No existing Astro Clock data was modified, overwritten, or deleted. All findings appended additively. Every source preserved separately with its own Arabic text (harakat preserved), Malayalam explanations, citations, page numbers, and book references. No data written to HolyNameKnowledge or HolyNameImportedSection.',
       });
     }
 
@@ -226,7 +355,9 @@ Deno.serve(async (req) => {
     }
 
     const completedCount = astroBooks.filter(i => i.astrology_extraction_status === 'completed').length + stats.booksCompleted;
-    const allComplete = completedCount >= astroBooks.length && astroBooks.length > 0;
+    const skippedCount = astroBooks.filter(i => i.astrology_extraction_status === 'skipped').length;
+    const genuineCount = astroBooks.length - skippedCount;
+    const allComplete = completedCount >= genuineCount && genuineCount > 0;
 
     // Per-book checkpoint summary for the response
     const bookCheckpoints = pending.map(i => {
@@ -248,23 +379,36 @@ Deno.serve(async (req) => {
     const overallPct = totalPagesAll > 0 ? Math.round((totalProcessedAll / totalPagesAll) * 100) : 0;
 
     if (allComplete) {
+      const skipped = astroBooks.filter(i => i.astrology_extraction_status === 'skipped');
+      const ALL_CATEGORIES = ['planetary_hours','zodiac_signs','lunar_mansions','planets','weekdays','sahat','islamic_months','special_days','special_nights','lucky_timings','unfavourable_timings','correspondences','planet_relationships','friendly_planets','enemy_planets','colours','metals','stones','incense','directions','elements','spiritual_properties','khawass','mujarrabat','wafq','invocations','recommended_actions','forbidden_actions','treatments','rituals'];
+      const missingCategories = ALL_CATEGORIES.filter(c => !stats.categoriesCovered.has(c));
       return Response.json({
         status: 'complete',
         totalAstrologyBooks: astroBooks.length,
+        genuineAstroBooks: genuineCount,
         extractionCompleted: completedCount,
+        booksSkipped: skippedCount,
         booksProcessedThisRun: stats.booksProcessed,
         pagesProcessed: stats.pagesProcessed,
         findingsDetected: stats.findingsDetected,
+        totalAstroClockCardsUpdated: stats.recordsCreated + stats.recordsMerged,
         recordsCreated: stats.recordsCreated,
         recordsMerged: stats.recordsMerged,
         citationsAdded: stats.citationsAdded,
         crossLinksCreated: stats.crossLinksCreated,
         magicSquaresStored: stats.magicSquaresStored,
         categoriesCovered: Array.from(stats.categoriesCovered),
+        missingCategories,
+        processedBooks: astroBooks.filter(i => i.astrology_extraction_status === 'completed').map(i => ({ book_id: i.source_book_id, title: i.book_title, pages_processed: i.astrology_pages_processed || 0 })),
+        skippedBooks: skipped.map(i => {
+          const basis = String(i.classification_basis || '');
+          const reason = basis.includes('SCREENED: skip —') ? basis.split('SCREENED: skip —')[1].trim() : 'Not genuine Astro Clock content';
+          return { book_id: i.source_book_id, title: i.book_title, reason };
+        }),
         overallCompletionPercentage: 100,
         module: 'astrology',
         nextModule: 'holy_names',
-        confirmation: 'Astrology extraction 100% complete. No existing data was modified, overwritten, or deleted. Every source preserved separately. Astro Clock cards are now ready to be generated/verified from this appended data. Holy Names module may now begin.',
+        confirmation: 'Astrology extraction 100% complete. Only genuine Astro Clock books were processed. No existing data was modified, overwritten, or deleted. Every source preserved separately with its own Arabic text (harakat preserved), Malayalam explanations, citations, page numbers, and book references. No data written to HolyNameKnowledge or HolyNameImportedSection.',
         reRunNeeded: false,
         timeMs: Date.now() - started,
       });
@@ -273,8 +417,10 @@ Deno.serve(async (req) => {
     return Response.json({
       status: 'in_progress',
       totalAstrologyBooks: astroBooks.length,
+      genuineAstroBooks: genuineCount,
       extractionCompleted: completedCount,
-      extractionRemaining: astroBooks.length - completedCount,
+      extractionRemaining: genuineCount - completedCount,
+      booksSkipped: skippedCount,
       booksProcessedThisRun: stats.booksProcessed,
       pagesProcessed: stats.pagesProcessed,
       findingsDetected: stats.findingsDetected,
@@ -298,6 +444,9 @@ Deno.serve(async (req) => {
 });
 
 // ── Write an Astro finding (append/merge into AstroClockKnowledge) ──
+// APPEND-ONLY: never overwrites or deletes existing data. Every source
+// is appended with '\n---\n' separator, preserving Arabic (harakat),
+// Malayalam, citations, page numbers, and book references separately.
 async function writeAstroFinding(sdk, f, bookId, bookTitle, bookAuthor, pageNumbers, stats) {
   const ruleCategory = slug(f.rule_category);
   const ruleEntity = slug(f.rule_entity);
@@ -322,6 +471,7 @@ async function writeAstroFinding(sdk, f, bookId, bookTitle, bookAuthor, pageNumb
   })) : [];
 
   if (existing && existing.length > 0) {
+    // ── APPEND to existing card (never overwrite) ──
     const rec = existing[0];
     const updates = {};
     const sep = '\n---\n';
@@ -356,6 +506,7 @@ async function writeAstroFinding(sdk, f, bookId, bookTitle, bookAuthor, pageNumb
     if (existingCross.length > 0) existingAttrs.cross_links = existingCross;
     updates.attributes = existingAttrs;
 
+    // Append this source as a separate citation (dedup by book+page)
     const supp = Array.isArray(rec.supporting_sources) ? [...rec.supporting_sources] : [];
     const srcKey = `${bookTitle}|${pageNumbers}`;
     if (!supp.some(s => `${s.book_title}|${s.page_number}` === srcKey)) {
@@ -370,6 +521,7 @@ async function writeAstroFinding(sdk, f, bookId, bookTitle, bookAuthor, pageNumb
       stats.recordsMerged++;
     } catch (_) {}
   } else {
+    // ── CREATE new card ──
     const attrs = (f.attributes && typeof f.attributes === 'object') ? { ...f.attributes } : {};
     if (magicSquares.length > 0) {
       attrs.magic_squares = magicSquares;
@@ -429,6 +581,53 @@ async function updateIndexStatus(sdk, idx, status, lastPage) {
       astrology_pages_processed: lastPage,
     });
   } catch (_) {}
+}
+
+// ── Screen astrology books: genuine Astro Clock vs general occult ──
+// Batch LLM call classifies each book from its index metadata.
+// Non-genuine books are marked 'skipped' so the extraction loop ignores them.
+// Idempotent: books already containing 'SCREENED:' in classification_basis are skipped.
+async function screenAstroBooks(sdk, astrologyBooks) {
+  const unscreened = astrologyBooks.filter(i => !String(i.classification_basis || '').includes('SCREENED:'));
+  if (unscreened.length === 0) return;
+
+  const booksBlock = unscreened.map((idx, i) => {
+    const toc = (idx.table_of_contents || []).map(t => t.title).filter(Boolean).slice(0, 15).join(', ');
+    const keywords = (idx.important_keywords || []).slice(0, 15).join(', ');
+    return `=== BOOK ${i + 1} ===\nTitle: ${idx.book_title || ''}\nAuthor: ${idx.author || ''}\nSummary: ${String(idx.classification_summary || '').slice(0, 300)}\nKeywords: ${keywords}\nTOC: ${toc}\nFirst pages (excerpt): ${String(idx.first_pages_summary || '').slice(0, 500)}`;
+  }).join('\n\n');
+
+  let result = null;
+  try {
+    result = await sdk.integrations.Core.InvokeLLM({
+      prompt: SCREENING_PROMPT + '\n\nYou are screening ' + unscreened.length + ' books at once. For EACH book, return is_genuine_astro, reason, and topics_found.\n\n' + booksBlock,
+      response_json_schema: SCREENING_SCHEMA,
+      model: LLM_MODEL,
+    });
+  } catch (_) { return; }
+
+  const results = (result && Array.isArray(result.results)) ? result.results : [];
+  const byIndex = new Map(results.map(r => [Number(r.book_index), r]));
+
+  for (let i = 0; i < unscreened.length; i++) {
+    const idx = unscreened[i];
+    const r = byIndex.get(i + 1);
+    if (!r) continue;
+    const isGenuine = !!r.is_genuine_astro;
+    const reason = String(r.reason || '').slice(0, 200);
+    try {
+      if (!isGenuine) {
+        await sdk.entities.LibraryBookIndex.update(idx.id || idx._id, {
+          astrology_extraction_status: 'skipped',
+          classification_basis: `${idx.classification_basis || ''} | SCREENED: skip — ${reason}`,
+        });
+      } else {
+        await sdk.entities.LibraryBookIndex.update(idx.id || idx._id, {
+          classification_basis: `${idx.classification_basis || ''} | SCREENED: genuine — ${reason}`,
+        });
+      }
+    } catch (_) {}
+  }
 }
 
 async function loadAllIndex(sdk) {
