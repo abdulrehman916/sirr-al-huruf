@@ -13,6 +13,7 @@ import { natureToArabic, natureToML, isNahsNature, zodiacToArabic, zodiacToML, e
 import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
 import EntityKnowledgePanel from "./EntityKnowledgePanel";
 import MagicalPeriodPanel from "./MagicalPeriodPanel";
+import AstroClockCategoryVisuals from "@/components/astroclock/AstroClockCategoryVisuals";
 
 export default function MansionsReference() {
   const d = useAstroData();
@@ -114,6 +115,9 @@ export default function MansionsReference() {
 
                       {/* Entity Knowledge from unified ingestion pipeline */}
                       <EntityKnowledgePanel entityType="mansion" entityKey={String(m.no)} />
+
+                      {/* Source visuals (nakshatra list / mansion tables) attached to lunar mansion records */}
+                      <AstroClockCategoryVisuals categories={['lunar mansion']} entityAliases={[]} />
                     </div>
                   </motion.div>
                 )}

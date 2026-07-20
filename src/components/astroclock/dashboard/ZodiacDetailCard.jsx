@@ -10,6 +10,7 @@ import { zodiacEnToML, signsToML } from "@/lib/astroClockLabelMap";
 import { GIH_SIGN_PROPERTIES, GIH_ZODIAC_RELATIONSHIPS, GIH_ZODIAC_PROPERTIES, GIH_ELEMENT_RELATIONSHIPS, GIH_TWELVE_HOUSES, GIH_RITUAL_INCENSE } from "@/lib/gizliIlimlerHazinesiZodiacData";
 import EntityKnowledgePanel from "./EntityKnowledgePanel";
 import MagicalPeriodPanel from "./MagicalPeriodPanel";
+import AstroClockCategoryVisuals from "@/components/astroclock/AstroClockCategoryVisuals";
 import { normalizeDisplay, normalizeArray } from "@/lib/astroClockLanguageNormalizer";
 
 function TagList({ items, color }) {
@@ -254,6 +255,9 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
 
               {/* Entity Knowledge from unified ingestion pipeline */}
               <EntityKnowledgePanel entityType="zodiac" entityKey={zodiacData.name_en} />
+
+              {/* Source visuals (rashi table, zodiac diagram) attached to zodiac records */}
+              <AstroClockCategoryVisuals categories={['zodiac']} entityAliases={[]} />
 
               {/* ── Source References ── */}
               <div className="pt-2" style={{ borderTop: "1px solid rgba(212,175,55,0.10)" }}>
