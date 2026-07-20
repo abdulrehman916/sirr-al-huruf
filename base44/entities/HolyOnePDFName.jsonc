@@ -54,6 +54,11 @@
       "type": "string",
       "description": "Which PDF file: 'pdf1_pages_1_40', 'pdf2_pages_41_120', 'pdf3_pages_121_186'"
     },
+    "source_pdf_url": {
+      "type": "string",
+      "default": "",
+      "description": "Permanent URL of the source PDF file (from UploadFile). Used to re-open the original page for visual extraction and OCR verification."
+    },
     "source_reference_arabic": {
       "type": "string",
       "description": "Original Arabic heading/reference from PDF"
@@ -65,6 +70,147 @@
     "global_order": {
       "type": "integer",
       "description": "Global sequential order across all PDFs"
+    },
+    "attached_visuals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "visual_url": {
+            "type": "string",
+            "description": "URL of the rendered page image showing the visual content exactly as it appears in the source PDF."
+          },
+          "visual_type": {
+            "type": "string",
+            "enum": [
+              "magic_square",
+              "wafq",
+              "table",
+              "symbol",
+              "seal",
+              "diagram",
+              "figure",
+              "grid",
+              "handwritten_chart",
+              "other"
+            ],
+            "default": "other",
+            "description": "Type of visual content."
+          },
+          "description": {
+            "type": "string",
+            "default": "",
+            "description": "Description of what the visual contains."
+          },
+          "source_reference": {
+            "type": "string",
+            "default": "",
+            "description": "Source PDF file name."
+          },
+          "source_page": {
+            "type": "string",
+            "default": "",
+            "description": "Page number in the source PDF."
+          },
+          "order_on_page": {
+            "type": "integer",
+            "default": 0,
+            "description": "Order of this visual on the page (1-based) when multiple visuals exist on one page. Preserves original order."
+          },
+          "imported_at": {
+            "type": "string",
+            "default": "",
+            "description": "ISO 8601 timestamp when this visual was attached."
+          }
+        },
+        "required": [
+          "visual_url",
+          "visual_type"
+        ]
+      },
+      "default": [],
+      "description": "VISUAL CONTENT \u2014 rendered page images showing magic squares, wafq, tables, symbols, seals, diagrams, figures from the source PDFs. Each visual is displayed inside the card below the Arabic text and explanation. APPEND-ONLY: new visuals are appended, never overwritten. Multiple visuals on one page preserve their original order via order_on_page."
+    },
+    "corrected_arabic_name": {
+      "type": "string",
+      "default": "",
+      "description": "QUALITY REVIEW: the fully corrected Arabic name with complete harakat, verified against the original source page image. The original arabic_name is NEVER modified \u2014 this field holds the corrected version alongside it. Empty until the quality review processes this card."
+    },
+    "corrected_malayalam_pronunciation": {
+      "type": "string",
+      "default": "",
+      "description": "QUALITY REVIEW: corrected Malayalam pronunciation. The original malayalam_pronunciation is NEVER modified. Empty until reviewed."
+    },
+    "corrected_meaning_malayalam": {
+      "type": "string",
+      "default": "",
+      "description": "QUALITY REVIEW: corrected Malayalam meaning. The original meaning_malayalam is NEVER modified. Empty until reviewed."
+    },
+    "corrected_explanation_malayalam": {
+      "type": "string",
+      "default": "",
+      "description": "QUALITY REVIEW: corrected Malayalam explanation. The original explanation_malayalam is NEVER modified. Empty until reviewed."
+    },
+    "correction_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "default": "",
+            "description": "Which field was corrected: arabic_name, malayalam_pronunciation, meaning_malayalam, explanation_malayalam, etc."
+          },
+          "original_text": {
+            "type": "string",
+            "default": ""
+          },
+          "corrected_text": {
+            "type": "string",
+            "default": ""
+          },
+          "reason": {
+            "type": "string",
+            "default": "",
+            "description": "Reason for the correction (e.g., 'OCR error', 'Missing harakat restored', 'Spelling corrected from source')."
+          },
+          "source": {
+            "type": "string",
+            "default": "",
+            "description": "Verification source used (e.g., 'Vision LLM re-OCR of source page')."
+          },
+          "correction_type": {
+            "type": "string",
+            "default": "",
+            "description": "ocr_error, harakat, spelling, malayalam_correction, missing_word."
+          },
+          "timestamp": {
+            "type": "string",
+            "default": ""
+          }
+        },
+        "required": [
+          "field"
+        ]
+      },
+      "default": [],
+      "description": "APPEND-ONLY correction log. Every individual correction (Arabic OCR fix, harakat restoration, Malayalam correction) is logged here. Never deleted, never overwritten."
+    },
+    "review_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "reviewed",
+        "corrected",
+        "needs_manual_review"
+      ],
+      "default": "pending",
+      "description": "Quality review status. 'pending' = not yet reviewed. 'reviewed' = reviewed, no corrections needed. 'corrected' = reviewed and corrections appended. 'needs_manual_review' = LLM could not verify with confidence."
+    },
+    "reviewed_at": {
+      "type": "string",
+      "default": "",
+      "description": "ISO 8601 timestamp of the most recent quality review pass."
     },
     "verification_status": {
       "type": "string",

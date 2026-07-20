@@ -11,6 +11,7 @@ import { usePageState } from "@/context/PageStateContext";
 import HolyNameImportedSections from "@/components/holynameknowledge/HolyNameImportedSections";
 import HolyOneScholarlySections from "@/components/holynameknowledge/HolyOneScholarlySections";
 import HolyNameVerifiedKnowledge from "@/components/holynameknowledge/HolyNameVerifiedKnowledge";
+import SectionCVisualDisplay from "@/components/sectionc/SectionCVisualDisplay";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -413,6 +414,11 @@ export default function HolyOneDetailPage() {
               <p className="text-white/80 leading-relaxed whitespace-pre-wrap">{name.authentic_notes}</p>
             </div>
           ) : null}
+
+          {/* Attached Visuals — original source page images (magic squares, wafq, symbols, seals, diagrams) */}
+          {source === "B" && Array.isArray(name.attached_visuals) && name.attached_visuals.length > 0 && (
+            <SectionCVisualDisplay visuals={name.attached_visuals} />
+          )}
 
           {/* Source Reference */}
           <div className="text-center text-xs text-white/30 mt-6">

@@ -94,6 +94,9 @@ export default function SectionCVisualIntegrator() {
   const [progress, setProgress] = useState({ current: 0, total: 0, current_page: 0, description: "" });
   const [showResults, setShowResults] = useState(false);
   const [error, setError] = useState("");
+  const [showStatus, setShowStatus] = useState(false);
+  const [statusReport, setStatusReport] = useState(null);
+  const [loadingStatus, setLoadingStatus] = useState(false);
 
   const handleFileSelect = useCallback((e) => {
     const file = e.target.files?.[0];
@@ -377,6 +380,48 @@ Also report:
     }
   }, [pdfFile, sourceLabel, toast]);
 
+  const handleShowStatus = useCallback(async () => {
+    if (showStatus) {
+      setShowStatus(false);
+      return;
+    }
+    setLoadingStatus(true);
+    setError("");
+    try {
+      const cards = await base44.entities.HolyNameEsotericKnowledge.list("order_index", 60);
+      const report = {
+        total_cards: cards.length,
+        cards_with_visuals: 0,
+        cards_without_visuals: 0,
+        total_visuals: 0,
+        by_type: {},
+        cards_missing: [],
+      };
+      for (const card of cards) {
+        const visuals = Array.isArray(card.attached_visuals) ? card.attached_visuals : [];
+        if (visuals.length > 0) {
+          report.cards_with_visuals++;
+          report.total_visuals += visuals.length;
+          for (const v of visuals) {
+            report.by_type[v.visual_type] = (report.by_type[v.visual_type] || 0) + 1;
+          }
+        } else {
+          report.cards_without_visuals++;
+          report.cards_missing.push({
+            name_id: card.name_id,
+            arabic_name: card.arabic_name,
+            transliteration: card.transliteration || "",
+          });
+        }
+      }
+      setStatusReport(report);
+      setShowStatus(true);
+    } catch (e) {
+      setError(String(e?.message || e));
+    }
+    setLoadingStatus(false);
+  }, [showStatus]);
+
   const handleReset = useCallback(() => {
     setStep("idle");
     setPdfFile(null);
@@ -422,6 +467,78 @@ Also report:
       </div>
 
       <div className="px-4 py-4 space-y-4">
+        {/* Status report toggle */}
+        <button
+          onClick={handleShowStatus}
+          disabled={loadingStatus}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all"
+          style={{
+            background: showStatus ? P.bgHi : "rgba(8,16,38,0.4)",
+            border: `1px solid ${showStatus ? P.borderHi : P.faint}`,
+            color: P.dim,
+          }}
+        >
+          {loadingStatus ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Sparkles className="w-3.5 h-3.5" />
+          )}
+          <span className="font-inter text-[10px] uppercase tracking-widest font-bold">
+            {showStatus ? "Hide Integration Status" : "View Integration Status"}
+          </span>
+        </button>
+
+        {/* Status report display */}
+        {showStatus && statusReport && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="rounded-xl p-3 space-y-2"
+            style={{ background: "rgba(8,16,38,0.5)", border: `1px solid ${P.border}` }}
+          >
+            <div className="grid grid-cols-2 gap-2">
+              <ReportStat label="Total Cards" value={statusReport.total_cards} color={P.text} />
+              <ReportStat label="With Visuals" value={statusReport.cards_with_visuals} color="rgba(74,222,128,0.70)" />
+              <ReportStat label="Missing Visuals" value={statusReport.cards_without_visuals} color="rgba(239,68,68,0.65)" />
+              <ReportStat label="Total Visuals" value={statusReport.total_visuals} color={P.text} />
+            </div>
+            {Object.keys(statusReport.by_type).length > 0 && (
+              <div className="pt-2 space-y-1" style={{ borderTop: `1px solid ${P.faint}` }}>
+                <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: P.dim }}>Breakdown by Type</p>
+                {Object.entries(statusReport.by_type).map(([type, count]) => (
+                  <div key={type} className="flex items-center justify-between">
+                    <span className="font-inter text-[10px]" style={{ color: VISUAL_TYPE_COLORS[type] || "rgba(255,255,255,0.70)" }}>
+                      {VISUAL_TYPE_LABELS[type] || type}
+                    </span>
+                    <span className="font-inter text-[10px] font-bold" style={{ color: "rgba(255,255,255,0.85)" }}>{count}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {statusReport.cards_missing.length > 0 && (
+              <details className="pt-2" style={{ borderTop: `1px solid ${P.faint}` }}>
+                <summary className="cursor-pointer list-none flex items-center gap-2">
+                  <ChevronDown className="w-3 h-3" style={{ color: P.dim }} />
+                  <span className="font-inter text-[9px] uppercase tracking-widest" style={{ color: "rgba(239,68,68,0.65)" }}>
+                    Cards Missing Visuals ({statusReport.cards_missing.length})
+                  </span>
+                </summary>
+                <div className="mt-1.5 space-y-0.5 max-h-32 overflow-y-auto">
+                  {statusReport.cards_missing.map((c, i) => (
+                    <div key={i} className="flex items-center gap-2 px-2 py-0.5">
+                      <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.45)" }}>{c.name_id}</span>
+                      <span className="font-amiri text-[10px]" style={{ color: "rgba(255,255,255,0.65)" }} dir="rtl">{c.arabic_name}</span>
+                      {c.transliteration && (
+                        <span className="font-inter text-[8px]" style={{ color: "rgba(255,255,255,0.30)" }}>({c.transliteration})</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+          </motion.div>
+        )}
+
         {/* Step 1: File selection */}
         <div className="space-y-2">
           <p className="font-malayalam text-sm font-semibold" style={{ color: P.dim }}>
