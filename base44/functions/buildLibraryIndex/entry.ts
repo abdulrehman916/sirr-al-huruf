@@ -39,9 +39,26 @@ const CLASSIFICATION_SCHEMA = {
       description: 'Per-module confidence 0-1. Only include modules that are in the modules array.',
       additionalProperties: { type: 'number' }
     },
-    classification_summary: { type: 'string', description: '1-2 sentence summary of what the book contains.' }
+    classification_summary: { type: 'string', description: '1-2 sentence summary of what the book contains.' },
+    table_of_contents: {
+      type: 'array',
+      description: 'Chapter / section headings detected on the first pages, verbatim. Empty if no headings detected.',
+      items: {
+        type: 'object',
+        properties: {
+          title: { type: 'string', description: 'Heading text verbatim as printed (Arabic/English).' },
+          page_number: { type: 'integer', description: 'Page number where the heading appears (0 if unknown).' }
+        },
+        required: ['title']
+      }
+    },
+    important_keywords: {
+      type: 'array',
+      description: 'Important keywords / topics detected on the first pages (Arabic + English terms). 5-15 keywords. Empty if none.',
+      items: { type: 'string' }
+    }
   },
-  required: ['modules', 'classification_summary']
+  required: ['modules', 'classification_summary', 'table_of_contents', 'important_keywords']
 };
 
 const PROMPT = `You are a librarian classifying occult/esoteric manuscripts for the Sirr al-Huruf project. You are given the title, author, and a sample of OCR text from several pages of a book. Classify which modules the book contains content for.
@@ -61,8 +78,10 @@ RULES:
 2. Only include a module if the sampled text clearly contains content for it. Do not guess from the title alone if the text contradicts.
 3. module_confidence: 0-1 per included module (how confident the sampled text supports it).
 4. classification_summary: 1-2 sentences describing the book's actual content.
+5. table_of_contents: list every chapter / section heading you can detect on the sampled first pages, verbatim (Arabic or English as printed). Include the page_number where the heading appears (from the sampled pages). Empty array if the first pages have no headings.
+6. important_keywords: 5-15 important keywords / topics from the first pages (Arabic terms preserved verbatim, plus English equivalents if present). These help fast module filtering.
 
-Return ONLY the JSON object { modules, module_confidence, classification_summary }. No commentary.`;
+Return ONLY the JSON object { modules, module_confidence, classification_summary, table_of_contents, important_keywords }. No commentary.`;
 
 Deno.serve(async (req) => {
   try {
@@ -139,11 +158,15 @@ Deno.serve(async (req) => {
         const textPages = pages.filter(p => (p.ocr_text || p.arabic_text || p.ocr_text_ar || '').trim().length > 0);
         const sample = samplePages(textPages, SAMPLE_PAGES);
         const textBlock = sample.map(p => String(p.ocr_text || p.arabic_text || p.ocr_text_ar || '').slice(0, TEXT_SLICE)).join('\n');
+        // First-pages summary: longer concatenation of the first 2-3 pages (capped 2000 chars) for the index record
+        const firstPagesSummary = sample.map(p => String(p.ocr_text || p.arabic_text || p.ocr_text_ar || '')).join('\n').slice(0, 2000);
         bookPreviews.push({
           book,
           hasText: sample.length > 0,
           samplePages: sample.map(p => p.page_number).join(','),
           textBlock: textBlock.slice(0, 1000),
+          firstPagesSummary,
+          folderPath: deriveFolderPath(book),
         });
       }));
 
@@ -151,7 +174,7 @@ Deno.serve(async (req) => {
       const withText = [];
       for (const pv of bookPreviews) {
         if (!pv.hasText) {
-          await upsertIndex(sdk, indexedMap, pv.book, [], {}, 'Book has no OCR text to sample.', 'none', 'not_applicable');
+          await upsertIndex(sdk, indexedMap, pv.book, [], {}, 'Book has no OCR text to sample.', 'none', 'not_applicable', [], pv.firstPagesSummary, pv.folderPath);
           stats.skipped++;
         } else {
           withText.push(pv);
@@ -173,8 +196,10 @@ Deno.serve(async (req) => {
                 modules: { type: 'array', items: { type: 'string', enum: ['astrology', 'holy_names', 'wafq', 'khawass', 'mujarrabat', 'abjad', 'nine_mizan', 'general_esoteric'] } },
                 module_confidence: { type: 'object', additionalProperties: { type: 'number' } },
                 classification_summary: { type: 'string' },
+                table_of_contents: { type: 'array', items: { type: 'object', properties: { title: { type: 'string' }, page_number: { type: 'integer' } }, required: ['title'] } },
+                important_keywords: { type: 'array', items: { type: 'string' } },
               },
-              required: ['book_index', 'modules', 'classification_summary'],
+              required: ['book_index', 'modules', 'classification_summary', 'table_of_contents', 'important_keywords'],
             },
           },
         },
@@ -184,11 +209,12 @@ Deno.serve(async (req) => {
       const booksBlock = withText.map((pv, i) => {
         return `=== BOOK ${i + 1} ===\nTitle: ${pv.book.book_title || ''}\nAuthor: ${pv.book.author || ''}\nSource: ${pv.book.import_source || ''}\n--- FIRST PAGES ---\n${pv.textBlock}`;
       }).join('\n\n');
+      const BATCH_PROMPT_SUFFIX = `\n\nFor EACH book, also extract:\n- table_of_contents: every chapter/section heading visible on the first pages, verbatim, with page_number\n- important_keywords: 5-15 key terms (Arabic preserved verbatim + English if present)\nReturn each book's full result in the results array.`;
 
       let result = null;
       try {
         result = await sdk.integrations.Core.InvokeLLM({
-          prompt: PROMPT + '\n\nYou are classifying ' + withText.length + ' books at once. For EACH book, return its classification in the results array with the matching book_index.\n\n' + booksBlock,
+          prompt: PROMPT + '\n\nYou are classifying ' + withText.length + ' books at once. For EACH book, return its classification in the results array with the matching book_index.' + BATCH_PROMPT_SUFFIX + '\n\n' + booksBlock,
           response_json_schema: batchSchema,
           model: LLM_MODEL,
         });
@@ -215,7 +241,11 @@ Deno.serve(async (req) => {
         const modules = Array.isArray(r.modules) ? r.modules.filter(m => typeof m === 'string') : [];
         const summary = String(r.classification_summary || '').slice(0, 1000);
         const confidence = (r.module_confidence && typeof r.module_confidence === 'object') ? r.module_confidence : {};
-        await upsertIndex(sdk, indexedMap, pv.book, modules, confidence, summary, pv.samplePages, 'classified');
+        const toc = Array.isArray(r.table_of_contents)
+          ? r.table_of_contents.filter(t => t && t.title).map(t => ({ title: String(t.title).slice(0, 300), page_number: Number(t.page_number) || 0 }))
+          : [];
+        const keywords = Array.isArray(r.important_keywords) ? r.important_keywords.map(k => String(k || '')).filter(Boolean).slice(0, 20) : [];
+        await upsertIndex(sdk, indexedMap, pv.book, modules, confidence, summary, pv.samplePages, 'classified', toc, pv.firstPagesSummary, pv.folderPath, keywords);
         stats.classified++;
       }
       stats.batchesRun++;
