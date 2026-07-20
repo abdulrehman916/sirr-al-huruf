@@ -4,6 +4,7 @@ import { Search, Loader2, ShieldAlert, Sparkles, BookOpen } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import HolyNameEsotericResearchProfile from "@/components/holynameknowledge/HolyNameEsotericResearchProfile";
+import SectionCVisualIntegrator from "@/components/sectionc/SectionCVisualIntegrator";
 
 // ── Section C — Birhatīya / Esoteric Invocation Names ──
 // INDEPENDENT module. Reads ONLY from HolyNameEsotericKnowledge.
@@ -93,6 +94,9 @@ export default function SectionCPage() {
             />
           </div>
         )}
+
+        {/* Visual Content Integrator — admin/owner only */}
+        <SectionCVisualIntegrator />
 
         {/* Body */}
         {loading ? (

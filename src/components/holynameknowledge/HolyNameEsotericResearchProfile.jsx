@@ -5,6 +5,7 @@ import {
   FileText, ChevronDown, BookMarked, BookCopy, ScrollText,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import SectionCVisualDisplay from "@/components/sectionc/SectionCVisualDisplay";
 
 // ── Section C Card Detail ──
 // Renders ONE Birhatīya name card with:
@@ -240,6 +241,11 @@ export default function HolyNameEsotericResearchProfile({ nameId }) {
           <Field label="Source Notes" labelML="സ്രോതസ്സ് കുറിപ്പുകൾ">{rec.source_notes}</Field>
         </div>
       </Block>
+
+      {/* VISUAL CONTENT — displayed above scholarly data, underneath primary info */}
+      {Array.isArray(rec.attached_visuals) && rec.attached_visuals.length > 0 && (
+        <SectionCVisualDisplay visuals={rec.attached_visuals} />
+      )}
 
       {/* 2 — CURRENT SCHOLARLY DATA */}
       <Block title="Current Scholarly Data" titleML="നിലവിലുള്ള പണ്ഡിത വിവരങ്ങൾ" icon={ScrollText} accent={P.text} defaultOpen={false}>
