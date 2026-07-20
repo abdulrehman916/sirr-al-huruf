@@ -315,7 +315,7 @@ function samplePages(pages, n) {
   return out.filter(p => (p.page_number != null && !seen.has(p.page_number) && seen.add(p.page_number)));
 }
 
-async function upsertIndex(sdk, indexedMap, book, modules, confidence, summary, basis, status) {
+async function upsertIndex(sdk, indexedMap, book, modules, confidence, summary, basis, status, toc, firstPagesSummary, folderPath, keywords) {
   const bookId = book.master_book_id;
   const indexId = `LBI-ML-${bookId}`;
   const existing = indexedMap.get(bookId);
@@ -325,6 +325,7 @@ async function upsertIndex(sdk, indexedMap, book, modules, confidence, summary, 
     book_title: book.book_title || '',
     author: book.author || '',
     import_source: book.import_source || '',
+    folder_path: folderPath || '',
     combined_total_pages: book.combined_total_pages || 0,
     modules,
     module_confidence: confidence,
@@ -332,6 +333,9 @@ async function upsertIndex(sdk, indexedMap, book, modules, confidence, summary, 
     classification_basis: `Sampled pages: ${basis}`,
     classification_status: status,
     indexed_at: new Date().toISOString(),
+    table_of_contents: Array.isArray(toc) ? toc : [],
+    first_pages_summary: firstPagesSummary || '',
+    important_keywords: Array.isArray(keywords) ? keywords : [],
     astrology_extraction_status: modules.includes('astrology') ? 'pending' : 'skipped',
   };
   try {
@@ -356,4 +360,20 @@ function moduleBreakdown(indexRecords) {
 function recentlyClassified(remaining, indexedMap) {
   // Returns the freshly classified records that are now in indexedMap
   return remaining.map(b => indexedMap.get(b.master_book_id)).filter(Boolean);
+}
+
+function deriveFolderPath(book) {
+  // Derive the original folder/location from MasterPdfBook provenance fields.
+  if (book.onedrive_file_path) {
+    const parts = String(book.onedrive_file_path).split('/');
+    parts.pop();
+    return parts.join('/');
+  }
+  if (book.google_drive_parent_id) return `gdrive_folder:${book.google_drive_parent_id}`;
+  if (book.adobe_file_path) {
+    const parts = String(book.adobe_file_path).split('/');
+    parts.pop();
+    return parts.join('/');
+  }
+  return '';
 }
