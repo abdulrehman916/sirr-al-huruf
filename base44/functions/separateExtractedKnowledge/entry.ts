@@ -182,6 +182,22 @@ Deno.serve(async (req) => {
       if (norm) holyNameByNormalized.set(norm, hn);
     }
 
+    // ── Load existing SectionDKnowledge for canonical_key append-merge ──
+    // Future PDF imports APPEND into the existing card (matched by canonical_key)
+    // instead of creating duplicates.
+    const existingSD: Map<string, any> = new Map();
+    skip = 0;
+    while (existingSD.size < 5000) {
+      const batch = await sdk.entities.SectionDKnowledge.list('-created_date', 500, skip).catch(() => []);
+      if (!batch || batch.length === 0) break;
+      for (const sd of batch) {
+        const ck = sd.canonical_key || `${sd.content_type}|${sd.original_rule_entity}`;
+        if (ck && !existingSD.has(ck)) existingSD.set(ck, sd);
+      }
+      skip += batch.length;
+      if (batch.length < 500) break;
+    }
+
     // ── Classification stats ──
     const stats = {
       totalFindings: allFindings.length,
