@@ -213,6 +213,10 @@ Deno.serve(async (req) => {
           stats.categoriesCovered.add(slug(f.rule_category));
           await writeAstroFinding(sdk, f, bookId, bookTitle, bookAuthor, pageNumbers, stats);
         }
+
+        // INCREMENTAL CHECKPOINT: save after every chunk so the next run
+        // resumes from exactly this page even if the function times out.
+        await updateIndexStatus(sdk, idx, 'in_progress', lastProcessedPage);
       }
 
       const newStatus = allPagesScanned ? 'completed' : 'in_progress';
@@ -223,6 +227,25 @@ Deno.serve(async (req) => {
 
     const completedCount = astroBooks.filter(i => i.astrology_extraction_status === 'completed').length + stats.booksCompleted;
     const allComplete = completedCount >= astroBooks.length && astroBooks.length > 0;
+
+    // Per-book checkpoint summary for the response
+    const bookCheckpoints = pending.map(i => {
+      const processed = i.astrology_pages_processed || 0;
+      const total = i.combined_total_pages || 0;
+      const pct = total > 0 ? Math.round((processed / total) * 100) : 0;
+      return {
+        book_id: i.source_book_id,
+        title: (i.book_title || '').slice(0, 50),
+        status: i.astrology_extraction_status,
+        lastProcessedPage: processed,
+        totalPages: total,
+        remainingPages: Math.max(total - processed, 0),
+        completionPercentage: pct,
+      };
+    });
+    const totalPagesAll = astroBooks.reduce((s, i) => s + (i.combined_total_pages || 0), 0);
+    const totalProcessedAll = astroBooks.reduce((s, i) => s + (i.astrology_pages_processed || 0), 0);
+    const overallPct = totalPagesAll > 0 ? Math.round((totalProcessedAll / totalPagesAll) * 100) : 0;
 
     if (allComplete) {
       return Response.json({
@@ -238,7 +261,10 @@ Deno.serve(async (req) => {
         crossLinksCreated: stats.crossLinksCreated,
         magicSquaresStored: stats.magicSquaresStored,
         categoriesCovered: Array.from(stats.categoriesCovered),
-        confirmation: 'Astrology extraction 100% complete. No existing data was modified, overwritten, or deleted. Every source preserved separately. Astro Clock cards are now ready to be generated/verified from this appended data.',
+        overallCompletionPercentage: 100,
+        module: 'astrology',
+        nextModule: 'holy_names',
+        confirmation: 'Astrology extraction 100% complete. No existing data was modified, overwritten, or deleted. Every source preserved separately. Astro Clock cards are now ready to be generated/verified from this appended data. Holy Names module may now begin.',
         reRunNeeded: false,
         timeMs: Date.now() - started,
       });
@@ -258,6 +284,11 @@ Deno.serve(async (req) => {
       crossLinksCreated: stats.crossLinksCreated,
       magicSquaresStored: stats.magicSquaresStored,
       categoriesCovered: Array.from(stats.categoriesCovered),
+      module: 'astrology',
+      overallCompletionPercentage: overallPct,
+      totalPagesAcrossAllBooks: totalPagesAll,
+      totalPagesProcessed: totalProcessedAll,
+      bookCheckpoints,
       reRunNeeded: true,
       timeMs: Date.now() - started,
     });
