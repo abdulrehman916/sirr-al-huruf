@@ -94,6 +94,7 @@ const PAGE_IMPORTS = {
   OwnerPendingReviews:      () => import('./pages/OwnerPendingReviews'),
   UnifiedKnowledgeSearch:   () => import('./pages/UnifiedKnowledgeSearch'),
   AstroClockLibraryStatus:  () => import('./pages/AstroClockLibraryStatus'),
+  OwnerApprovalQueue:       () => import('./pages/OwnerApprovalQueue'),
   };
 
 // ── Route factory — one lazy() + one <Route> per manifest entry ──────

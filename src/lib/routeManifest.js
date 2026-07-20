@@ -86,6 +86,8 @@ const ROUTE_MANIFEST = [
   { path: '/admin/knowledge-search', component: 'UnifiedKnowledgeSearch', chunk: 'UnifiedKnowledgeSearch' },
   // Astro Clock Library Status — Owner-only dashboard (Knowledge Management).
   { path: '/admin/astro-library-status', component: 'AstroClockLibraryStatus', chunk: 'AstroClockLibraryStatus' },
+  // Owner Approval Queue — READ-ONLY review of flagged Western-source Astro Clock records (Knowledge Management).
+  { path: '/admin/astro-approval-queue', component: 'OwnerApprovalQueue', chunk: 'OwnerApprovalQueue' },
 
   // Rules & Conditions — public
   { path: '/rules-conditions', component: 'RulesConditions', chunk: 'RulesConditions', flags: ['public'] },
