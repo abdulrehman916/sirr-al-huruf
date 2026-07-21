@@ -21,7 +21,7 @@ export default function MoonZodiac() {
   const z = d.moonZodiacFull;
   const kashfZodiacTiming = getKashfZodiacTiming(z.name_en);
   const zName = language === "ar" ? (z.name_ar || z.name_en) : (language === "ml" ? zodiacEnToML(z.name_en) : z.name_en);
-  const zElement = language === "ar" ? txt(z.element_ml, z.element) : (language === "ml" ? z.element_ml : z.element);
+  const zElement = language === "ar" ? "—" : (language === "ml" ? z.element_ml : z.element);
   const zGender = language === "ar" ? "—" : (language === "ml" ? z.gender_ml : z.gender);
   const zRuler = language === "ar" ? (PLANET_AR[z.ruling_planet?.toLowerCase()] || z.ruling_planet) : (language === "ml" ? z.ruling_planet_ml : z.ruling_planet);
   const zMetal = language === "ar" ? "—" : (language === "ml" ? z.metal_ml : z.metal);
@@ -38,7 +38,7 @@ export default function MoonZodiac() {
 
   const nextZodiacKey = nextSignNameRaw.toLowerCase();
   const nextZodiac = d.zodiacSigns[nextZodiacKey];
-  const nextElement = nextZodiac ? (language === "ar" ? txt(nextZodiac.element_ml, nextZodiac.element) : (language === "ml" ? nextZodiac.element_ml : nextZodiac.element)) : "—";
+  const nextElement = nextZodiac ? (language === "ar" ? "—" : (language === "ml" ? nextZodiac.element_ml : nextZodiac.element)) : "—";
   const nextRuler = nextZodiac ? (language === "ar" ? (PLANET_AR[nextZodiac.ruling_planet?.toLowerCase()] || nextZodiac.ruling_planet) : (language === "ml" ? nextZodiac.ruling_planet_ml : nextZodiac.ruling_planet)) : "—";
 
   const planetKey = z.ruling_planet?.toLowerCase();
@@ -58,9 +58,9 @@ export default function MoonZodiac() {
         <span className="text-3xl leading-none">{z.symbol}</span>
         <div className="flex-1">
           <p className="font-inter text-base font-bold" style={{ color: "#F5D060" }}>{zName}</p>
-          <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>{z.date_range_ml && language === "ml" ? z.date_range_ml : z.date_range}</p>
+          <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>{language === "ml" ? (z.date_range_ml || "") : language === "ar" ? "" : z.date_range}</p>
         </div>
-        <span className="font-amiri text-lg" style={{ color: "rgba(212,175,55,0.50)" }}>{z.name_ar}</span>
+        {language === "en" && <span className="font-amiri text-lg" style={{ color: "rgba(212,175,55,0.50)" }}>{z.name_ar}</span>}
       </div>
 
       {zExplanation && (

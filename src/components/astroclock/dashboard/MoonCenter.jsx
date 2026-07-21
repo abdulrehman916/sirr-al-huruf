@@ -30,7 +30,7 @@ export default function MoonCenter() {
   const moonMansionName = language === "ar" ? (moonMansion?.name_arabic || moonMansion?.name || "—") : (MANSION_ML_NAMES[moonMansion?.name] || moonMansion?.name || "—");
 
   const dignity = d.moonDignity;
-  const dignityType = dignity ? (language === "ar" ? txt(dignity.type_ml, dignity.type_en, dignity.type_tr) : (language === "ml" ? dignity.type_ml : dignity.type_en)) : txt("സാധാരണം", "Normal", "Normal");
+  const dignityType = dignity ? (language === "ar" ? "—" : (language === "ml" ? dignity.type_ml : dignity.type_en)) : txt("സാധാരണം", "Normal", "—");
   const dignityColor = dignity?.strength === "weakest" ? "#F87171" : dignity?.strength === "very_strong" || dignity?.strength === "strongest" ? "#4ADE80" : "#FBBF24";
 
   const element = d.moonZodiacFull ? (language === "ml" ? d.moonZodiacFull.element_ml : d.moonZodiacFull.element) : "—";

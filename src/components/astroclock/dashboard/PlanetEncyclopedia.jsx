@@ -46,7 +46,7 @@ export default function PlanetEncyclopedia() {
     const friends = d.planetFriendships[key];
     const isCurrent = key === currentPlanet;
     const isOpen = expanded === key;
-    const displayName = language === "ml" ? (planetArabicMLDisplay(key) || info.name_ml_equivalent) : info.name_en;
+    const displayName = language === "ml" ? (planetArabicMLDisplay(key) || info.name_ml_equivalent) : language === "ar" ? (PLANET_AR_ML[key]?.ar || info.name_ar || "") : info.name_en;
     const nature = normalizeDisplay(language === "ml" ? info.nature_ml : info.nature_en);
     const elements = getPlanetElements(key, d.zodiacSigns);
     const color = isCurrent ? "#F5D060" : "rgba(255,255,255,0.70)";

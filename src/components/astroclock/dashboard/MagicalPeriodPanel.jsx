@@ -68,17 +68,23 @@ export default function MagicalPeriodPanel({ entityType, entityKey }) {
       ) : (
         <div className="space-y-1.5">
           {records.map((r, i) => {
-            const text = language === "ml" ? (r.knowledge_text_ml || r.knowledge_text_en)
-              : language === "ar" ? (r.knowledge_text_ar || r.knowledge_text_en)
-              : r.knowledge_text_en;
-            const ar = r.knowledge_text_ar || "";
+            const text = language === "ml" ? (r.knowledge_text_ml || "")
+              : language === "ar" ? (r.knowledge_text_ar || "")
+              : (r.knowledge_text_en || "");
+            const arSupp = language === "en" ? (r.knowledge_text_ar || "") : "";
             const attrs = r.attributes && typeof r.attributes === "object" ? r.attributes : {};
             const attrEntries = Object.entries(attrs).filter(([, v]) => v != null && v !== "");
             return (
               <div key={r.knowledge_id || i} className="rounded p-1.5" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(129,140,248,0.12)" }}>
-                {ar && <p className="font-amiri text-[11px] mb-0.5" style={{ color: "rgba(212,175,55,0.50)", direction: "rtl" }}>{ar}</p>}
-                {text && <p className="font-inter text-[10px] leading-snug" style={{ color: "rgba(255,255,255,0.65)" }}>{text}</p>}
-                {attrEntries.length > 0 && (
+                {arSupp && <p className="font-amiri text-[11px] mb-0.5" style={{ color: "rgba(212,175,55,0.50)", direction: "rtl" }}>{arSupp}</p>}
+                {text ? (
+                  <p className={`font-inter text-[10px] leading-snug ${language === "ar" ? "font-amiri" : ""}`} style={{ color: "rgba(255,255,255,0.65)", ...(language === "ar" ? { direction: "rtl" } : {}) }}>{text}</p>
+                ) : (
+                  <p className="font-inter text-[10px] leading-snug" style={{ color: "rgba(255,255,255,0.30)" }}>
+                    {language === "ml" ? "മലയാള പരിഭാഷ ഇതുവരെ ലഭ്യമല്ല." : language === "ar" ? "الترجمة العربية غير متوفرة بعد." : ""}
+                  </p>
+                )}
+                {language === "en" && attrEntries.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1">
                     {attrEntries.map(([k, v], ai) => (
                       <span key={ai} className="font-inter text-[8px] px-1.5 py-0.5 rounded" style={{ background: "rgba(129,140,248,0.08)", color: "rgba(129,140,248,0.70)" }}>{k}: {String(v)}</span>
