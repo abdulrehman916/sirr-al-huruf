@@ -20,16 +20,17 @@ export default function MoonCenter() {
   }
 
   const moonSign = d.moonPosition.zodiacSign;
-  const moonSignName = language === "ml" ? zodiacEnToML(moonSign?.name_en) : moonSign?.name_en;
+  const moonSignName = language === "ar" ? (d.moonZodiacFull?.name_ar || moonSign?.name_en || "—") : (language === "ml" ? zodiacEnToML(moonSign?.name_en) : moonSign?.name_en);
   const moonPhasePct = parseFloat(d.moonPosition.phase);
-  const moonPhaseLabel = language === "ml" ? d.moonPhaseDesc?.ml : d.moonPhaseDesc?.en;
+  // No approved Arabic moon-phase label in the codebase — show nothing in Arabic mode.
+  const moonPhaseLabel = language === "ar" ? "" : (language === "ml" ? d.moonPhaseDesc?.ml : d.moonPhaseDesc?.en);
   const waxing = d.lunarDay ? d.lunarDay <= 14 : true;
   const moonLongitude = parseFloat(d.moonPosition.longitude);
   const moonMansion = d.currentMansion;
-  const moonMansionName = MANSION_ML_NAMES[moonMansion?.name] || moonMansion?.name || "—";
+  const moonMansionName = language === "ar" ? (moonMansion?.name_arabic || moonMansion?.name || "—") : (MANSION_ML_NAMES[moonMansion?.name] || moonMansion?.name || "—");
 
   const dignity = d.moonDignity;
-  const dignityType = dignity ? (language === "ml" ? dignity.type_ml : dignity.type_en) : txt("സാധാരണം", "Normal", "Normal");
+  const dignityType = dignity ? (language === "ar" ? txt(dignity.type_ml, dignity.type_en, dignity.type_tr) : (language === "ml" ? dignity.type_ml : dignity.type_en)) : txt("സാധാരണം", "Normal", "Normal");
   const dignityColor = dignity?.strength === "weakest" ? "#F87171" : dignity?.strength === "very_strong" || dignity?.strength === "strongest" ? "#4ADE80" : "#FBBF24";
 
   const element = d.moonZodiacFull ? (language === "ml" ? d.moonZodiacFull.element_ml : d.moonZodiacFull.element) : "—";
@@ -37,8 +38,9 @@ export default function MoonCenter() {
   const isNahs = isNahsNature(moonMansion?.genel_hukum);
   const natureColor = isNahs ? "#F87171" : "#4ADE80";
 
-  const friendlySigns = language === "ml" ? signsToML(d.moonZodiacFull?.friendly_signs) : (d.moonZodiacFull?.friendly_signs || []);
-  const enemySigns = language === "ml" ? signsToML(d.moonZodiacFull?.enemy_signs) : (d.moonZodiacFull?.enemy_signs || []);
+  const signsToAr = (signs) => (signs || []).map(s => d.zodiacSigns[s.toLowerCase()]?.name_ar || s);
+  const friendlySigns = language === "ar" ? signsToAr(d.moonZodiacFull?.friendly_signs) : (language === "ml" ? signsToML(d.moonZodiacFull?.friendly_signs) : (d.moonZodiacFull?.friendly_signs || []));
+  const enemySigns = language === "ar" ? signsToAr(d.moonZodiacFull?.enemy_signs) : (language === "ml" ? signsToML(d.moonZodiacFull?.enemy_signs) : (d.moonZodiacFull?.enemy_signs || []));
 
   const strengthLabel = moonPhasePct > 75 ? txt("വളരെ ശക്തം", "Very Strong", "Çok Güçlü") :
     moonPhasePct > 50 ? txt("ശക്തം", "Strong", "Güçlü") :
@@ -49,15 +51,15 @@ export default function MoonCenter() {
   const kashfLunarDay = getKashfLunarDayInfo(d.lunarDay);
   const kashfNightRule = getKashfNightDayRule();
   const recommendations = [];
-  if (waxing && moonPhasePct > 50) {
+  if (language !== "ar" && waxing && moonPhasePct > 50) {
     recommendations.push(txt("ആകർഷണം, വർദ്ധന, ജല്പം കർമ്മങ്ങൾക്ക് അനുകൂലം", "Favorable for attraction, growth, increase works", "Çekim, büyüme, artış çalışmaları için elverişli"));
-  } else if (!waxing) {
+  } else if (language !== "ar" && !waxing) {
     recommendations.push(txt("തടയൽ, നീക്കം, ശുദ്ധീകരണം കർമ്മങ്ങൾക്ക് അനുകൂലം", "Favorable for banishment, removal, cleansing works", "Uzaklaştırma, temizleme çalışmaları için elverişli"));
   }
-  if (isNahs) {
+  if (language !== "ar" && isNahs) {
     recommendations.push(txt("ഈ നക്ഷത്രം نحس ആണ് — പ്രധാന കർമ്മങ്ങൾ ഒഴിവാക്കുക", "This mansion is Nahs — avoid important works", "Bu menzil nahs'tır — önemli çalışmalarından kaçının"));
   }
-  if (dignity?.strength === "weakest") {
+  if (language !== "ar" && dignity?.strength === "weakest") {
     recommendations.push(txt("ചന്ദ്രൻ നീചം — മാനസിക കാര്യങ്ങൾ വിലമതിക്കുക", "Moon debilitated — be cautious with mental matters", "Ay düşük — zihinsel konularda dikkatli olun"));
   }
 

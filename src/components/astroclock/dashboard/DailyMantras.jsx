@@ -18,6 +18,7 @@
 import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import GuidedRitualCard from "./GuidedRitualCard";
+import { useIsOwner } from "@/hooks/useIsOwner";
 import {
   getDailyMantrasForDay,
   getTotalMantraCount,
@@ -50,7 +51,8 @@ function SourceGroup({ sourceGroup, defaultExpandedId }) {
 
 export default function DailyMantras() {
   const d = useAstroData();
-  const { txt } = useAstroClockLanguage();
+  const { txt, language } = useAstroClockLanguage();
+  const isOwner = useIsOwner();
 
   if (!d.currentHour) return null;
 
@@ -86,17 +88,21 @@ export default function DailyMantras() {
             {total} {txt("പ്രാർഥനകൾ", "recitations", "zikir")}
           </span>
         </div>
-        <span className="font-amiri text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.10)", color: G.dim, direction: "rtl" }}>
-          📖 كشف الحقائق
-        </span>
+        {isOwner && (
+          <span className="font-amiri text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.10)", color: G.dim, direction: "rtl" }}>
+            📖 كشف الحقائق
+          </span>
+        )}
       </div>
 
-      {/* Manuscript Authority Notice */}
-      <div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.10)" }}>
-        <p className="font-malayalam text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
-          ⚖️ മൂല ഗ്രന്ഥം ആണ് പ്രാഥമിക അധികാരം. എല്ലാ അറബി പാഠവും ഗ്രന്ഥത്തിൽ നിന്ന് നേരിട്ട് പകർത്തിയതാണ്.
-        </p>
-      </div>
+      {/* Manuscript Authority Notice — Malayalam mode only (prevents ML leak in EN/AR) */}
+      {language === "ml" && (
+        <div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.10)" }}>
+          <p className="font-malayalam text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
+            ⚖️ മൂല ഗ്രന്ഥം ആണ് പ്രാഥമിക അധികാരം. എല്ലാ അറബി പാഠവും ഗ്രന്ഥത്തിൽ നിന്ന് നേരിട്ട് പകർത്തിയതാണ്.
+          </p>
+        </div>
+      )}
 
       {/* Guided ritual groups */}
       {mantraGroups.map((group, i) => (

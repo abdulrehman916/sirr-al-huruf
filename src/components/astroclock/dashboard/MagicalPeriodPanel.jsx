@@ -15,6 +15,7 @@ import { useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 // A record counts as a "magical period" record when its category or
 // attributes explicitly mention a magical period / duration.
@@ -29,6 +30,7 @@ function isMagicalPeriodRecord(r) {
 
 export default function MagicalPeriodPanel({ entityType, entityKey }) {
   const { txt, language } = useAstroClockLanguage();
+  const isOwner = useIsOwner();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -83,7 +85,7 @@ export default function MagicalPeriodPanel({ entityType, entityKey }) {
                     ))}
                   </div>
                 )}
-                {r.source_book_title && (
+                {isOwner && r.source_book_title && (
                   <p className="font-inter text-[8px] mt-1" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {r.source_book_title}{r.source_page_number ? ` p.${r.source_page_number}` : ""}</p>
                 )}
               </div>

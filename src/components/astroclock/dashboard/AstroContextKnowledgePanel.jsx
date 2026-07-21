@@ -25,6 +25,7 @@ import {
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { useAstroClockContextKnowledge } from "@/hooks/useAstroClockContextKnowledge";
 import AstroClockVisuals from "@/components/astroclock/AstroClockVisuals";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 const CATEGORY_CONFIG = {
   recommended: {
@@ -98,6 +99,7 @@ const SECTION_ORDER = {
 };
 
 function ActionList({ items, config, language }) {
+  const isOwner = useIsOwner();
   if (!items || items.length === 0) return null;
   const Icon = config.icon;
 
@@ -121,8 +123,8 @@ function ActionList({ items, config, language }) {
               {item.ar}
             </p>
           )}
-          {/* Source references — preserve every source */}
-          {item.sources && item.sources.length > 0 && (
+          {/* Source references — Owner only (preserve every source) */}
+          {isOwner && item.sources && item.sources.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-0.5">
               {item.sources.map((src, si) => (
                 <span key={si} className="font-inter text-[7px] px-1 py-0.5 rounded" style={{
@@ -198,6 +200,7 @@ function dedupeSources(sources) {
  */
 export default function AstroContextKnowledgePanel({ context, qualityTier }) {
   const { txt, language } = useAstroClockLanguage();
+  const isOwner = useIsOwner();
   const { knowledge, loading, error } = useAstroClockContextKnowledge(context);
   const [showAll, setShowAll] = useState(false);
 
@@ -344,8 +347,8 @@ export default function AstroContextKnowledgePanel({ context, qualityTier }) {
             {/* Manuscript sections rendered in the order defined by the calculated
                 quality tier (SECTION_ORDER). Labels and content unchanged — order only. */}
             {(SECTION_ORDER[qualityTier] || SECTION_ORDER[3]).map((key) => renderSection(key))}
-            {/* All supporting sources */}
-            <SourceList sources={merged.sources} language={language} txt={txt} />
+            {/* All supporting sources — Owner only */}
+            {isOwner && <SourceList sources={merged.sources} language={language} txt={txt} />}
             {/* Cropped source visuals (wafq, tables, diagrams) — displayed inside the card */}
             <AstroClockVisuals visuals={merged.visuals} />
           </div>

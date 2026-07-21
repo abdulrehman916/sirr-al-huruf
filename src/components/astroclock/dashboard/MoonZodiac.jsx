@@ -2,7 +2,7 @@
 // SECTION 5 — MOON IN ZODIAC
 // Current zodiac details + Next zodiac preview with transition time
 // ═══════════════════════════════════════════════════════════════
-import { useAstroData } from "./useAstroData";
+import { useAstroData, PLANET_AR } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { MiniCard } from "./DashboardSection";
 import { ArrowRight } from "lucide-react";
@@ -20,33 +20,34 @@ export default function MoonZodiac() {
 
   const z = d.moonZodiacFull;
   const kashfZodiacTiming = getKashfZodiacTiming(z.name_en);
-  const zName = language === "ml" ? zodiacEnToML(z.name_en) : z.name_en;
-  const zElement = language === "ml" ? z.element_ml : z.element;
-  const zGender = language === "ml" ? z.gender_ml : z.gender;
-  const zRuler = language === "ml" ? z.ruling_planet_ml : z.ruling_planet;
-  const zMetal = language === "ml" ? z.metal_ml : z.metal;
-  const zIncense = language === "ml" ? z.incense_ml : z.incense;
-  const zExplanation = language === "ml" ? z.explanation_ml : z.explanation_en;
+  const zName = language === "ar" ? (z.name_ar || z.name_en) : (language === "ml" ? zodiacEnToML(z.name_en) : z.name_en);
+  const zElement = language === "ar" ? txt(z.element_ml, z.element) : (language === "ml" ? z.element_ml : z.element);
+  const zGender = language === "ar" ? "—" : (language === "ml" ? z.gender_ml : z.gender);
+  const zRuler = language === "ar" ? (PLANET_AR[z.ruling_planet?.toLowerCase()] || z.ruling_planet) : (language === "ml" ? z.ruling_planet_ml : z.ruling_planet);
+  const zMetal = language === "ar" ? "—" : (language === "ml" ? z.metal_ml : z.metal);
+  const zIncense = language === "ar" ? "—" : (language === "ml" ? z.incense_ml : z.incense);
+  const zExplanation = language === "ar" ? "" : (language === "ml" ? z.explanation_ml : z.explanation_en);
 
   const nextTransit = d.moonTransits?.signTransits?.[1];
   const nextSignNameRaw = nextTransit?.name || "—";
-  const nextSignName = language === "ml" ? zodiacEnToML(nextSignNameRaw) : nextSignNameRaw;
+  const nextSignName = language === "ar" ? (d.zodiacSigns[nextSignNameRaw.toLowerCase()]?.name_ar || nextSignNameRaw) : (language === "ml" ? zodiacEnToML(nextSignNameRaw) : nextSignNameRaw);
   const nextSignSymbol = nextTransit?.symbol || "";
-  const transitionTime = nextTransit?.entryTime ? new Date(nextTransit.entryTime).toLocaleString(language === "ml" ? "ml-IN" : "en-US", {
+  const transitionTime = nextTransit?.entryTime ? new Date(nextTransit.entryTime).toLocaleString(language === "ar" ? "ar" : (language === "ml" ? "ml-IN" : "en-US"), {
     weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
   }) : "—";
 
-  const nextZodiacKey = nextSignName.toLowerCase();
+  const nextZodiacKey = nextSignNameRaw.toLowerCase();
   const nextZodiac = d.zodiacSigns[nextZodiacKey];
-  const nextElement = nextZodiac ? (language === "ml" ? nextZodiac.element_ml : nextZodiac.element) : "—";
-  const nextRuler = nextZodiac ? (language === "ml" ? nextZodiac.ruling_planet_ml : nextZodiac.ruling_planet) : "—";
+  const nextElement = nextZodiac ? (language === "ar" ? txt(nextZodiac.element_ml, nextZodiac.element) : (language === "ml" ? nextZodiac.element_ml : nextZodiac.element)) : "—";
+  const nextRuler = nextZodiac ? (language === "ar" ? (PLANET_AR[nextZodiac.ruling_planet?.toLowerCase()] || nextZodiac.ruling_planet) : (language === "ml" ? nextZodiac.ruling_planet_ml : nextZodiac.ruling_planet)) : "—";
 
   const planetKey = z.ruling_planet?.toLowerCase();
   const planetInfo = d.planetInfo[planetKey];
-  const goodActions = language === "ml" ? planetInfo?.goodActions_ml : planetInfo?.goodActions_en;
-  const badActions = language === "ml" ? planetInfo?.badActions_ml : planetInfo?.badActions_en;
-  const friendlyDisplay = language === "ml" ? (signsToML(z.friendly_signs).join(", ") || "—") : (z.friendly_signs?.join(", ") || "—");
-  const enemyDisplay = language === "ml" ? (signsToML(z.enemy_signs).join(", ") || "—") : (z.enemy_signs?.join(", ") || "—");
+  const goodActions = language === "ar" ? [] : (language === "ml" ? planetInfo?.goodActions_ml : planetInfo?.goodActions_en);
+  const badActions = language === "ar" ? [] : (language === "ml" ? planetInfo?.badActions_ml : planetInfo?.badActions_en);
+  const signsToAr = (signs) => (signs || []).map(s => d.zodiacSigns[s.toLowerCase()]?.name_ar || s).join(", ");
+  const friendlyDisplay = language === "ar" ? (signsToAr(z.friendly_signs) || "—") : (language === "ml" ? (signsToML(z.friendly_signs).join(", ") || "—") : (z.friendly_signs?.join(", ") || "—"));
+  const enemyDisplay = language === "ar" ? (signsToAr(z.enemy_signs) || "—") : (language === "ml" ? (signsToML(z.enemy_signs).join(", ") || "—") : (z.enemy_signs?.join(", ") || "—"));
 
   return (
     <div className="space-y-3">

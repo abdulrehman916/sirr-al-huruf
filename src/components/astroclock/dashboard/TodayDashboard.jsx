@@ -7,7 +7,7 @@
 // LANGUAGE RULE: One language per card — no mixing
 // DATA RULE: Live values from useAstroData only — no new calculations
 // ═══════════════════════════════════════════════════════════════
-import { useAstroData } from "./useAstroData";
+import { useAstroData, DAY_AR, PLANET_AR } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { MiniCard, SubCollapse } from "./DashboardSection";
 import { getKashfLunarDayInfo, getKashfNahsStatus } from "@/lib/astroClockManuscriptMerger";
@@ -27,14 +27,15 @@ export default function TodayDashboard() {
   const isOwner = useIsOwner();
   if (!d.currentHour) return null;
 
-  // ── Language-specific names ──
-  const dayName = language === "ml" ? d.dayInfo?.name_ml : d.dayInfo?.name_en;
-  const planetName = language === "ml"
-    ? d.planetInfo[d.currentHour.planet]?.name_ml_equivalent
+  // ── Language-specific names (Arabic uses existing DAY_AR / PLANET_AR) ──
+  const dayName = language === "ar" ? DAY_AR[d.activeDayIndex]
+    : language === "ml" ? d.dayInfo?.name_ml : d.dayInfo?.name_en;
+  const planetName = language === "ar" ? (PLANET_AR[d.currentHour.planet] || d.planetInfo[d.currentHour.planet]?.name_en)
+    : language === "ml" ? d.planetInfo[d.currentHour.planet]?.name_ml_equivalent
     : d.planetInfo[d.currentHour.planet]?.name_en;
   const planetNameAr = d.planetInfo[d.currentHour.planet]?.name_ar;
-  const dayRulerName = language === "ml"
-    ? (PLANET_AR_ML[d.dayRuler.planet]?.ml || d.planetInfo[d.dayRuler.planet]?.name_ml_equivalent)
+  const dayRulerName = language === "ar" ? (PLANET_AR[d.dayRuler.planet] || d.planetInfo[d.dayRuler.planet]?.name_en)
+    : language === "ml" ? (PLANET_AR_ML[d.dayRuler.planet]?.ml || d.planetInfo[d.dayRuler.planet]?.name_ml_equivalent)
     : d.planetInfo[d.dayRuler.planet]?.name_en;
   const dayRulerSymbol = d.planetInfo[d.dayRuler.planet]?.symbol || "☉";
 
@@ -47,17 +48,23 @@ export default function TodayDashboard() {
     : isMalefic
       ? txt("ശ്രദ്ധിക്കുക", "Cautious Day", "Dikkatli Gün")
       : txt("നല്ല ദിവസം", "Good Day", "İyi Gün");
-  const verdictSub = txt(
-    `${dayRulerName} ഭരിക്കുന്നു`,
-    `Ruled by ${dayRulerName}`,
-    `${dayRulerName} yönetir`
-  );
+  const verdictSub = language === "ar"
+    ? `يحكمه ${PLANET_AR[d.dayRuler.planet] || dayRulerName}`
+    : txt(
+        `${dayRulerName} ഭരിക്കുന്നു`,
+        `Ruled by ${dayRulerName}`,
+        `${dayRulerName} yönetir`
+      );
 
   // ── Activities (language-specific, manuscript-sourced) ──
   let bestActivities = [], avoidActivities = [];
   if (language === "ml") {
     bestActivities = d.dayInfo?.benefits_ml || [];
     avoidActivities = d.dayInfo?.warnings_ml || [];
+  } else if (language === "ar") {
+    // No approved Arabic benefits/warnings exist in the codebase — show none (no English leak).
+    bestActivities = [];
+    avoidActivities = [];
   } else {
     bestActivities = d.dayInfo?.benefits_en || d.weekdayAnalysis?.goodWorks || [];
     avoidActivities = d.dayInfo?.warnings_en || d.weekdayAnalysis?.badWorks || [];
@@ -65,16 +72,20 @@ export default function TodayDashboard() {
 
   // ── Moon snapshot (compact — full Moon data in Section 4) ──
   const moonSymbol = d.moonPosition?.zodiacSign?.symbol;
-  const moonSignName = language === "ml"
-    ? zodiacEnToML(d.moonPosition?.zodiacSign?.name_en)
+  const moonSignName = language === "ar"
+    ? (d.moonZodiacFull?.name_ar || "—")
+    : language === "ml" ? zodiacEnToML(d.moonPosition?.zodiacSign?.name_en)
     : d.moonPosition?.zodiacSign?.name_en;
   const moonPhasePct = d.moonPosition ? parseFloat(d.moonPosition.phase) : 0;
   const phaseEn = d.moonPhaseDesc?.en || "";
-  const moonPhaseLabel = language === "ml"
-    ? d.moonPhaseDesc?.ml
-    : phaseEn;
+  // No approved Arabic moon-phase label exists in the codebase — show percentage only in Arabic mode.
+  const moonPhaseLabel = language === "ar" ? "" : (language === "ml" ? d.moonPhaseDesc?.ml : phaseEn);
   const moonMansionName = MANSION_ML_NAMES[d.currentMansion?.name] || "";
-  const moonMansionDisplay = `#${d.currentMansion?.no || "?"} ${moonMansionName}`.trim();
+  const moonMansionDisplay = language === "ar"
+    ? `#${d.currentMansion?.no || "?"} ${d.currentMansion?.name_arabic || ""}`.trim()
+    : language === "ml"
+    ? `#${d.currentMansion?.no || "?"} ${moonMansionName}`.trim()
+    : `#${d.currentMansion?.no || "?"} ${d.currentMansion?.name || ""}`.trim();
 
   // ── Kashf lunar day data ──
   const kashfLunarDay = getKashfLunarDayInfo(d.lunarDay);
@@ -82,7 +93,7 @@ export default function TodayDashboard() {
 
   // ── Warnings (language-specific — no mixing) ──
   const warnings = [];
-  if (kashfNahs?.isNahs) {
+  if (kashfNahs?.isNahs && language !== "ar") {
     warnings.push(language === "ml" ? kashfNahs.ml : kashfNahs.en);
   }
   if (d.moonDignity?.strength === "weakest") {
@@ -104,9 +115,9 @@ export default function TodayDashboard() {
       {/* ══ SUMMARY: State Grid ══ */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <MiniCard icon="📅" label={txt("ദിവസം", "Day", "Gün")} value={dayName} color={G.text} />
-        <MiniCard icon={d.isNight ? "🌙" : "☀"} label={txt("ليل / نهار", "Layl / Nahar", "Gece / Gündüz")} value={d.laylNahar} color={d.isNight ? "#818CF8" : "#FBBF24"} />
+        <MiniCard icon={d.isNight ? "🌙" : "☀"} label={txt("ليل / نهار", "Layl / Nahar", "Gece / Gündüz")} value={language === "ar" ? (d.isNight ? "ليل" : "نهار") : d.laylNahar} color={d.isNight ? "#818CF8" : "#FBBF24"} />
         <MiniCard icon="⏰" label={txt("ساعة (ഗ്രഹമണിക്കൂർ)", "Saat", "Saat")} value={`#${d.currentHour.hourNumber}`} color={G.text} />
-        <MiniCard icon={dayRulerSymbol} label={txt("كوكب (ഗ്രഹം)", "Kawkab", "Kavkeb")} value={language === "ml" ? (planetArabicMLDisplay(d.currentHour.planet) || planetName) : (PLANET_AR_ML[d.currentHour.planet]?.ar || planetNameAr || planetName)} color={G.text} />
+        <MiniCard icon={dayRulerSymbol} label={txt("كوكب (ഗ്രഹം)", "Kawkab", "Kavkeb")} value={language === "ar" ? (PLANET_AR[d.currentHour.planet] || planetName) : language === "ml" ? (planetArabicMLDisplay(d.currentHour.planet) || planetName) : planetName} color={G.text} />
       </div>
 
       {/* ══ SUMMARY: Verdict ══ */}
@@ -131,7 +142,7 @@ export default function TodayDashboard() {
         <div className="flex-1 flex items-center gap-2 flex-wrap min-w-0">
           <span className="font-inter text-xs font-bold" style={{ color: "#818CF8" }}>{moonSymbol} {moonSignName}</span>
           <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>·</span>
-          <span className="font-inter text-xs" style={{ color: "#818CF8" }}>{moonPhaseLabel} ({moonPhasePct.toFixed(0)}%)</span>
+          <span className="font-inter text-xs" style={{ color: "#818CF8" }}>{moonPhaseLabel ? `${moonPhaseLabel} ` : ""}({moonPhasePct.toFixed(0)}%)</span>
           <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>·</span>
           <span className="font-inter text-xs" style={{ color: "#818CF8" }}>{moonMansionDisplay}</span>
         </div>
@@ -148,7 +159,7 @@ export default function TodayDashboard() {
             border: `1px solid ${kashfLunarDay.nature_en.includes("Auspi") ? "rgba(74,222,128,0.12)" : kashfLunarDay.nature_en.includes("Inauspi") ? "rgba(248,113,113,0.12)" : "rgba(251,191,36,0.12)"}`,
           }}>
             <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.60)" }}>
-              {txt("ചാന്ദ്ര ദിവസം", "Lunar Day", "Ay Günü")} {d.lunarDay}: {language === "ml" ? kashfLunarDay.nature_ml : kashfLunarDay.nature_en}
+              {txt("ചാന്ദ്ര ദിവസം", "Lunar Day", "Ay Günü")} {d.lunarDay}: {language === "ar" ? "—" : (language === "ml" ? kashfLunarDay.nature_ml : kashfLunarDay.nature_en)}
             </p>
             <p className="font-amiri text-[10px] mt-0.5" style={{ color: "rgba(212,175,55,0.40)", direction: "rtl" }}>{kashfLunarDay.summary_ar}</p>
             {isOwner && <p className="font-inter text-[8px] mt-0.5" style={{ color: "rgba(129,140,248,0.30)" }}>📖 {kashfLunarDay.source}</p>}
