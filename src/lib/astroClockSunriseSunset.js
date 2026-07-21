@@ -8,19 +8,46 @@
 // PRE-CONFIGURED LOCATIONS (LAT/LNG)
 // ─────────────────────────────────────────────────────────────────────────────
 export const KNOWN_LOCATIONS = {
-  dubai: { lat: 25.2048, lng: 55.2708, name: "Dubai, UAE" },
-  abu_dhabi: { lat: 24.4539, lng: 54.3773, name: "Abu Dhabi, UAE" },
-  mecca: { lat: 21.4225, lng: 39.8262, name: "Mecca, Saudi Arabia" },
-  medina: { lat: 24.5247, lng: 39.5692, name: "Medina, Saudi Arabia" },
-  riyadh: { lat: 24.7136, lng: 46.6753, name: "Riyadh, Saudi Arabia" },
-  cairo: { lat: 30.0444, lng: 31.2357, name: "Cairo, Egypt" },
-  istanbul: { lat: 41.0082, lng: 28.9784, name: "Istanbul, Turkey" },
-  delhi: { lat: 28.6139, lng: 77.2090, name: "Delhi, India" },
-  mumbai: { lat: 19.0760, lng: 72.8777, name: "Mumbai, India" },
-  kochi: { lat: 9.9312, lng: 76.2673, name: "Kochi, India" },
-  london: { lat: 51.5074, lng: -0.1278, name: "London, UK" },
-  new_york: { lat: 40.7128, lng: -74.0060, name: "New York, USA" }
+  dubai: { lat: 25.2048, lng: 55.2708, name: "Dubai, UAE", tz: "Asia/Dubai" },
+  abu_dhabi: { lat: 24.4539, lng: 54.3773, name: "Abu Dhabi, UAE", tz: "Asia/Dubai" },
+  mecca: { lat: 21.4225, lng: 39.8262, name: "Mecca, Saudi Arabia", tz: "Asia/Riyadh" },
+  medina: { lat: 24.5247, lng: 39.5692, name: "Medina, Saudi Arabia", tz: "Asia/Riyadh" },
+  riyadh: { lat: 24.7136, lng: 46.6753, name: "Riyadh, Saudi Arabia", tz: "Asia/Riyadh" },
+  cairo: { lat: 30.0444, lng: 31.2357, name: "Cairo, Egypt", tz: "Africa/Cairo" },
+  istanbul: { lat: 41.0082, lng: 28.9784, name: "Istanbul, Turkey", tz: "Europe/Istanbul" },
+  delhi: { lat: 28.6139, lng: 77.2090, name: "Delhi, India", tz: "Asia/Kolkata" },
+  mumbai: { lat: 19.0760, lng: 72.8777, name: "Mumbai, India", tz: "Asia/Kolkata" },
+  kochi: { lat: 9.9312, lng: 76.2673, name: "Kochi, India", tz: "Asia/Kolkata" },
+  london: { lat: 51.5074, lng: -0.1278, name: "London, UK", tz: "Europe/London" },
+  new_york: { lat: 40.7128, lng: -74.0060, name: "New York, USA", tz: "America/New_York" }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// IANA TIMEZONE OFFSET RESOLVER (DST-aware)
+// Returns the UTC offset in HOURS for the given IANA timezone (e.g. "America/New_York")
+// at the given instant, with Daylight Saving Time applied by the browser's built-in
+// Intl tz database. This is the authoritative civil offset — no external API, no
+// manual DST tables. Returns null if the timezone name is invalid/unsupported.
+// ─────────────────────────────────────────────────────────────────────────────
+export function getTzOffsetHours(ianaTz, date) {
+  if (!ianaTz) return null;
+  try {
+    const dtf = new Intl.DateTimeFormat("en-US", {
+      timeZone: ianaTz, hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    });
+    const map = {};
+    dtf.formatToParts(date).forEach((p) => { map[p.type] = p.value; });
+    // Reinterpret the target-tz wall clock as UTC, then diff against the true UTC instant.
+    // tz ahead of UTC (e.g. +4) → wall clock is later → asUTC > date.getTime() → +offset. ✓
+    const asUTC = Date.UTC(
+      +map.year, +map.month - 1, +map.day,
+      (+map.hour) % 24, +map.minute, +map.second
+    );
+    return (asUTC - date.getTime()) / 3600000;
+  } catch (_) { return null; }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CALCULATE SUNRISE/SUNSET

@@ -23,6 +23,7 @@ const DUBAI_DEFAULT = Object.freeze({
   lat: 25.2048,
   lng: 55.2708,
   timezone: 4,
+  tz: "Asia/Dubai",
   name: "Dubai, UAE (Default)",
   isDefault: true,
   source: "default",
@@ -54,6 +55,13 @@ function deviceTimezone() {
   try { return -new Date().getTimezoneOffset() / 60; } catch (_) { return 0; }
 }
 
+function deviceIana() {
+  // Authoritative IANA timezone of the device (e.g. "Asia/Dubai", "America/New_York").
+  // Used so GPS and manual presets resolve offsets through the same Intl path →
+  // identical astronomical results for the same coordinates and date.
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (_) { return undefined; }
+}
+
 // Location-aware timezone from longitude (solar/nautical offset). Used for
 // free-form manual coordinates where no curated civil offset exists.
 // Astronomically correct for sunrise/sunset — planetary hours are solar time,
@@ -75,6 +83,7 @@ function buildGpsLoc(latitude, longitude) {
     lat: latitude,
     lng: longitude,
     timezone: deviceTimezone(),
+    tz: deviceIana(),
     name: `${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`,
     isDefault: false,
     source: "gps",

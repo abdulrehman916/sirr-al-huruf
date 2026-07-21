@@ -8,7 +8,7 @@ import {
   getCurrentPlanetaryHour, getDayRuler, getActiveWeekday,
   getAllPlanetaryHours, PLANET_INFO, DAY_INFO, WEEKDAY_ANALYSIS, PLANET_SEQUENCE,
 } from "@/lib/astroClockLiveEngine";
-import { calculateSunriseSunset, getUserLocation } from "@/lib/astroClockSunriseSunset";
+import { calculateSunriseSunset, getUserLocation, getTzOffsetHours } from "@/lib/astroClockSunriseSunset";
 import { calculateMoonPosition, calculateMoonTransits, getMoonPhaseDescription } from "@/lib/astroClockMoonPosition";
 import { AY_MANAZILLERI, PLANETARY_DAY_RULERS } from "@/lib/astroClockData";
 import { ZODIAC_SIGNS } from "@/lib/astroClockZodiacData";
@@ -71,12 +71,19 @@ export function useAstroData() {
   return useMemo(() => {
     const now = customDate || new Date();
     const loc = getUserLocation();
-    const sun = calculateSunriseSunset(now, loc.lat, loc.lng, loc.timezone);
+    // Authoritative offset: IANA timezone (DST-aware for the selected date via the
+    // browser Intl tz database) wins; falls back to the stored numeric offset
+    // (longitude-based solar offset for free-form coords / legacy records).
+    // This makes GPS and manual presets resolve through the same path → identical
+    // results for the same coordinates and date, with correct DST everywhere.
+    const ianaOffset = loc.tz ? getTzOffsetHours(loc.tz, now) : null;
+    const effectiveTz = (typeof ianaOffset === "number" && isFinite(ianaOffset)) ? ianaOffset : loc.timezone;
+    const sun = calculateSunriseSunset(now, loc.lat, loc.lng, effectiveTz);
     const sr = sun.sunrise ?? 6.5;
     const ss = sun.sunset ?? 18.25;
 
-    // Timezone correction — shifts now to location's local time
-    const tzDiffMs = (loc.timezone * 60 + now.getTimezoneOffset()) * 60 * 1000;
+    // Timezone correction — shifts now to location's local time (DST-correct)
+    const tzDiffMs = (effectiveTz * 60 + now.getTimezoneOffset()) * 60 * 1000;
     const localNow = new Date(now.getTime() + tzDiffMs);
 
     const activeDayIndex = getActiveWeekday(localNow, sr, ss);
