@@ -208,7 +208,7 @@ export default function SaatGrid() {
       {/* Day Hours */}
       <div>
         <p className="font-inter text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: "rgba(212,175,55,0.55)" }}>
-          ☀ {txt("പകൽ 12 ساعة", "Daytime 12 Saat", "Gündüz 12 Saat")} — {txt("സൂര്യോദയം", "Sunrise", "Doğuş")} {formatDecimalHour12h(d.sunrise)} → {txt("അസ്തമയം", "Sunset", "Batış")} {formatDecimalHour12h(d.sunset)}
+          ☀ {txt("പകൽ 12 ساعة", "Daytime 12 Saat", "Gündüz 12 Saat")} — {txt("സൂര്യോദയം", "Sunrise", "Doğuş")} {formatDecimalHour12h(d.sunrise, language)} → {txt("അസ്തമയം", "Sunset", "Batış")} {formatDecimalHour12h(d.sunset, language)}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
           {dayHours.map(renderHour)}
@@ -218,7 +218,7 @@ export default function SaatGrid() {
       {/* Night Hours */}
       <div>
         <p className="font-inter text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: "rgba(129,140,248,0.55)" }}>
-          🌙 {txt("രാത്രി 12 ساعة", "Nighttime 12 Saat", "Gece 12 Saat")} — {txt("അസ്തമയം", "Sunset", "Batış")} {formatDecimalHour12h(d.sunset)} → {txt("സൂര്യോദയം", "Sunrise", "Doğuş")} {formatDecimalHour12h(d.sunrise)}
+          🌙 {txt("രാത്രി 12 ساعة", "Nighttime 12 Saat", "Gece 12 Saat")} — {txt("അസ്തമയം", "Sunset", "Batış")} {formatDecimalHour12h(d.sunset, language)} → {txt("സൂര്യോദയം", "Sunrise", "Doğuş")} {formatDecimalHour12h(d.sunrise, language)}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
           {nightHours.map(renderHour)}

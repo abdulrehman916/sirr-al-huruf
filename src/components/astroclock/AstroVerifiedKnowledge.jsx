@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ShieldCheck, Database, BookOpen, ChevronDown, Sparkles, FileText } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 // ═══════════════════════════════════════════════════════════════
 // AstroVerifiedKnowledge — Knowledge Intelligence Engine reader
@@ -109,6 +110,7 @@ export default function AstroVerifiedKnowledge({ query }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const isOwner = useIsOwner();
 
   useEffect(() => {
     let alive = true;
@@ -133,7 +135,7 @@ export default function AstroVerifiedKnowledge({ query }) {
     return () => { alive = false; };
   }, [query]);
 
-  if (loading || error || !data) return null; // cache miss → existing Astro Clock panels remain
+  if (!isOwner || loading || error || !data) return null; // Owner-only verified-knowledge reader; cache miss → existing Astro Clock panels remain
 
   const entries = data.scholarly_entries || {};
   const sourceBooks = data.source_books || [];

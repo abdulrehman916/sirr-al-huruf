@@ -104,19 +104,19 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
               {/* ── GIH Favorable Properties ── */}
               {language === "en" && gih.favorable_colors?.length > 0 && (
                 <div>
-                  <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("അനുകൂല നിറങ്ങൾ", "Favorable Colors", "Colors")} (GIH p.{gih.source_page})</p>
+                  <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("അനുകൂല നിറങ്ങൾ", "Favorable Colors", "Colors")} {isOwner && <>(GIH p.{gih.source_page})</>}</p>
                   <TagList items={normalizeArray(gih.favorable_colors)} color={G} />
                 </div>
               )}
               {language === "en" && gih.favorable_stones?.length > 0 && (
                 <div>
-                  <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("അനുകൂല രത്നങ്ങൾ", "Favorable Stones", "Stones")} (GIH p.{gih.source_page})</p>
+                  <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("അനുകൂല രത്നങ്ങൾ", "Favorable Stones", "Stones")} {isOwner && <>(GIH p.{gih.source_page})</>}</p>
                   <TagList items={normalizeArray(gih.favorable_stones)} color={G} />
                 </div>
               )}
               {language === "en" && gih.favorable_metals?.length > 0 && (
                 <div>
-                  <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("അനുകൂല ലോഹങ്ങൾ", "Favorable Metals", "Metals")} (GIH p.{gih.source_page})</p>
+                  <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("അനുകൂല ലോഹങ്ങൾ", "Favorable Metals", "Metals")} {isOwner && <>(GIH p.{gih.source_page})</>}</p>
                   <TagList items={normalizeArray(gih.favorable_metals)} color={G} />
                 </div>
               )}
@@ -146,7 +146,7 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
               {/* ── GIH Health Vulnerabilities ── */}
               {language === "en" && gih.health_vulnerabilities_en?.length > 0 && (
                 <div>
-                  <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(248,113,113,0.50)" }}>📖 {txt("ആരോഗ്യ ദൗർബല്യങ്ങൾ", "Health Vulnerabilities", "Health")} (GIH p.{gih.source_page})</p>
+                  <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(248,113,113,0.50)" }}>📖 {txt("ആരോഗ്യ ദൗർബല്യങ്ങൾ", "Health Vulnerabilities", "Health")} {isOwner && <>(GIH p.{gih.source_page})</>}</p>
                   <TagList items={normalizeArray(gih.health_vulnerabilities_en)} color="#F87171" />
                 </div>
               )}
@@ -154,7 +154,7 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
               {/* ── GIH Ritual Timing ── */}
               {language === "en" && gih.ritual_timing_note_en && (
                 <div className="rounded-lg p-2" style={{ background: "rgba(129,140,248,0.04)", border: "1px solid rgba(129,140,248,0.12)" }}>
-                  <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(129,140,248,0.60)" }}>📖 {txt("ആചാര സമയം", "Ritual Timing", "Ritual")} (GIH p.{gih.source_page})</p>
+                  <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(129,140,248,0.60)" }}>📖 {txt("ആചാര സമയം", "Ritual Timing", "Ritual")} {isOwner && <>(GIH p.{gih.source_page})</>}</p>
                   <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>{gih.ritual_timing_note_en}</p>
                   {gih.ritual_day && (
                     <p className="font-inter text-[9px] mt-0.5" style={{ color: "rgba(129,140,248,0.50)" }}>{txt("ദിവസം", "Day", "Day")}: {gih.ritual_day}</p>
@@ -179,8 +179,8 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
               {/* ── GIH Zodiac Relationship (p.1418) ── */}
               {gihRel && (
                 <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                  <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("സുഹൃത്", "Friend", "Friend")} (p.{gihRel.source_page}): </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? zodiacEnToML(gihRel.friendly_sign_en) : gihRel.friendly_sign_en}</span></div>
-                  <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("ശത്രു", "Enemy", "Enemy")} (p.{gihRel.source_page}): </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? zodiacEnToML(gihRel.enemy_sign_en) : gihRel.enemy_sign_en}</span></div>
+                  <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("സുഹൃത്", "Friend", "Friend")} {isOwner && <>(p.{gihRel.source_page})</>}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? zodiacEnToML(gihRel.friendly_sign_en) : gihRel.friendly_sign_en}</span></div>
+                  <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("ശത്രു", "Enemy", "Enemy")} {isOwner && <>(p.{gihRel.source_page})</>}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? zodiacEnToML(gihRel.enemy_sign_en) : gihRel.enemy_sign_en}</span></div>
                 </div>
               )}
 
@@ -205,10 +205,10 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
                 return (
                   <div className="flex flex-wrap gap-1">
                     {classifications.map((c, i) => (
-                      <span key={i} className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.08)", color: "rgba(212,175,55,0.70)" }}>📖 {c.label} <span style={{ color: "rgba(74,222,128,0.35)" }}>p.{c.page}</span></span>
+                      <span key={i} className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.08)", color: "rgba(212,175,55,0.70)" }}>{isOwner && "📖 "}{c.label} {isOwner && <span style={{ color: "rgba(74,222,128,0.35)" }}>p.{c.page}</span>}</span>
                     ))}
                     {horizonMin && (
-                      <span className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(129,140,248,0.08)", color: "rgba(129,140,248,0.70)" }}>📖 {txt("ഷാഫക് സമയം", "Horizon Duration", "Horizon")}: {horizonMin}m <span style={{ color: "rgba(74,222,128,0.35)" }}>p.1419</span></span>
+                      <span className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(129,140,248,0.08)", color: "rgba(129,140,248,0.70)" }}>{isOwner && "📖 "}{txt("ഷാഫക് സമയം", "Horizon Duration", "Horizon")}: {horizonMin}m {isOwner && <span style={{ color: "rgba(74,222,128,0.35)" }}>p.1419</span>}</span>
                     )}
                   </div>
                 );
@@ -221,8 +221,8 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
                 if (!elemRel) return null;
                 return (
                   <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                    <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("മൂലക സുഹൃത്", "Elem. Friend", "Elem Friend")} (p.{elemRel.source_page}): </span><span style={{ color: "rgba(74,222,128,0.70)" }}>{language === "ml" ? elementToML(elemRel.friend) : elemRel.friend}</span></div>
-                    <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("മൂലക ശത്രു", "Elem. Enemy", "Elem Enemy")} (p.{elemRel.source_page}): </span><span style={{ color: "rgba(248,113,113,0.70)" }}>{language === "ml" ? elementToML(elemRel.enemy) : elemRel.enemy}</span></div>
+                    <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("മൂലക സുഹൃത്", "Elem. Friend", "Elem Friend")} {isOwner && <>(p.{elemRel.source_page})</>}: </span><span style={{ color: "rgba(74,222,128,0.70)" }}>{language === "ml" ? elementToML(elemRel.friend) : elemRel.friend}</span></div>
+                    <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("മൂലക ശത്രു", "Elem. Enemy", "Elem Enemy")} {isOwner && <>(p.{elemRel.source_page})</>}: </span><span style={{ color: "rgba(248,113,113,0.70)" }}>{language === "ml" ? elementToML(elemRel.enemy) : elemRel.enemy}</span></div>
                   </div>
                 );
               })()}
@@ -233,7 +233,7 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
                 if (!house) return null;
                 return (
                   <div className="rounded-lg p-2" style={{ background: "rgba(129,140,248,0.04)", border: "1px solid rgba(129,140,248,0.12)" }}>
-                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(129,140,248,0.60)" }}>📖 {txt("12-ാം ഭവനം", "12th House Rulership", "12th House")} (GIH p.{GIH_TWELVE_HOUSES.source_page})</p>
+                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(129,140,248,0.60)" }}>📖 {txt("12-ാം ഭവനം", "12th House Rulership", "12th House")} {isOwner && <>(GIH p.{GIH_TWELVE_HOUSES.source_page})</>}</p>
                     <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>#{house.hane} — {txt("ഭവനം", "House", "House")} · {txt("ഗ്രഹം", "Planet", "Planet")}: {language === "ml" ? (PLANET_AR_ML[house.planet_en?.toLowerCase()]?.ml || house.planet_en) : house.planet_en}</p>
                   </div>
                 );
@@ -245,7 +245,7 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
                 if (!ritual || language !== "en") return null;
                 return (
                   <div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.15)" }}>
-                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("ആചാര തൂപം", "Ritual Incense", "Ritual Incense")} (GIH p.{ritual.source_page})</p>
+                    <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("ആചാര തൂപം", "Ritual Incense", "Ritual Incense")} {isOwner && <>(GIH p.{ritual.source_page})</>}</p>
                     <p className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.55)" }}>{txt("തൂപം", "Incense", "Incense")}: {ritual.incense.join(", ")}</p>
                     <p className="font-inter text-[9px]" style={{ color: "rgba(129,140,248,0.55)" }}>{txt("സമയം", "Timing", "Timing")}: {ritual.timing}</p>
                   </div>

@@ -130,7 +130,7 @@ export default function TodayDashboard() {
           <span className="font-inter text-[10px] ml-2" style={{ color: "rgba(255,255,255,0.50)" }}>{verdictSub}</span>
         </div>
         <span className="font-inter text-[10px] flex-shrink-0 hidden sm:block" style={{ color: "rgba(255,255,255,0.40)" }}>
-          {txt("സൂര്യോദയം", "Sunrise", "Doğuş")}: {formatDecimalHour12h(d.sunrise)} · {txt("അസ്തമയം", "Sunset", "Batış")}: {formatDecimalHour12h(d.sunset)}
+          {txt("സൂര്യോദയം", "Sunrise", "Doğuş")}: {formatDecimalHour12h(d.sunrise, language)} · {txt("അസ്തമയം", "Sunset", "Batış")}: {formatDecimalHour12h(d.sunset, language)}
         </span>
       </div>
 
