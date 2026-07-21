@@ -8,6 +8,7 @@ import PageLayout from "@/components/PageLayout";
 import PageTitle from "@/components/PageTitle";
 import SectionDLibrary from "@/components/sectiond/SectionDLibrary";
 import SectionDVisualIntegrator from "@/components/sectiond/SectionDVisualIntegrator";
+import SirrManuscriptLibrary from "@/components/sirr/SirrManuscriptLibrary";
 import { useAuth } from "@/lib/AuthContext";
 import { isAdminRole } from "@/lib/rbac";
 
@@ -26,6 +27,9 @@ export default function SectionDPage() {
         />
         {canManage && <SectionDVisualIntegrator />}
         <SectionDLibrary />
+
+        {/* Sirr Manuscript Library — migrated UI (reads SirrManuscriptBook/SirrManuscriptEntry) */}
+        <SirrManuscriptLibrary />
       </div>
     </PageLayout>
   );
