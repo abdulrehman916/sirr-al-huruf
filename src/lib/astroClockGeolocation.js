@@ -17,6 +17,8 @@
  * Timezone = device offset (DST-aware via getTimezoneOffset), NOT a longitude
  * estimate. No calculation formulas live here — only the location SOURCE.
  */
+import tzLookup from "tz-lookup";
+
 const STORAGE_KEY = "astro_clock_location";
 
 const DUBAI_DEFAULT = Object.freeze({
@@ -62,15 +64,28 @@ function deviceIana() {
   try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (_) { return undefined; }
 }
 
-// Location-aware timezone from longitude (solar/nautical offset). Used for
-// free-form manual coordinates where no curated civil offset exists.
-// Astronomically correct for sunrise/sunset — planetary hours are solar time,
-// so the longitude-based offset matches the sun's actual position at that place.
-// GPS users keep the device offset (DST-aware, correct for physical location);
-// preset cities keep their curated offset. No external API.
+// Location-aware timezone from longitude (solar/nautical offset). Used ONLY as
+// a last-resort numeric fallback when no IANA timezone can be resolved.
 export function timezoneFromLng(lng) {
   if (typeof lng !== "number" || !isFinite(lng)) return 0;
   return Math.round(lng / 15);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OFFLINE LAT/LNG → IANA TIMEZONE RESOLVER (tz-lookup spatial tz database)
+// Returns the authoritative IANA timezone name (e.g. "America/New_York",
+// "Europe/London", "Asia/Kolkata") for ANY coordinate on Earth — no network,
+// no API, no manual offset tables. The browser's built-in Intl tz database then
+// applies the correct historical + current DST rules for that zone at the
+// selected date. This is the single source of truth used by GPS, preset cities,
+// and free-form manual coordinates alike, so identical (lat, lng, date) always
+// resolve to the identical timezone and identical astronomical results.
+// ─────────────────────────────────────────────────────────────────────────────
+export function ianaFromCoords(lat, lng) {
+  try {
+    const tz = tzLookup(lat, lng);
+    return (typeof tz === "string" && tz) ? tz : undefined;
+  } catch (_) { return undefined; }
 }
 
 function notify() {
@@ -79,11 +94,14 @@ function notify() {
 }
 
 function buildGpsLoc(latitude, longitude) {
+  // Resolve IANA tz from the GPS coordinates (spatial tz database). This is the
+  // SAME resolver used for manual coords → identical coords produce identical tz.
+  // Device IANA is kept only as a fallback if the spatial lookup fails.
   return {
     lat: latitude,
     lng: longitude,
     timezone: deviceTimezone(),
-    tz: deviceIana(),
+    tz: ianaFromCoords(latitude, longitude) || deviceIana(),
     name: `${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`,
     isDefault: false,
     source: "gps",
@@ -106,20 +124,24 @@ export function subscribeLocation(fn) {
 
 export function setManualLocation(loc) {
   if (!loc || typeof loc.lat !== "number" || typeof loc.lng !== "number") return;
-  // Location-aware timezone: explicit offset (preset city) → use it; otherwise
-  // derive from longitude so any free-form coordinate gets a sane solar offset.
-  const tz = (typeof loc.timezone === "number") ? loc.timezone : timezoneFromLng(loc.lng);
-  const next = { ...loc, timezone: tz, isDefault: false, source: "manual" };
+  // Resolve IANA tz: an explicit tz from a preset wins; otherwise resolve from
+  // the coordinates via the spatial tz database so any free-form coordinate gets
+  // the correct DST-aware civil timezone. Numeric offset is a last-resort fallback.
+  const tz = (typeof loc.tz === "string" && loc.tz) ? loc.tz : ianaFromCoords(loc.lat, loc.lng);
+  const numericOffset = (typeof loc.timezone === "number") ? loc.timezone : timezoneFromLng(loc.lng);
+  const next = { ...loc, tz, timezone: numericOffset, isDefault: false, source: "manual" };
   writePersisted(next);
   notify();
 }
 
 // Free-form manual location from raw coordinates — supports ANY place on Earth,
-// not only the preset city list. Timezone is derived from longitude.
+// not only the preset city list. IANA timezone is resolved from the coordinates
+// via the spatial tz database (DST-aware); numeric offset is the fallback.
 export function setManualLocationByCoords(lat, lng, name) {
   if (typeof lat !== "number" || typeof lng !== "number") return;
   setManualLocation({
     lat, lng,
+    tz: ianaFromCoords(lat, lng),
     timezone: timezoneFromLng(lng),
     name: name || `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`,
     source: "manual",
