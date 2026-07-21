@@ -18,6 +18,19 @@ import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { useEntityKnowledge } from "@/hooks/useEntityKnowledge";
 import { normalizeDisplay } from "@/lib/astroClockLanguageNormalizer";
 
+// UI-only Malayalam labels for the 9 knowledge categories (logic/sort keys stay English).
+const CATEGORY_LABEL_ML = {
+  properties: "ഗുണങ്ങൾ",
+  traits: "സവിശേഷതകൾ",
+  timing_rules: "സമയ നിയമങ്ങൾ",
+  ritual_instructions: "ആചാര നിർദ്ദേശങ്ങൾ",
+  incense: "തൂപം",
+  health: "ആരോഗ്യം",
+  general: "പൊതു",
+  warnings: "മുന്നറിയിപ്പുകൾ",
+  relationships: "ബന്ധങ്ങൾ",
+};
+
 export default function EntityKnowledgePanel({ entityType, entityKey }) {
   const { txt, language } = useAstroClockLanguage();
   const { knowledge, loading } = useEntityKnowledge(entityType, entityKey);
@@ -72,7 +85,7 @@ export default function EntityKnowledgePanel({ entityType, entityKey }) {
               }}>
                 {rec.knowledge_category && rec.knowledge_category !== 'general' && (
                   <span className="font-inter text-[8px] uppercase tracking-wider font-bold mb-1 block" style={{ color: "rgba(129,140,248,0.50)" }}>
-                    {rec.knowledge_category}
+                    {CATEGORY_LABEL_ML[rec.knowledge_category] || rec.knowledge_category}
                   </span>
                 )}
                 {/* Split merged text by separator and show each piece */}

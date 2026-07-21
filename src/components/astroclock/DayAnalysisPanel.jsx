@@ -26,6 +26,15 @@ const WEEKDAYS = [
   { id: 6, name: "Saturday", arabic: "السبت", malayalam: "ശനിയാഴ്ച", planet: "Saturn" }
 ];
 
+const PLANET_ML = {
+  Sun: "സൂര്യൻ", Moon: "ചന്ദ്രൻ", Mars: "ചൊവ്വ", Mercury: "ബുധൻ",
+  Jupiter: "ഗുരു", Venus: "ശുക്രൻ", Saturn: "ശനി"
+};
+const DAY_EN_ML = {
+  Sunday: "ഞായർ", Monday: "തിങ്കൾ", Tuesday: "ചൊവ്വ", Wednesday: "ബുധൻ",
+  Thursday: "വ്യാഴം", Friday: "വെള്ളി", Saturday: "ശനി"
+};
+
 export default function DayAnalysisPanel() {
   const [selectedDay, setSelectedDay] = useState(new Date().getDay());
 
@@ -48,7 +57,7 @@ export default function DayAnalysisPanel() {
         <div className="flex items-center gap-3 mb-4">
           <Calendar className="w-6 h-6" style={{ color: G.text }} />
           <h2 className="font-inter text-xl font-bold uppercase tracking-widest" style={{ color: G.text }}>
-            Day Analysis
+            ദിവസ വിശകലനം
           </h2>
         </div>
 
@@ -66,9 +75,9 @@ export default function DayAnalysisPanel() {
               }}
             >
               <p className="font-inter text-[8px] uppercase tracking-wider mb-1" style={{ color: G.dim }}>
-                {day.planet}
+                {PLANET_ML[day.planet] || day.planet}
               </p>
-              <p className="font-inter text-[9px] font-bold text-white">{day.name.slice(0, 3)}</p>
+              <p className="font-inter text-[9px] font-bold text-white">{day.malayalam}</p>
             </button>
           ))}
         </div>
@@ -81,10 +90,10 @@ export default function DayAnalysisPanel() {
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <p className="font-inter text-[9px] uppercase tracking-widest mb-1" style={{ color: G.dim }}>
-                    Planet Ruler
+                    ദിനത്തിന്റെ ഗ്രഹം
                   </p>
                   <p className="font-inter text-lg font-bold" style={{ color: getPlanetColor(dayInfo.planet) }}>
-                    {dayInfo.planet}
+                    {PLANET_ML[dayInfo.planet] || dayInfo.planet}
                   </p>
                 </div>
                 <div className="text-right">
@@ -99,24 +108,24 @@ export default function DayAnalysisPanel() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-lg" style={{ background: "rgba(34,197,94,0.05)" }}>
                   <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.success }}>
-                    Friendly Days
+                    അനുകൂല ദിനങ്ങൾ
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {(dayData.friendlyDays || []).map((d, idx) => (
                       <span key={idx} className="px-2 py-1 rounded text-[10px]" style={{ background: G.bg, color: G.text }}>
-                        {d}
+                        {DAY_EN_ML[d] || d}
                       </span>
                     ))}
                   </div>
                 </div>
                 <div className="p-3 rounded-lg" style={{ background: "rgba(239,68,68,0.05)" }}>
                   <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.danger }}>
-                    Enemy Days
+                    പ്രതികൂല ദിനങ്ങൾ
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {(dayData.enemyDays || []).map((d, idx) => (
                       <span key={idx} className="px-2 py-1 rounded text-[10px]" style={{ background: G.bg, color: G.text }}>
-                        {d}
+                        {DAY_EN_ML[d] || d}
                       </span>
                     ))}
                   </div>
@@ -128,25 +137,25 @@ export default function DayAnalysisPanel() {
             <div className="grid grid-cols-2 gap-3">
               <ActivityCard
                 icon={Briefcase}
-                title="Business"
+                title="വ്യാപാരം"
                 content={dayData.business}
                 color={G.success}
               />
               <ActivityCard
                 icon={Heart}
-                title="Love & Marriage"
+                title="പ്രണയവും വിവാഹവും"
                 content={`${dayData.love} • ${dayData.marriage}`}
                 color={G.text}
               />
               <ActivityCard
                 icon={Plane}
-                title="Travel"
+                title="യാത്ര"
                 content={dayData.travel}
                 color={G.dim}
               />
               <ActivityCard
                 icon={Shield}
-                title="Healing"
+                title="ചികിത്സ"
                 content={dayData.healing}
                 color={G.success}
               />
@@ -156,7 +165,7 @@ export default function DayAnalysisPanel() {
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 rounded-lg" style={{ background: "rgba(34,197,94,0.05)" }}>
                 <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.success }}>
-                  Good Works
+                  ചെയ്യാൻ അനുയോജ്യമായ കാര്യങ്ങൾ
                 </p>
                 <ul className="space-y-1">
                   {(dayData.goodWorks || []).map((work, idx) => (
@@ -166,7 +175,7 @@ export default function DayAnalysisPanel() {
               </div>
               <div className="p-3 rounded-lg" style={{ background: "rgba(239,68,68,0.05)" }}>
                 <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.danger }}>
-                  Bad Works
+                  ഒഴിവാക്കേണ്ട കാര്യങ്ങൾ
                 </p>
                 <ul className="space-y-1">
                   {(dayData.badWorks || []).map((work, idx) => (
@@ -181,11 +190,11 @@ export default function DayAnalysisPanel() {
               <div className="flex items-center gap-2 mb-3">
                 <BookOpen className="w-4 h-4" style={{ color: G.dim }} />
                 <p className="font-inter text-[9px] uppercase tracking-widest" style={{ color: G.dim }}>
-                  Spiritual Operations
+                  ആത്മീയ പ്രവർത്തനങ്ങൾ
                 </p>
               </div>
               <p className="font-inter text-sm text-white/80 mb-2">{dayData.spiritual}</p>
-              <p className="font-inter text-[10px] text-white/40">Source: {dayData.source}</p>
+              <p className="font-inter text-[10px] text-white/40">സ്രോതസ്സ്: {dayData.source}</p>
             </div>
 
             {/* Malayalam Explanation */}
@@ -211,7 +220,7 @@ function ActivityCard({ icon: Icon, title, content, color }) {
           {title}
         </p>
       </div>
-      <p className="font-inter text-xs text-white/80">{content || "No specific guidance"}</p>
+      <p className="font-inter text-xs text-white/80">{content || "പ്രത്യേക നിർദ്ദേശമില്ല"}</p>
     </div>
   );
 }

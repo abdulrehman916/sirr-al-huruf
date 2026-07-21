@@ -232,7 +232,7 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
                 return (
                   <div className="rounded-lg p-2" style={{ background: "rgba(129,140,248,0.04)", border: "1px solid rgba(129,140,248,0.12)" }}>
                     <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(129,140,248,0.60)" }}>📖 {txt("12-ാം ഭവനം", "12th House Rulership", "12th House")} (GIH p.{GIH_TWELVE_HOUSES.source_page})</p>
-                    <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>#{house.hane} — {house.title_tr} · {txt("ഗ്രഹം", "Planet", "Planet")}: {house.planet_en}</p>
+                    <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>#{house.hane} — {txt("ഭവനം", "House", "House")} · {txt("ഗ്രഹം", "Planet", "Planet")}: {house.planet_en}</p>
                   </div>
                 );
               })()}
