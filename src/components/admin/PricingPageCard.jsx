@@ -28,6 +28,7 @@ import { invalidateFeatureConfigCache } from "@/lib/featureConfigCache";
 import { invalidatePlanCache } from "@/lib/subscriptionPlanCache";
 import { formatPrice, isSaleActive, getEffectivePrice, formatDuration, inferDurationType } from "@/lib/pricingUtils";
 import PricingPlanEditor from "./PricingPlanEditor";
+import ChildPagePlansSection from "./ChildPagePlansSection";
 
 const G = {
   border: "rgba(212,175,55,0.30)",
@@ -314,10 +315,10 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
               {/* ── Plans Section ── */}
               <div className="pt-1 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
                 {isMultiFeature ? (
-                  /* Multi-feature: plans per feature */
+                  /* Multi-feature: plans per feature (A/B) + child pages (C/D) in one continuous list */
                   <div className="space-y-3">
                     <span className="text-[10px] text-white/40 uppercase tracking-wider font-semibold block mb-1">
-                      Features & Plans ({features.length} features)
+                      Features & Plans ({features.length + (childPages?.length || 0)})
                     </span>
                     {features.map((feature) => {
                       const featureConfig = configs?.find((c) => c.feature_id === feature.id);
@@ -334,6 +335,17 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
                         />
                       );
                     })}
+                    {childPages?.map((cp) => (
+                      <ChildPagePlansSection
+                        key={cp.pagePath}
+                        pagePath={cp.pagePath}
+                        pageName={cp.pageName}
+                        pageIcon={cp.pageIcon}
+                        visibilityConfig={cp.visibilityConfig}
+                        plans={cp.plans || []}
+                        onSaved={cp.onSaved}
+                      />
+                    ))}
                   </div>
                 ) : (
                   /* Single-feature: plans at FULL_PAGE level */
@@ -348,31 +360,6 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
                 )}
               </div>
 
-              {/* ── Child Pages Section (UI hierarchy ONLY) ── */}
-              {/* Each child keeps its OWN route, PageVisibilityConfig, price, plan,
-                  access code, permission, visibility, display order, RBAC, and
-                  payment settings. The parent is a visual container — nothing merged. */}
-              {childPages?.length > 0 && (
-                <div className="pt-1 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-                  <span className="text-[10px] text-white/40 uppercase tracking-wider font-semibold block mb-1">
-                    Child Pages ({childPages.length})
-                  </span>
-                  <div className="space-y-2 pl-3" style={{ borderLeft: `1px solid ${G.border}` }}>
-                    {childPages.map((cp) => (
-                      <PricingPageCard
-                        key={cp.pagePath}
-                        pagePath={cp.pagePath}
-                        pageName={cp.pageName}
-                        pageIcon={cp.pageIcon}
-                        visibilityConfig={cp.visibilityConfig}
-                        configs={cp.configs || []}
-                        plans={cp.plans || []}
-                        onSaved={cp.onSaved}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </motion.div>
         )}
