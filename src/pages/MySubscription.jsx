@@ -46,7 +46,7 @@ function SubscribeModal({ plan, onClose, onSuccess }) {
 
   const handleSubscribe = () => {
     onClose();
-    window.location.href = `/payment/${plan.plan_id}`;
+    window.location.href = '/premium/request';
   };
 
   const PlanIcon = PLAN_ICONS[plan.plan_name] || Star;
@@ -137,7 +137,6 @@ export default function MySubscription() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ subscriptions: [], all_subscriptions: [], permissions: [], plans: [] });
   const [subscribing, setSubscribing] = useState(null);
-  const [showHistory, setShowHistory] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -156,8 +155,6 @@ export default function MySubscription() {
   const { subscriptions, all_subscriptions, permissions, plans } = data;
   const activeSubs = subscriptions;
   const expiredSubs = all_subscriptions.filter(s => s.status !== "ACTIVE" || (s.expiry_date && new Date(s.expiry_date) < new Date()));
-  const paymentHistory = all_subscriptions.filter(s => s.razorpay_payment_id || s.stripe_payment_intent_id).sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
-
   if (loading) return (
     <PageLayout>
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -288,52 +285,6 @@ export default function MySubscription() {
           <div className="text-center py-16" style={{ color: "rgba(255,255,255,0.25)" }}>
             <CreditCard className="w-14 h-14 mx-auto mb-4 opacity-20" />
             <p className="text-sm">No subscriptions or plans available yet.</p>
-          </div>
-        )}
-
-        {/* Payment History */}
-        {paymentHistory.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="font-inter font-bold text-white text-sm flex items-center gap-2">
-                <History className="w-4 h-4" style={{ color: G.text }} /> Payment History
-              </h2>
-              <button onClick={() => setShowHistory(!showHistory)} className="text-xs px-3 py-1.5 rounded-lg"
-                style={{ background: G.bgHi, border: `1px solid ${G.borderHi}`, color: G.text }}>
-                {showHistory ? "Hide" : `Show All (${paymentHistory.length})`}
-              </button>
-            </div>
-            <div className="space-y-2">
-              {(showHistory ? paymentHistory : paymentHistory.slice(0, 3)).map(sub => {
-                const gateway = sub.payment_gateway || (sub.razorpay_payment_id ? "razorpay" : "stripe");
-                const paymentId = gateway === "razorpay" ? sub.razorpay_payment_id : sub.stripe_payment_intent_id;
-                return (
-                  <div key={sub.id} className="rounded-xl border p-3"
-                    style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)" }}>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded text-xs font-semibold"
-                            style={{ background: gateway === "razorpay" ? "rgba(79, 164, 244, 0.12)" : "rgba(100, 115, 255, 0.12)", color: gateway === "razorpay" ? "#4FA4F4" : "#6473FF" }}>
-                            {gateway === "razorpay" ? "Razorpay" : "Stripe"}
-                          </span>
-                          <p className="font-inter font-semibold text-white/70 text-sm">{sub.page_name}</p>
-                        </div>
-                        <p className="text-xs text-white/30 mt-1">{new Date(sub.start_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</p>
-                        <p className="text-xs text-white/25 mt-0.5 font-mono">{paymentId}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-white">{sub.currency} {sub.amount}</p>
-                        <span className="px-2 py-0.5 rounded text-xs font-semibold"
-                          style={{ background: "rgba(34,197,94,0.10)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.20)" }}>
-                          {sub.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         )}
 
