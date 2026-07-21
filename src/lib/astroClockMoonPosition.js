@@ -83,6 +83,9 @@ export function calculateMoonPosition(date) {
     latitude: latitude.toFixed(2),
     distance: distance.toFixed(3),
     phase: (phase * 100).toFixed(1),
+    // Mean elongation D (0..360) determines waxing (0<D<180) vs waning (180<D<360).
+    // Illumination % alone cannot distinguish the two halves — both give the same value.
+    isWaxing: D > 0 && D < 180,
     mansion: mansion,
     zodiacSign: getZodiacSign(longitude),
     nakshatra: mansion?.name_en || 'Unknown',
@@ -279,15 +282,29 @@ function getZodiacSigns() {
 // ─────────────────────────────────────────────────────────────────────────────
 // MOON PHASE DESCRIPTION
 // ─────────────────────────────────────────────────────────────────────────────
-export function getMoonPhaseDescription(phase) {
+export function getMoonPhaseDescription(phase, isWaxing) {
   const phasePercent = parseFloat(phase);
-  
+
+  // New / Full are illumination-only (unambiguous at the cycle extremes).
   if (phasePercent < 5) return { en: 'New Moon', ml: 'അമാവാസി' };
-  if (phasePercent < 25) return { en: 'Waxing Crescent', ml: 'വളരുന്ന പിറവം' };
-  if (phasePercent < 50) return { en: 'First Quarter', ml: 'പകുതി പിറവം' };
-  if (phasePercent < 75) return { en: 'Waxing Gibbous', ml: 'കുത്തുപിറവം' };
-  if (phasePercent < 95) return { en: 'Full Moon', ml: 'പൗർണ്ണമി' };
-  if (phasePercent < 100) return { en: 'Waning Gibbous', ml: 'തേയുന്ന പിറവം' };
-  if (phasePercent < 100) return { en: 'Last Quarter', ml: 'പകുതി തേയുന്ന' };
-  return { en: 'Waning Crescent', ml: 'തേയുന്ന പിറവം' };
+  if (phasePercent >= 95) return { en: 'Full Moon', ml: 'പൗർണ്ണമി' };
+
+  // Waxing/waning from the mean elongation (D in 0..360):
+  //   waxing  = 0  < D < 180   (New → Full)
+  //   waning = 180 < D < 360  (Full → New)
+  // The previous implementation labelled the ENTIRE waning half as waxing
+  // (e.g. Last Quarter → "First Quarter", Waning Crescent → "Waxing Crescent")
+  // because it used illumination % alone, which is identical for both halves.
+  // `isWaxing` is passed from calculateMoonPosition (which has D); when a
+  // legacy caller omits it, we default to waxing to preserve prior behavior.
+  const waxing = isWaxing !== undefined ? isWaxing : true;
+
+  if (waxing) {
+    if (phasePercent < 25) return { en: 'Waxing Crescent', ml: 'വളരുന്ന പിറവം' };
+    if (phasePercent < 50) return { en: 'First Quarter', ml: 'പകുതി പിറവം' };
+    return { en: 'Waxing Gibbous', ml: 'കുത്തുപിറവം' };
+  }
+  if (phasePercent < 25) return { en: 'Waning Crescent', ml: 'തേയുന്ന പിറവം' };
+  if (phasePercent < 50) return { en: 'Last Quarter', ml: 'പകുതി തേയുന്ന' };
+  return { en: 'Waning Gibbous', ml: 'തേയുന്ന പിറവം' };
 }

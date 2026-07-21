@@ -92,7 +92,7 @@ export function useAstroData() {
     try {
       moonPosition = calculateMoonPosition(now);
       moonTransits = calculateMoonTransits(now);
-      moonPhaseDesc = getMoonPhaseDescription(moonPosition.phase);
+      moonPhaseDesc = getMoonPhaseDescription(moonPosition.phase, moonPosition.isWaxing);
     } catch (_) { moonPosition = null; }
 
     const moonZodiacKey = moonPosition?.zodiacSign?.name_en?.toLowerCase();
