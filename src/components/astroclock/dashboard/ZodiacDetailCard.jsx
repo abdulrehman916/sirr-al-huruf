@@ -6,7 +6,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
-import { zodiacEnToML, signsToML } from "@/lib/astroClockLabelMap";
+import { zodiacEnToML, signsToML, elementToML, PLANET_AR_ML } from "@/lib/astroClockLabelMap";
 import { GIH_SIGN_PROPERTIES, GIH_ZODIAC_RELATIONSHIPS, GIH_ZODIAC_PROPERTIES, GIH_ELEMENT_RELATIONSHIPS, GIH_TWELVE_HOUSES, GIH_RITUAL_INCENSE } from "@/lib/gizliIlimlerHazinesiZodiacData";
 import EntityKnowledgePanel from "./EntityKnowledgePanel";
 import MagicalPeriodPanel from "./MagicalPeriodPanel";
@@ -128,7 +128,7 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
                   <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("സംഖ്യ", "Number", "Number")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{gih.favorable_number}</span></div>
                 )}
                 {gih.favorable_hour_planet && (
-                  <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("ഗ്രഹമണിക്കൂർ", "Hour Planet", "Hour")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{gih.favorable_hour_planet}</span></div>
+                  <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("ഗ്രഹമണിക്കൂർ", "Hour Planet", "Hour")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? (PLANET_AR_ML[gih.favorable_hour_planet?.toLowerCase()]?.ml || gih.favorable_hour_planet) : gih.favorable_hour_planet}</span></div>
                 )}
                 {gih.favorable_months?.length > 0 && (
                   <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("മാസങ്ങൾ", "Months", "Months")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{gih.favorable_months.join(", ")}</span></div>
@@ -165,11 +165,11 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
                 <div className="grid grid-cols-2 gap-1.5">
                   <div className="rounded p-1.5" style={{ background: "rgba(74,222,128,0.04)" }}>
                     <p className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: "rgba(74,222,128,0.50)" }}>📖 {txt("അനുയോജ്യം (GIH)", "Compatible (GIH)", "Compatible")}</p>
-                    <p className="font-inter text-[9px]" style={{ color: "rgba(74,222,128,0.70)" }}>{gih.compatible_signs_en.join(", ")}</p>
+                    <p className="font-inter text-[9px]" style={{ color: "rgba(74,222,128,0.70)" }}>{language === "ml" ? signsToML(gih.compatible_signs_en).join(", ") : gih.compatible_signs_en.join(", ")}</p>
                   </div>
                   <div className="rounded p-1.5" style={{ background: "rgba(248,113,113,0.04)" }}>
                     <p className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: "rgba(248,113,113,0.50)" }}>📖 {txt("അനനുകൂലം (GIH)", "Incompatible (GIH)", "Incompatible")}</p>
-                    <p className="font-inter text-[9px]" style={{ color: "rgba(248,113,113,0.70)" }}>{gih.incompatible_signs_en?.join(", ") || "—"}</p>
+                    <p className="font-inter text-[9px]" style={{ color: "rgba(248,113,113,0.70)" }}>{language === "ml" ? (signsToML(gih.incompatible_signs_en || []).join(", ") || "—") : (gih.incompatible_signs_en?.join(", ") || "—")}</p>
                   </div>
                 </div>
               )}
@@ -177,8 +177,8 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
               {/* ── GIH Zodiac Relationship (p.1418) ── */}
               {gihRel && (
                 <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                  <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("സുഹൃത്", "Friend", "Friend")} (p.{gihRel.source_page}): </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{gihRel.friendly_sign_en}</span></div>
-                  <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("ശത്രു", "Enemy", "Enemy")} (p.{gihRel.source_page}): </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{gihRel.enemy_sign_en}</span></div>
+                  <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("സുഹൃത്", "Friend", "Friend")} (p.{gihRel.source_page}): </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? zodiacEnToML(gihRel.friendly_sign_en) : gihRel.friendly_sign_en}</span></div>
+                  <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("ശത്രു", "Enemy", "Enemy")} (p.{gihRel.source_page}): </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? zodiacEnToML(gihRel.enemy_sign_en) : gihRel.enemy_sign_en}</span></div>
                 </div>
               )}
 
@@ -190,10 +190,10 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
                 if (props.munkalibe_signs.signs.includes(signName)) classifications.push({ label: txt("മാറ്റായ്വരുന്ന", "Cardinal", "Cardinal"), page: props.munkalibe_signs.source_page });
                 if (props.sabite_signs.signs.includes(signName)) classifications.push({ label: txt("സ്ഥിരം", "Fixed", "Fixed"), page: props.sabite_signs.source_page });
                 if (props.mumtezic_signs.signs.includes(signName)) classifications.push({ label: txt("മിശ്രം", "Mutable", "Mutable"), page: props.mumtezic_signs.source_page });
-                if (props.nar_teslisler.signs.includes(signName)) classifications.push({ label: `${props.nar_teslisler.element} ${txt("ത്രികോണം", "Triplicity", "Triplicity")}`, page: props.nar_teslisler.source_page });
-                if (props.turab_teslisler.signs.includes(signName)) classifications.push({ label: `${props.turab_teslisler.element} ${txt("ത്രികോണം", "Triplicity", "Triplicity")}`, page: props.turab_teslisler.source_page });
-                if (props.heva_teslisler.signs.includes(signName)) classifications.push({ label: `${props.heva_teslisler.element} ${txt("ത്രികോണം", "Triplicity", "Triplicity")}`, page: props.heva_teslisler.source_page });
-                if (props.maiyye_teslisler.signs.includes(signName)) classifications.push({ label: `${props.maiyye_teslisler.element} ${txt("ത്രികോണം", "Triplicity", "Triplicity")}`, page: props.maiyye_teslisler.source_page });
+                if (props.nar_teslisler.signs.includes(signName)) classifications.push({ label: `${language === "ml" ? elementToML(props.nar_teslisler.element) : props.nar_teslisler.element} ${txt("ത്രികോണം", "Triplicity", "Triplicity")}`, page: props.nar_teslisler.source_page });
+                if (props.turab_teslisler.signs.includes(signName)) classifications.push({ label: `${language === "ml" ? elementToML(props.turab_teslisler.element) : props.turab_teslisler.element} ${txt("ത്രികോണം", "Triplicity", "Triplicity")}`, page: props.turab_teslisler.source_page });
+                if (props.heva_teslisler.signs.includes(signName)) classifications.push({ label: `${language === "ml" ? elementToML(props.heva_teslisler.element) : props.heva_teslisler.element} ${txt("ത്രികോണം", "Triplicity", "Triplicity")}`, page: props.heva_teslisler.source_page });
+                if (props.maiyye_teslisler.signs.includes(signName)) classifications.push({ label: `${language === "ml" ? elementToML(props.maiyye_teslisler.element) : props.maiyye_teslisler.element} ${txt("ത്രികോണം", "Triplicity", "Triplicity")}`, page: props.maiyye_teslisler.source_page });
                 if (props.masculine_signs.signs.includes(signName)) classifications.push({ label: txt("പുരുഷ/പകൽ", "Masculine/Day", "Masculine"), page: props.masculine_signs.source_page });
                 if (props.feminine_signs.signs.includes(signName)) classifications.push({ label: txt("സ്ത്രീ/രാത്രി", "Feminine/Night", "Feminine"), page: props.feminine_signs.source_page });
                 if (props.northern_signs.signs.includes(signName)) classifications.push({ label: txt("വടക്കൻ", "Northern", "Northern"), page: props.northern_signs.source_page });
@@ -219,8 +219,8 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
                 if (!elemRel) return null;
                 return (
                   <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                    <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("മൂലക സുഹൃത്", "Elem. Friend", "Elem Friend")} (p.{elemRel.source_page}): </span><span style={{ color: "rgba(74,222,128,0.70)" }}>{elemRel.friend}</span></div>
-                    <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("മൂലക ശത്രു", "Elem. Enemy", "Elem Enemy")} (p.{elemRel.source_page}): </span><span style={{ color: "rgba(248,113,113,0.70)" }}>{elemRel.enemy}</span></div>
+                    <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("മൂലക സുഹൃത്", "Elem. Friend", "Elem Friend")} (p.{elemRel.source_page}): </span><span style={{ color: "rgba(74,222,128,0.70)" }}>{language === "ml" ? elementToML(elemRel.friend) : elemRel.friend}</span></div>
+                    <div><span className="font-bold" style={{ color: G_DIM }}>📖 GIH {txt("മൂലക ശത്രു", "Elem. Enemy", "Elem Enemy")} (p.{elemRel.source_page}): </span><span style={{ color: "rgba(248,113,113,0.70)" }}>{language === "ml" ? elementToML(elemRel.enemy) : elemRel.enemy}</span></div>
                   </div>
                 );
               })()}
@@ -232,7 +232,7 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
                 return (
                   <div className="rounded-lg p-2" style={{ background: "rgba(129,140,248,0.04)", border: "1px solid rgba(129,140,248,0.12)" }}>
                     <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(129,140,248,0.60)" }}>📖 {txt("12-ാം ഭവനം", "12th House Rulership", "12th House")} (GIH p.{GIH_TWELVE_HOUSES.source_page})</p>
-                    <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>#{house.hane} — {txt("ഭവനം", "House", "House")} · {txt("ഗ്രഹം", "Planet", "Planet")}: {house.planet_en}</p>
+                    <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>#{house.hane} — {txt("ഭവനം", "House", "House")} · {txt("ഗ്രഹം", "Planet", "Planet")}: {language === "ml" ? (PLANET_AR_ML[house.planet_en?.toLowerCase()]?.ml || house.planet_en) : house.planet_en}</p>
                   </div>
                 );
               })()}

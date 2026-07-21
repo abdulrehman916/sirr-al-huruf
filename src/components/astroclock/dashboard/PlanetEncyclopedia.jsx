@@ -174,8 +174,8 @@ export default function PlanetEncyclopedia() {
                   if (!gihRel) return null;
                   return (
                     <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                      <div><span className="font-bold" style={{ color: "rgba(212,175,55,0.50)" }}>📖 GIH {txt("സുഹൃത്", "Friend", "Friend")} (p.{gihRel.source_page}): </span><span style={{ color: "rgba(74,222,128,0.65)" }}>{gihRel.friend_en}</span></div>
-                      <div><span className="font-bold" style={{ color: "rgba(212,175,55,0.50)" }}>📖 GIH {txt("ശത്രു", "Enemy", "Enemy")} (p.{gihRel.source_page}): </span><span style={{ color: "rgba(248,113,113,0.65)" }}>{gihRel.enemy_en}</span></div>
+                      <div><span className="font-bold" style={{ color: "rgba(212,175,55,0.50)" }}>📖 GIH {txt("സുഹൃത്", "Friend", "Friend")} (p.{gihRel.source_page}): </span><span style={{ color: "rgba(74,222,128,0.65)" }}>{language === "ml" ? (PLANET_AR_ML[gihRel.friend_en?.toLowerCase()]?.ml || gihRel.friend_en) : gihRel.friend_en}</span></div>
+                      <div><span className="font-bold" style={{ color: "rgba(212,175,55,0.50)" }}>📖 GIH {txt("ശത്രു", "Enemy", "Enemy")} (p.{gihRel.source_page}): </span><span style={{ color: "rgba(248,113,113,0.65)" }}>{language === "ml" ? (PLANET_AR_ML[gihRel.enemy_en?.toLowerCase()]?.ml || gihRel.enemy_en) : gihRel.enemy_en}</span></div>
                     </div>
                   );
                 })()}
