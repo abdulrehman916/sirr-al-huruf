@@ -4,6 +4,90 @@
 // ═══════════════════════════════════════════════════════════════
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 
+// ── ARABIC UI LABEL DICTIONARY ────────────────────────────────
+// Centralized Arabic translations for every Astro Clock UI label.
+// Keyed by the English string passed as the 2nd arg to txt().
+// Arabic mode looks up this dictionary; falls back to English only
+// if a label is missing (none of the labels below fall back).
+// This is UI chrome only — never manuscript content. Manuscript
+// Arabic is preserved via the *_ar fields and txtA(), not here.
+// ─────────────────────────────────────────────────────────────
+const AR_UI = {
+  // Common
+  "Day": "اليوم", "Saat": "الساعة", "Kawkab": "الكوكب",
+  "Layl / Nahar": "ليل / نهار", "Sunrise": "الشروق", "Sunset": "الغروب",
+  "Now": "الآن", "Today": "اليوم", "Library": "المكتبة",
+  "Location": "الموقع", "Astro Clock": "الساعة الفلكية",
+  "Traditional Timing System": "نظام التوقيت التقليدي",
+  "English": "الإنجليزية", "Malayalam": "المالايالامية",
+  "GPS": "نظام تحديد المواقع",
+  // AstroClockPage section titles
+  "Today's Dashboard": "لوحة اليوم",
+  "Day, Saat, Kawkab, Activities, Warnings": "اليوم، الساعة، الكوكب، الأعمال، التحذيرات",
+  "Daily Mantras": "الأذكار اليومية",
+  "Today's Spiritual Recitations": "الأوراد الروحانية لليوم",
+  "Smart Search": "البحث الذكي",
+  "Purpose → Best Saat": "الغرض → أفضل ساعة",
+  "Today's 24 Saat": "ساعات اليوم الـ24",
+  "12 Day + 12 Night Planetary Hours": "12 ساعة نهارية + 12 ساعة ليلية",
+  "Moon Center": "مركز القمر",
+  "Zodiac, Phase, Mansion, Strength, Nature": "البرج، الطور، المنزل، القوة، الطبيعة",
+  "Moon in Zodiac": "القمر في البرج",
+  "Current Zodiac + Next Transition": "البرج الحالي + الانتقال التالي",
+  "12 Zodiac Signs": "أبراج الـ12",
+  "Full Details for All Signs": "تفاصيل جميع الأبراج",
+  "28 Lunar Mansions": "المنازل القمرية الـ28",
+  "Manzil / Nakshatra Reference": "مرجع المنازل / النجوم",
+  "Planet Encyclopedia": "موسوعة الكواكب",
+  "7 Planetary Rulers": "الحكام السبعة للكواكب",
+  "Import History": "سجل الاستيراد",
+  "Books, Pages, Records, Progress, Verification": "الكتب، الصفحات، السجلات، التقدم، التحقق",
+  "Reference Library": "مكتبة المراجع",
+  "Master Manuscript Catalog": "فهرس المخطوطات الرئيسي",
+  "Screenshot Analysis": "تحليل لقطة الشاشة",
+  "Manuscript screenshot → Day+Saat+Kawkab knowledge": "لقطة المخطوطة → معرفة اليوم+الساعة+الكوكب",
+  "Knowledge Review Queue": "قائمة مراجعة المعرفة",
+  "Records pending admin review": "سجلات تنتظر المراجعة",
+  // TodayDashboard
+  "Excellent Day": "يوم ممتاز", "Cautious Day": "يوم حذر", "Good Day": "يوم جيد",
+  "Ruled by": "يحكمه", "Lunar Day": "اليوم القمري",
+  "Best": "الأفضل", "Avoid": "تجنب",
+  "Today's Activities": "أعمال اليوم", "Warnings": "تحذيرات",
+  "Moon debilitated (Scorpio)": "القمر في هبوط (العقرب)",
+  "Active Now": "نشط الآن", "Upcoming": "قادم", "Completed": "مكتمل", "Remaining": "متبقٍ",
+  // PlanetEncyclopedia
+  "Arabic": "العربية", "Elements": "العناصر",
+  "Friends": "أصدقاء", "Enemies": "أعداء", "Neutral": "محايد",
+  "Weak Conditions": "حالات الضعف", "Recommended": "موصى به",
+  "Spiritual Uses": "استخدامات روحانية",
+  // ZodiacDetailCard
+  "Element": "العنصر", "Gender": "الجنس", "Metal": "المعدن",
+  "Ruler": "الحاكم", "Incense": "البخور", "Letters": "الحروف",
+  "Friendly": "ودود", "Enemy": "عدو",
+  "Favorable Colors": "ألوان مواتية", "Favorable Stones": "أحجار مواتية",
+  "Favorable Metals": "معادن مواتية", "Days": "أيام", "Number": "رقم",
+  "Hour Planet": "كوكب الساعة", "Months": "أشهر", "Fav. Night": "ليلة مواتية",
+  "Health Vulnerabilities": "نقاط الضعف الصحية", "Ritual Timing": "توقيت الطقس",
+  "Compatible (GIH)": "متوافق (GIH)", "Incompatible (GIH)": "غير متوافق (GIH)",
+  "Friend": "صديق", "Cardinal": "أساسي", "Fixed": "ثابت", "Mutable": "متغير",
+  "Triplicity": "الثلاثي", "Masculine/Day": "ذكري/نهاري", "Feminine/Night": "أنثوي/ليلي",
+  "Northern": "شمالي", "Southern": "جنوبي", "Horizon Duration": "مدة الأفق",
+  "Elem. Friend": "صديق العنصر", "Elem. Enemy": "عدو العنصر",
+  "12th House Rulership": "حكم البيت الـ12", "House": "البيت", "Planet": "الكوكب",
+  "Ritual Incense": "بخور الطقس", "Timing": "التوقيت",
+  // MansionsReference
+  "All 28": "الكل 28", "Current": "الحالي", "Favorable": "مواتي", "Unfavorable": "غير مواتي",
+  "Boundary": "الحد", "Zodiac": "البرج", "Letter": "حرف", "Ruling": "الحكم",
+  "Manuscript": "المخطوطة", "Kashf al-Haqa'iq (Omani)": "كشف الحقائق (عُماني)",
+  // SaatGrid
+  "Best Suited": "الأكثر ملاءمة", "Suitable": "ملائم", "Caution": "حذر",
+  "Less Suitable": "أقل ملاءمة", "Spiritual": "روحاني",
+  "Daytime 12 Saat": "12 ساعة نهارية", "Nighttime 12 Saat": "12 ساعة ليلية",
+  // EntityKnowledgePanel
+  "Manuscript Knowledge (Unified Pipeline)": "معرفة المخطوطة (الخط الموحد)",
+  "sources": "مصادر",
+};
+
 const LanguageContext = createContext();
 
 export function AstroClockLanguageProvider({ children }) {
@@ -39,10 +123,12 @@ export function AstroClockLanguageProvider({ children }) {
     setLang(prev => prev === "ml" ? "en" : "ml");
   }, []);
 
-  // txt: returns Malayalam or English. Never returns Turkish.
-  // Existing calls with a 3rd arg (legacy Turkish) are safely ignored.
+  // txt: Malayalam / English / Arabic. Arabic mode looks up the English
+  // label in the centralized AR_UI dictionary. The legacy 3rd arg
+  // (Turkish) is ALWAYS ignored — Turkish is never shown to users.
   const txt = useCallback((ml, en) => {
     if (language === "ml") return ml;
+    if (language === "ar") return (AR_UI[en] || en);
     return en;
   }, [language]);
 

@@ -14,10 +14,12 @@ import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
 import EntityKnowledgePanel from "./EntityKnowledgePanel";
 import MagicalPeriodPanel from "./MagicalPeriodPanel";
 import AstroClockCategoryVisuals from "@/components/astroclock/AstroClockCategoryVisuals";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 export default function MansionsReference() {
   const d = useAstroData();
   const { txt, language } = useAstroClockLanguage();
+  const isOwner = useIsOwner();
   const [expanded, setExpanded] = useState(null);
   const [filter, setFilter] = useState("all"); // all | current | favorable | unfavorable
 
@@ -90,7 +92,7 @@ export default function MansionsReference() {
                       </div>
 
                       {/* Manuscript operations — Arabic source shown via Kashf panel below */}
-                      <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {txt("ഗ്രന്ഥം", "Manuscript", "Manuscript")}: كشف الحقائق</p>
+                      {isOwner && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {txt("ഗ്രന്ഥം", "Manuscript", "Manuscript")}: كشف الحقائق</p>}
 
                       {/* Kashf Omani tradition */}
                       {kashfMansion && (

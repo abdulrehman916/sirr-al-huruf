@@ -16,6 +16,7 @@ import { zodiacEnToML, planetArabicMLDisplay, PLANET_AR_ML } from "@/lib/astroCl
 import { Sparkles, AlertTriangle, CheckCircle2, Ban, Moon } from "lucide-react";
 import { formatDecimalHour12h } from "@/lib/astroClockTimeFormat";
 import MagicalPeriodPanel from "./MagicalPeriodPanel";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 const BENEFIC = ["sun", "jupiter", "venus", "moon"];
 const MALEFIC = ["saturn", "mars"];
@@ -23,6 +24,7 @@ const MALEFIC = ["saturn", "mars"];
 export default function TodayDashboard() {
   const d = useAstroData();
   const { txt, language } = useAstroClockLanguage();
+  const isOwner = useIsOwner();
   if (!d.currentHour) return null;
 
   // ── Language-specific names ──
@@ -149,7 +151,7 @@ export default function TodayDashboard() {
               {txt("ചാന്ദ്ര ദിവസം", "Lunar Day", "Ay Günü")} {d.lunarDay}: {language === "ml" ? kashfLunarDay.nature_ml : kashfLunarDay.nature_en}
             </p>
             <p className="font-amiri text-[10px] mt-0.5" style={{ color: "rgba(212,175,55,0.40)", direction: "rtl" }}>{kashfLunarDay.summary_ar}</p>
-            <p className="font-inter text-[8px] mt-0.5" style={{ color: "rgba(129,140,248,0.30)" }}>📖 {kashfLunarDay.source}</p>
+            {isOwner && <p className="font-inter text-[8px] mt-0.5" style={{ color: "rgba(129,140,248,0.30)" }}>📖 {kashfLunarDay.source}</p>}
           </div>
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -191,7 +193,7 @@ export default function TodayDashboard() {
         {/* Reference at bottom */}
         <p className="font-inter text-[9px] mt-2 pt-2" style={{
           color: "rgba(255,255,255,0.25)", borderTop: "1px solid rgba(212,175,55,0.10)",
-        }}>📖 {refDay}</p>
+        }}>{isOwner && <>📖 {refDay}</>}</p>
       </SubCollapse>
 
       {/* ══ EXPAND: Warnings (collapsed by default — only if warnings exist) ══ */}
@@ -206,7 +208,7 @@ export default function TodayDashboard() {
           {/* Reference at bottom */}
           <p className="font-inter text-[9px] mt-2 pt-2" style={{
             color: "rgba(255,255,255,0.25)", borderTop: "1px solid rgba(212,175,55,0.10)",
-          }}>📖 {refWarn}</p>
+          }}>{isOwner && <>📖 {refWarn}</>}</p>
         </SubCollapse>
       )}
     </div>

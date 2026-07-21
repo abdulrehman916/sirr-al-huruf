@@ -17,6 +17,7 @@ import { getPlanetHourRules } from "@/lib/astroClockPlanetaryHourRules.js";
 import { getSahathQuality } from "@/lib/astroClockSahathQuality.js";
 import { PLANET_AR_ML } from "@/lib/astroClockLabelMap";
 import { formatDecimalHour12h } from "@/lib/astroClockTimeFormat";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 // Status badge — independent from quality. Controls badge text + card opacity only.
 const STATUS_BADGE = {
@@ -34,6 +35,7 @@ function hourStatus(isCurrent, isPast) {
 export default function SaatGrid() {
   const d = useAstroData();
   const { txt, txtA, language } = useAstroClockLanguage();
+  const isOwner = useIsOwner();
   const [expanded, setExpanded] = useState(null);
   if (!d.allHours) return null;
 
@@ -167,7 +169,7 @@ export default function SaatGrid() {
                     : [secBest, secSuit, secCaut, secLess, secSpir, secWarn];
                   return <>{order.filter(Boolean)}</>;
                 })()}
-                {source && (
+                {isOwner && source && (
                   <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.40)" }}>📖 {source}</p>
                 )}
                 {kashfAttrs.length > 0 && (

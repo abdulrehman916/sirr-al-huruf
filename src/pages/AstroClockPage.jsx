@@ -172,7 +172,7 @@ function AstroClockContent() {
       <div className="space-y-3 pb-8 max-w-4xl mx-auto">
         {/* ── Header ── */}
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          <PageTitle arabic="الساعة الفلكية" latin={language === "ml" ? undefined : "Astro Clock"} subtitle={txt("പാരമ്പര്യ സമയ വ്യവസ്ഥ", "Traditional Timing System", "Geleneksel Zaman Sistemi")} icon="🕰" />
+          <PageTitle arabic="الساعة الفلكية" latin={language === "en" ? "Astro Clock" : undefined} subtitle={txt("പാരമ്പര്യ സമയ വ്യവസ്ഥ", "Traditional Timing System", "Geleneksel Zaman Sistemi")} icon="🕰" />
           <div className="flex items-center gap-2">
             <Link to="/manuscript-library" className="px-3 py-2 rounded-xl border text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5"
               style={{ background: "rgba(212,175,55,0.10)", color: "#F5D060", borderColor: "rgba(212,175,55,0.30)" }}>
