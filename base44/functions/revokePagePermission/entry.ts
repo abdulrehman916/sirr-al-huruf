@@ -49,12 +49,20 @@ Deno.serve(async (req) => {
       console.error("Failed to create audit log:", auditError);
     }
 
-    // Update user profile
+    // Update user profile — recompute BOTH counters from actual records so
+    // total_permissions and active_permissions stay fully synchronized
+    // (self-heals any prior drift from increment/decrement arithmetic) and
+    // never go negative. total_permissions = non-revoked records;
+    // active_permissions = records still marked active.
+    const allUserPerms = await base44.entities.PagePermission.filter({ user_id: permission.user_id }, '-created_date', 500);
+    const nonRevokedCount = allUserPerms.filter(p => p.is_revoked !== true).length;
+    const activeCount = allUserPerms.filter(p => p.is_active === true && p.is_revoked !== true).length;
     const profiles = await base44.entities.UserAccessProfile.filter({ user_id: permission.user_id });
     if (profiles.length > 0) {
       const profile = profiles[0];
       await base44.entities.UserAccessProfile.update(profile.id, {
-        active_permissions: Math.max(0, (profile.active_permissions || 0) - 1)
+        total_permissions: Math.max(0, nonRevokedCount),
+        active_permissions: Math.max(0, activeCount)
       });
     }
 
