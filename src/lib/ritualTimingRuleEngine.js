@@ -16,6 +16,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { getCurrentPlanetaryHour, getDayRuler, getActiveWeekday, PLANET_SEQUENCE, PLANET_INFO, getAllPlanetaryHours } from './astroClockLiveEngine.js';
+import { calculateSunriseSunset, getUserLocation } from './astroClockSunriseSunset.js';
+import { calculateMoonPosition } from './astroClockMoonPosition.js';
 import { ACTION_RULES } from './astroClockActionTimingAdvisor.js';
 
 // ── Mizan key → English planet name (used by live engine) ──
@@ -140,21 +142,33 @@ const PURPOSE_POLARITY = {
 // HELPER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════
 
+// Moon phase delegated to the Astro Clock (single source of truth).
+// `calculateMoonPosition` returns illumination %, isWaxing (mean elongation D),
+// zodiacSign, mansion. The lunar-day number (1–29) is derived locally only
+// because the Astro Clock does not expose it — it is a cycle-position number,
+// NOT an independent astronomy calculation.
 function getMoonPhase(date) {
+  let liveMoon = null;
+  try { liveMoon = calculateMoonPosition(date); } catch (_) { liveMoon = null; }
   const knownNewMoon = new Date('2000-01-06T18:14:00Z').getTime();
   const lunarCycleMs = 29.53059 * 24 * 60 * 60 * 1000;
   const diff = date.getTime() - knownNewMoon;
   const cycles = diff / lunarCycleMs;
   const phaseFraction = cycles - Math.floor(cycles);
   const lunarDay = Math.floor(phaseFraction * 29.53) + 1;
-  const isWaxing = lunarDay <= 14;
-  const isWaning = lunarDay > 14;
+  // Waxing/waning from the Astro Clock's mean elongation (single source of truth).
+  const isWaxing = liveMoon ? liveMoon.isWaxing === true : (lunarDay <= 14);
+  const isWaning = !isWaxing;
   const isNewMoon = lunarDay >= 28 || lunarDay <= 1;
   const isFullMoon = lunarDay >= 13 && lunarDay <= 16;
   return {
     lunarDay, phaseName: isWaxing ? 'Waxing (مقبل)' : 'Waning (مدبر)',
     isWaxing, isWaning, isNewMoon, isFullMoon,
     isGoodForKhayr: isWaxing, isGoodForSharr: isWaning || isNewMoon,
+    // Live Astro Clock data (read-only passthrough)
+    moonSign: liveMoon?.zodiacSign?.name_en || null,
+    moonIllumination: liveMoon ? parseFloat(liveMoon.phase) : null,
+    moonMansion: liveMoon?.mansion?.name_en || null,
   };
 }
 
@@ -172,12 +186,15 @@ function matchCustomPurpose(text) {
   return null;
 }
 
+// Sunrise/sunset delegated to the Astro Clock (single source of truth).
+// Uses the SAME calculateSunriseSunset + getUserLocation that the Astro Clock
+// page uses — NOAA astronomical algorithm based on real lat/lng/IANA tz.
+// No hardcoded seasonal values. Identical fallback as useAstroData.
 function getTodayAllHours(date) {
-  const month = date.getMonth();
-  let sunrise, sunset;
-  if (month >= 4 && month <= 8) { sunrise = 5.5; sunset = 19.0; }
-  else if (month === 3 || month === 9) { sunrise = 6.0; sunset = 18.25; }
-  else { sunrise = 6.83; sunset = 17.67; }
+  const loc = getUserLocation();
+  const sun = calculateSunriseSunset(date, loc.lat, loc.lng, loc.timezone);
+  const sunrise = (sun.sunrise != null) ? sun.sunrise : 6.5;
+  const sunset = (sun.sunset != null) ? sun.sunset : 18.25;
   return { hours: getAllPlanetaryHours(date, sunrise, sunset), sunrise, sunset };
 }
 
@@ -411,7 +428,8 @@ export function analyzeRitualTiming({ result, selections, customPurpose, activeM
     ? (dayNight === 'gece')
     : (now.getHours() < sunrise || now.getHours() >= sunset);
 
-  reasoning.push(`Current time: ${now.toLocaleString('en-US', { timeZone: 'Asia/Dubai' })}`);
+  const _rtLoc = getUserLocation();
+  reasoning.push(`Current time: ${now.toLocaleString('en-US', { timeZone: _rtLoc.tz || undefined })}`);
   reasoning.push(`Current planetary hour: #${currentHourInfo.hourNumber} (${currentHourInfo.planet})`);
   reasoning.push(`Current day ruler: ${dayRuler.planet}`);
   reasoning.push(`Moon phase: Day ${moonPhase.lunarDay} — ${moonPhase.phaseName}`);
@@ -1125,7 +1143,8 @@ export function analyzeConfigurationAdvice({ result, selections, customPurpose, 
   if (!dayNightOptimal) allOptimal = false;
 
   // ── 8. Selected Time (live, today) ──
-  const currentClock = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Dubai', hour: '2-digit', minute: '2-digit' });
+  const _rtLocAdv = getUserLocation();
+  const currentClock = now.toLocaleTimeString('en-US', { timeZone: _rtLocAdv.tz || undefined, hour: '2-digit', minute: '2-digit' });
   const recommendedTime = bestWindow ? `${bestWindow.startTime}–${bestWindow.endTime}` : (base.nextOpportunity ? `${base.nextOpportunity.startTime}–${base.nextOpportunity.endTime} (${base.nextOpportunity.dayName})` : 'No optimal time today');
   const timeOptimal = bestWindow && base.currentMomentSuitable;
   recommendations.push({

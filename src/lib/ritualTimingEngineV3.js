@@ -406,13 +406,18 @@ function getMoonPhase(date) {
   const moonMansion = liveMoon?.mansion || null;
   const illumination = liveMoon ? parseFloat(liveMoon.phase) : 0;
 
+  // ── Waxing/waning from the Astro Clock's mean elongation (D in 0..360),
+  // NOT from the lunar-day number. The Astro Clock (calculateMoonPosition)
+  // is the single source of truth: waxing = 0 < D < 180, waning = 180 < D < 360.
+  // Using lunarDay <= 14 diverges from the Astro Clock near quarter phases.
+  const isWaxing = liveMoon ? liveMoon.isWaxing === true : (lunarDay <= 14);
   return {
     lunarDay,
-    isWaxing: lunarDay <= 14,
-    isWaning: lunarDay > 14,
+    isWaxing,
+    isWaning: !isWaxing,
     isNewMoon: lunarDay >= 27 || lunarDay <= 1,
     isFullMoon: lunarDay >= 13 && lunarDay <= 16,
-    phaseName: lunarDay <= 14 ? "Waxing" : "Waning",
+    phaseName: isWaxing ? "Waxing" : "Waning",
     // ── LIVE DATA from Astro Clock Moon Engine ──
     moonSign: moonSign ? moonSign.name_en : null,
     moonSignMl: moonSign ? moonSign.name_ml : null,
@@ -1800,7 +1805,8 @@ export function analyzeConfigurationAdvice({ result, selections, customPurpose, 
   if (req.nightRequired === true && dayNight !== "gece") allOptimal = false;
 
   // 5. Next available suitable timing
-  const currentClock = now.toLocaleTimeString("en-US", { timeZone: "Asia/Dubai", hour: "2-digit", minute: "2-digit" });
+  const _advLoc = getUserLocation();
+  const currentClock = now.toLocaleTimeString("en-US", { timeZone: _advLoc.tz || undefined, hour: "2-digit", minute: "2-digit" });
   recommendations.push({
     field: "Next Available Suitable Timing", icon: "timer",
     current: `Now: ${currentClock}`,

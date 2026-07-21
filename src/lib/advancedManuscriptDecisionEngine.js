@@ -17,6 +17,9 @@ import { AY_MANAZILLERI } from './astroClockData.js';
 import { PLANETARY_HOUR_RULES } from './astroClockPlanetaryHourRules.js';
 import { getRulesForTopic } from './astroClockKnowledgeBaseFramework.js';
 import { classifyActionType } from './actionTypeClassification.js';
+import { getCurrentPlanetaryHour, getActiveWeekday } from './astroClockLiveEngine.js';
+import { calculateSunriseSunset, getUserLocation } from './astroClockSunriseSunset.js';
+import { calculateMoonPosition } from './astroClockMoonPosition.js';
 
 /**
  * Search manuscripts for action-related rules with classification
@@ -72,33 +75,47 @@ export function searchManuscriptsForAction(action) {
  */
 export function getCurrentLiveConditions(timestamp, sunrise = 6.5, sunset = 18.25) {
   const now = timestamp || new Date();
-  const hour = now.getHours() + now.getMinutes() / 60;
-  const dayIndex = now.getDay();
+  // ── Astro Clock is the single source of truth ──
+  // Real sunrise/sunset (NOAA + GPS/IANA tz), real lunar mansion from the
+  // Moon's ecliptic longitude, sunset-aware weekday, and the Astro Clock's
+  // planetary-hour engine. No crude day-of-month mansion, no civil weekday,
+  // no fixed 6.5/18.25 when a location is available.
+  const loc = getUserLocation();
+  const sun = calculateSunriseSunset(now, loc.lat, loc.lng, loc.timezone);
+  const sr = (sun.sunrise != null) ? sun.sunrise : sunrise;
+  const ss = (sun.sunset != null) ? sun.sunset : sunset;
+  // Shift now to the location's local time so getHours()/getDay() match the
+  // location-local sunrise/sunset (same correction as useAstroData).
+  const tzDiffMs = (loc.timezone * 60 + now.getTimezoneOffset()) * 60 * 1000;
+  const localNow = new Date(now.getTime() + tzDiffMs);
+  const dayIndex = getActiveWeekday(localNow, sr, ss);
   const dayKeys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
   const dayKey = dayKeys[dayIndex];
-  
-  // Get lunar mansion (simplified - would use full calculation in production)
-  const mansionNumber = ((now.getDate() % 28) + 1);
-  const mansion = AY_MANAZILLERI.find(m => m.no === mansionNumber);
-  
-  // Get planetary hour
-  const isDaytime = hour >= sunrise && hour < sunset;
-  const planetHour = calculatePlanetaryHour(now, sunrise, sunset);
-  
+
+  // Lunar mansion from the Astro Clock's Moon longitude (single source of truth).
+  let liveMoon = null;
+  try { liveMoon = calculateMoonPosition(now); } catch (_) { liveMoon = null; }
+  const mansionNumber = liveMoon?.mansion?.no || (((Math.floor((parseFloat(liveMoon?.longitude) || 0) / (360 / 28))) % 28) + 1) || 1;
+  const mansion = AY_MANAZILLERI.find(m => m.no === mansionNumber) || liveMoon?.mansion;
+
+  const planetHour = getCurrentPlanetaryHour(localNow, sr, ss);
+  const hour = localNow.getHours() + localNow.getMinutes() / 60;
+  const isDaytime = hour >= sr && hour < ss;
+
   return {
     timestamp: now,
     lunarMansion: {
       number: mansionNumber,
-      name_en: mansion?.name || `Mansion ${mansionNumber}`,
+      name_en: mansion?.name || mansion?.name_en || `Mansion ${mansionNumber}`,
       name_ml: mansion?.name_ml || `മൻസിൽ ${mansionNumber}`,
-      name_ar: mansion?.name_arabic || `منزل ${mansionNumber}`,
+      name_ar: mansion?.name_arabic || mansion?.harfi || `منزل ${mansionNumber}`,
       nature: mansion?.nature || ''
     },
     planetaryHour: {
       planet: planetHour.planet,
       name_en: planetHour.planetInfo?.name_en || planetHour.planet,
       name_ml: planetHour.planetInfo?.name_ml_equivalent || planetHour.planet,
-      nature: planetHour.planetInfo?.nature || '',
+      nature: planetHour.planetInfo?.nature_en || planetHour.planetInfo?.nature || '',
       isDaytime
     },
     dayRuler: {
