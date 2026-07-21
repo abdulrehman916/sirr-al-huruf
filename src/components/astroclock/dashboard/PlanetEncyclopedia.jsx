@@ -16,6 +16,7 @@ import { GIH_PLANET_INFLUENCE_CHARACTERISTICS, GIH_PLANET_RELATIONSHIPS, GIH_VEN
 import EntityKnowledgePanel from "./EntityKnowledgePanel";
 import MagicalPeriodPanel from "./MagicalPeriodPanel";
 import AstroClockCategoryVisuals from "@/components/astroclock/AstroClockCategoryVisuals";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 const PLANET_ORDER = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
 
@@ -33,6 +34,7 @@ function getPlanetElements(planetKey, zodiacSigns) {
 export default function PlanetEncyclopedia() {
   const d = useAstroData();
   const { txt, language } = useAstroClockLanguage();
+  const isOwner = useIsOwner();
   const [expanded, setExpanded] = useState(null);
   const currentPlanet = d.currentHour?.planet;
 
@@ -227,8 +229,8 @@ export default function PlanetEncyclopedia() {
                 })()}
 
                 {/* Source */}
-                {language === "en" && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(info.source)}</p>}
-                {language === "en" && friends?.source && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(friends.source)}</p>}
+                {isOwner && language === "en" && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(info.source)}</p>}
+                {isOwner && language === "en" && friends?.source && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(friends.source)}</p>}
 
                 {(kashfOps.length > 0 || kashfDir) && (
                   <ManuscriptSourcePanel

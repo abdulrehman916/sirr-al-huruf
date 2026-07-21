@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Loader2, BookOpen, ImageIcon, AlertTriangle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 const P = {
   border: "rgba(212,175,55,0.30)",
@@ -33,6 +34,7 @@ const LANG_LABELS = { ar: "Arabic", ml: "Malayalam", en: "English", mixed: "Arab
 export default function HolyNameImportedSections({ sourceSection, sourceNameKey, refreshKey = 0 }) {
   const [sections, setSections] = useState(null);
   const [loading, setLoading] = useState(false);
+  const isOwner = useIsOwner();
 
   useEffect(() => {
     let alive = true;
@@ -72,7 +74,7 @@ export default function HolyNameImportedSections({ sourceSection, sourceNameKey,
       <div className="flex items-center gap-2 mb-3">
         <BookOpen className="w-3.5 h-3.5" style={{ color: P.text }} />
         <span className="font-inter text-[9px] uppercase tracking-widest font-bold" style={{ color: P.text }}>
-          PDF Knowledge · {sections.length} paragraph{sections.length > 1 ? "s" : ""}
+          {isOwner ? `PDF Knowledge · ${sections.length} paragraph${sections.length > 1 ? "s" : ""}` : `${sections.length} paragraph${sections.length > 1 ? "s" : ""}`}
         </span>
       </div>
 
@@ -104,6 +106,7 @@ export default function HolyNameImportedSections({ sourceSection, sourceNameKey,
                 </div>
               )}
 
+              {isOwner && (
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
                   <span className="font-inter text-[8px]" style={{ color: P.dim }}>
@@ -124,6 +127,7 @@ export default function HolyNameImportedSections({ sourceSection, sourceNameKey,
                   </span>
                 )}
               </div>
+              )}
 
               {s.arabic_text && (
                 <div className="space-y-1">
@@ -154,6 +158,7 @@ export default function HolyNameImportedSections({ sourceSection, sourceNameKey,
 
               {/* Page-scan images removed from public view (private library artifacts) */}
 
+              {isOwner && (
               <div className="flex items-center gap-1.5 pt-1 border-t flex-wrap" style={{ borderColor: "rgba(212,175,55,0.12)" }}>
                 <FileText className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(212,175,55,0.40)" }} />
                 <span className="font-inter text-[8px] truncate" style={{ color: "rgba(255,255,255,0.40)" }}>
@@ -165,6 +170,7 @@ export default function HolyNameImportedSections({ sourceSection, sourceNameKey,
                   </span>
                 )}
               </div>
+              )}
             </motion.div>
           ))}
         </AnimatePresence>

@@ -16,6 +16,7 @@
 import { motion } from "framer-motion";
 import { ImageIcon, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 const TYPE_LABEL = {
   magic_square: { ml: "മാന്ത്രിക് ചതുരം", en: "Magic Square", ar: "المربع السحري" },
@@ -47,7 +48,8 @@ const TYPE_COLOR = {
 
 export default function AstroClockVisuals({ visuals }) {
   const [showAll, setShowAll] = useState(false);
-  if (!visuals || visuals.length === 0) return null;
+  const isOwner = useIsOwner();
+  if (!isOwner || !visuals || visuals.length === 0) return null;
 
   // Dedup by visual_url (safety — data is already deduped on write)
   const seen = new Set();

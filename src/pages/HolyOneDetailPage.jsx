@@ -12,6 +12,7 @@ import HolyNameImportedSections from "@/components/holynameknowledge/HolyNameImp
 import HolyOneScholarlySections from "@/components/holynameknowledge/HolyOneScholarlySections";
 import HolyNameVerifiedKnowledge from "@/components/holynameknowledge/HolyNameVerifiedKnowledge";
 import SectionCVisualDisplay from "@/components/sectionc/SectionCVisualDisplay";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -28,6 +29,7 @@ export default function HolyOneDetailPage() {
   const [name, setName] = useState(null);
   const [loading, setLoading] = useState(true);
   const [source, setSource] = useState("A"); // A or B
+  const isOwner = useIsOwner();
 
   // Save navigation state before navigating to detail
   useEffect(() => {
@@ -228,7 +230,7 @@ export default function HolyOneDetailPage() {
                 Last viewed {new Date(name.last_viewed).toLocaleDateString()}
               </Badge>
             )}
-            {source === "B" && name.source_pdf_page && (
+            {isOwner && source === "B" && name.source_pdf_page && (
               <Badge style={{ background: G.bg, borderColor: G.border, fontSize: 12 }}>
                 PDF Page {name.source_pdf_page}
               </Badge>
@@ -420,19 +422,19 @@ export default function HolyOneDetailPage() {
             <SectionCVisualDisplay visuals={name.attached_visuals} />
           )}
 
-          {/* Source Reference */}
+          {/* Source Reference — provenance Owner-only; Surah kept as content */}
           <div className="text-center text-xs text-white/30 mt-6">
-            {source === "A" && name.source_reference && (
+            {isOwner && source === "A" && name.source_reference && (
               <>
                 <p>Source: {name.source_reference}</p>
                 {name.source_page && <p>Page {name.source_page}</p>}
               </>
             )}
-            {source === "B" && (
-              <>
-                {name.source_pdf_page && <p>Page {name.source_pdf_page}</p>}
-                {name.surah_name && <p>Surah: {name.surah_name}</p>}
-              </>
+            {isOwner && source === "B" && name.source_pdf_page && (
+              <p>Page {name.source_pdf_page}</p>
+            )}
+            {source === "B" && name.surah_name && (
+              <p>Surah: {name.surah_name}</p>
             )}
           </div>
 

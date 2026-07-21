@@ -12,6 +12,7 @@ import EntityKnowledgePanel from "./EntityKnowledgePanel";
 import MagicalPeriodPanel from "./MagicalPeriodPanel";
 import AstroClockCategoryVisuals from "@/components/astroclock/AstroClockCategoryVisuals";
 import { normalizeDisplay, normalizeArray } from "@/lib/astroClockLanguageNormalizer";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 function TagList({ items, color }) {
   if (!items?.length) return null;
@@ -27,6 +28,7 @@ function TagList({ items, color }) {
 
 export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExpanded, onToggle }) {
   const { txt, language } = useAstroClockLanguage();
+  const isOwner = useIsOwner();
   if (!zodiacData) return null;
 
   const gih = GIH_SIGN_PROPERTIES[signKey] || {};
@@ -261,8 +263,8 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
 
               {/* ── Source References ── */}
               <div className="pt-2" style={{ borderTop: "1px solid rgba(212,175,55,0.10)" }}>
-                {language === "en" && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay("Havâss'ın Derinlikleri")} — {zodiacData.date_range}</p>}
-                {language === "en" && gih.source && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(gih.source)} — pp.{gih.source_page}</p>}
+                {isOwner && language === "en" && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay("Havâss'ın Derinlikleri")} — {zodiacData.date_range}</p>}
+                {isOwner && language === "en" && gih.source && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(gih.source)} — pp.{gih.source_page}</p>}
               </div>
             </div>
           </motion.div>

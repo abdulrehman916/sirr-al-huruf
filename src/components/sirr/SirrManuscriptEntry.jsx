@@ -21,6 +21,7 @@
 //     invented, summarized, merged, or reordered.
 // ═══════════════════════════════════════════════════════════════
 import { BookOpen, AlertTriangle } from "lucide-react";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 // Field label map (Malayalam / English). Manuscript-section labels only.
 const FIELD_LABELS = {
@@ -84,6 +85,7 @@ function FieldBlock({ entry, field, language }) {
 }
 
 export default function SirrManuscriptEntry({ entry, book, heading, language }) {
+  const isOwner = useIsOwner();
   if (!entry) return null;
   const isMl = language === "ml";
 
@@ -106,7 +108,7 @@ export default function SirrManuscriptEntry({ entry, book, heading, language }) 
       <header className="px-4 pt-4 pb-2 text-center" style={{ borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
         {/* Manual-review flag — shown when OCR confidence is below 100. The page
             is flagged for human review instead of trusting uncertain text. */}
-        {entry.needs_review && (
+        {isOwner && entry.needs_review && (
           <div className="flex justify-center mb-2">
             <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"
               style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.30)" }}>
@@ -171,7 +173,8 @@ export default function SirrManuscriptEntry({ entry, book, heading, language }) 
         {/* Page-scan images removed from public view (private library artifacts) */}
       </div>
 
-      {/* ── Reference footer: Book Name · Original Book Name · Page · Volume · Edition · Source ── */}
+      {/* ── Reference footer: Book Name · Original Book Name · Page · Volume · Edition · Source ── Owner only */}
+      {isOwner && (
       <footer className="px-4 py-3 mt-1" style={{ borderTop: "1px solid rgba(212,175,55,0.15)", background: "rgba(212,175,55,0.03)" }}>
         <div className="flex items-center gap-1.5 mb-2">
           <BookOpen className="w-3 h-3" style={{ color: "rgba(212,175,55,0.55)" }} />
@@ -190,6 +193,7 @@ export default function SirrManuscriptEntry({ entry, book, heading, language }) 
           <RefRow label={isMl ? "സ്രോതസ്സ്" : "Source"} value={book?.source || "Sirr Manuscript Upload"} />
         </div>
       </footer>
+      )}
     </article>
   );
 }

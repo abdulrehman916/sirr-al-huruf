@@ -17,6 +17,7 @@ import { BookOpen, ChevronDown } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { useEntityKnowledge } from "@/hooks/useEntityKnowledge";
 import { normalizeDisplay } from "@/lib/astroClockLanguageNormalizer";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 // UI-only Malayalam labels for the 9 knowledge categories (logic/sort keys stay English).
 const CATEGORY_LABEL_ML = {
@@ -34,6 +35,7 @@ const CATEGORY_LABEL_ML = {
 export default function EntityKnowledgePanel({ entityType, entityKey }) {
   const { txt, language } = useAstroClockLanguage();
   const { knowledge, loading } = useEntityKnowledge(entityType, entityKey);
+  const isOwner = useIsOwner();
   const [showAll, setShowAll] = useState(false);
 
   // Deduplicate by knowledge_text_en (first 100 chars) — merge records with same text
@@ -100,7 +102,8 @@ export default function EntityKnowledgePanel({ entityType, entityKey }) {
                     {rec.knowledge_text_ar}
                   </p>
                 )}
-                {/* Sources */}
+                {/* Sources — Owner only */}
+                {isOwner && (
                 <div className="flex flex-wrap gap-1 mt-1">
                   <span className="font-inter text-[7px] px-1 py-0.5 rounded" style={{
                     background: "rgba(129,140,248,0.06)",
@@ -119,6 +122,7 @@ export default function EntityKnowledgePanel({ entityType, entityKey }) {
                     </span>
                   )}
                 </div>
+                )}
               </div>
             ))}
           </div>

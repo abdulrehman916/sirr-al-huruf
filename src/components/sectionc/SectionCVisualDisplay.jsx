@@ -11,6 +11,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { motion } from "framer-motion";
 import { Image as ImageIcon, BookOpen, Sparkles } from "lucide-react";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 const P = {
   border: "rgba(212,175,55,0.30)",
@@ -63,7 +64,8 @@ const VISUAL_TYPE_COLORS = {
 
 export default function SectionCVisualDisplay({ visuals }) {
   const list = Array.isArray(visuals) ? visuals : [];
-  if (list.length === 0) return null;
+  const isOwner = useIsOwner();
+  if (!isOwner || list.length === 0) return null;
 
   return (
     <motion.div

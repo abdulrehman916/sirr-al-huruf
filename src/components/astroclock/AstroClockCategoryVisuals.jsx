@@ -14,9 +14,11 @@
 // ═══════════════════════════════════════════════════════════════
 import AstroClockVisuals from "./AstroClockVisuals";
 import { useAstroClockVisuals } from "@/hooks/useAstroClockVisuals";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 export default function AstroClockCategoryVisuals({ categories = [], entityAliases = [] }) {
   const { visuals } = useAstroClockVisuals(categories, entityAliases);
-  if (!visuals || visuals.length === 0) return null;
+  const isOwner = useIsOwner();
+  if (!isOwner || !visuals || visuals.length === 0) return null;
   return <AstroClockVisuals visuals={visuals} />;
 }

@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import SectionCVisualDisplay from "@/components/sectionc/SectionCVisualDisplay";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 // ── Section C Card Detail ──
 // Renders ONE Birhatīya name card with:
@@ -105,6 +106,7 @@ function Block({ title, titleML, icon: Icon, children, accent, defaultOpen = tru
 
 function AdvancedBlock({ label, ml, entries }) {
   const list = Array.isArray(entries) ? entries : [];
+  const isOwner = useIsOwner();
   const isArabic = (t) => /[\u0600-\u06FF]/.test(t || "");
   return (
     <div className="rounded-lg px-3 py-2.5" style={{ background: "rgba(8,16,38,0.4)", border: `1px solid ${P.faint}` }}>
@@ -119,7 +121,7 @@ function AdvancedBlock({ label, ml, entries }) {
           {list.map((e, i) => (
             <div key={i} className="rounded-md px-2 py-1.5" style={{ background: "rgba(8,16,38,0.55)", border: `1px solid ${P.faint}` }}>
               <p className={`selectable leading-relaxed ${isArabic(e.text) ? "font-amiri text-base" : "font-inter text-[11px]"}`} style={{ color: "rgba(255,255,255,0.85)" }} dir={isArabic(e.text) ? "rtl" : "auto"}>{e.text}</p>
-              <p className="font-malayalam text-[10px] mt-1" style={{ color: "rgba(212,175,55,0.45)" }}>{e.source_reference}{e.source_page ? ` · പേജ് ${e.source_page}` : ""}</p>
+              {isOwner && <p className="font-malayalam text-[10px] mt-1" style={{ color: "rgba(212,175,55,0.45)" }}>{e.source_reference}{e.source_page ? ` · പേജ് ${e.source_page}` : ""}</p>}
             </div>
           ))}
         </div>
@@ -131,6 +133,7 @@ function AdvancedBlock({ label, ml, entries }) {
 export default function HolyNameEsotericResearchProfile({ nameId }) {
   const [rec, setRec] = useState(null);
   const [loading, setLoading] = useState(true);
+  const isOwner = useIsOwner();
 
   useEffect(() => {
     let alive = true;
@@ -235,11 +238,13 @@ export default function HolyNameEsotericResearchProfile({ nameId }) {
         <div className="grid grid-cols-2 gap-3">
           <Field label="Verification Status" labelML="പരിശോധന നില">{rec.verification_status || "unverified"}</Field>
         </div>
+        {isOwner && (<>
         <Field label="Source Reference" labelML="സ്രോതസ്സ് പരാമർശം">{rec.source_reference}</Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Source Page Number" labelML="സ്രോതസ്സ് പേജ്">{rec.source_page_number}</Field>
           <Field label="Source Notes" labelML="സ്രോതസ്സ് കുറിപ്പുകൾ">{rec.source_notes}</Field>
         </div>
+        </>)}
       </Block>
 
       {/* VISUAL CONTENT — displayed above scholarly data, underneath primary info */}
@@ -255,10 +260,12 @@ export default function HolyNameEsotericResearchProfile({ nameId }) {
               <div key={i} className="rounded-lg p-3 space-y-2" style={{ background: "rgba(212,175,55,0.04)", border: `1px solid ${P.faint}` }}>
                 <div className="flex items-start gap-2">
                   <BookMarked className="w-3 h-3 flex-shrink-0 mt-0.5" style={{ color: P.dim }} />
+                  {isOwner && (
                   <div className="flex-1 space-y-0.5">
                     <p className="font-inter text-[10px] selectable" style={{ color: "rgba(255,255,255,0.82)" }}>{s.source_reference}</p>
                     {s.source_page && <p className="font-malayalam text-[11px]" style={{ color: P.dim }}>പേജ് {s.source_page}</p>}
                   </div>
+                  )}
                 </div>
                 {s.arabic_text && <p className="font-amiri text-lg leading-loose selectable" style={{ color: "rgba(255,255,255,0.90)" }} dir="rtl">{s.arabic_text}</p>}
                 {s.transliteration && <p className="font-inter text-xs italic selectable" style={{ color: "rgba(255,255,255,0.70)" }} dir="ltr">{s.transliteration}</p>}
@@ -282,8 +289,8 @@ export default function HolyNameEsotericResearchProfile({ nameId }) {
           </div>
         )}
 
-        {/* Sources consulted */}
-        {Array.isArray(rec.sources) && rec.sources.length > 0 && (
+        {/* Sources consulted — Owner only */}
+        {isOwner && Array.isArray(rec.sources) && rec.sources.length > 0 && (
           <div className="space-y-1 pt-2" style={{ borderTop: `1px solid ${P.faint}` }}>
             <span className="font-malayalam text-[12px] font-semibold" style={{ color: P.dim }}>പരിശോധിച്ച സ്രോതസ്സുകൾ</span>
             {rec.sources.map((s, i) => <p key={i} className="font-inter text-[9px] selectable" style={{ color: "rgba(255,255,255,0.65)" }}>{s.reference} {s.page ? `(p. ${s.page})` : ""}</p>)}
@@ -298,13 +305,15 @@ export default function HolyNameEsotericResearchProfile({ nameId }) {
         </div>
       </Block>
 
-      {/* Footer — traceability */}
+      {/* Footer — traceability — Owner only */}
+      {isOwner && (
       <div className="flex items-center gap-2 pt-2 px-1" style={{ borderTop: `1px solid ${P.faint}` }}>
         <FileText className="w-3 h-3" style={{ color: P.dim }} />
         <span className="font-malayalam text-[10px]" style={{ color: "rgba(255,255,255,0.45)" }}>
           {rec.name_id} · Section C · ഓരോ വിവരവും അതിന്റെ കൃത്യമായ സ്രോതസ്സിലേക്ക് ലേഖനം ചെയ്യാൻ കഴിയും
         </span>
       </div>
+      )}
     </div>
   );
 }

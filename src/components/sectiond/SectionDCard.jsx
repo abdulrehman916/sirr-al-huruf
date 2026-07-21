@@ -12,6 +12,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { useState } from "react";
 import { ChevronDown, BookOpen, Clock, Calendar, Repeat, Sparkles, AlertCircle, Hand, Heart, Link2, Grid3x3 } from "lucide-react";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 const CONTENT_TYPE_LABELS = {
   long_dua: { en: "Long Du'a", ml: "ദീർഘ ദുആ", color: "rgba(212,175,55,0.65)", bg: "rgba(212,175,55,0.10)" },
@@ -39,6 +40,7 @@ function Field({ icon: Icon, label, value, color }) {
 
 export default function SectionDCard({ record }) {
   const [expanded, setExpanded] = useState(false);
+  const isOwner = useIsOwner();
   const ct = CONTENT_TYPE_LABELS[record.content_type] || CONTENT_TYPE_LABELS.miscellaneous;
   const title = record.title || record.original_rule_entity || record.section_d_id;
   const additionalSources = Array.isArray(record.additional_sources) ? record.additional_sources : [];
@@ -68,12 +70,12 @@ export default function SectionDCard({ record }) {
             {title}
           </span>
           <div className="flex items-center gap-2 mt-0.5">
-            {record.source_book_title && (
+            {isOwner && record.source_book_title && (
               <span className="font-inter text-[9px] truncate" style={{ color: "rgba(255,255,255,0.30)" }}>
                 📖 {record.source_book_title.slice(0, 30)}
               </span>
             )}
-            {sourceCount > 1 && (
+            {isOwner && sourceCount > 1 && (
               <span className="font-inter text-[8px] px-1.5 py-0.5 rounded flex-shrink-0" style={{
                 background: "rgba(212,175,55,0.08)",
                 color: "rgba(212,175,55,0.60)",
@@ -185,7 +187,8 @@ export default function SectionDCard({ record }) {
             </div>
           )}
 
-          {/* Primary Source Citation */}
+          {/* Primary Source Citation — Owner only */}
+          {isOwner && (
           <div className="pt-1.5 border-t" style={{ borderColor: "rgba(212,175,55,0.06)" }}>
             <div className="flex items-start gap-1.5">
               <BookOpen className="w-3 h-3 mt-0.5 flex-shrink-0" style={{ color: "rgba(74,222,128,0.45)" }} />
@@ -197,9 +200,10 @@ export default function SectionDCard({ record }) {
               </div>
             </div>
           </div>
+          )}
 
-          {/* Additional Sources — appended from future PDF imports */}
-          {additionalSources.length > 0 && (
+          {/* Additional Sources — appended from future PDF imports — Owner only */}
+          {isOwner && additionalSources.length > 0 && (
             <div className="pt-1.5 border-t" style={{ borderColor: "rgba(212,175,55,0.06)" }}>
               <p className="font-inter text-[8px] uppercase font-bold tracking-wider mb-1.5" style={{ color: "rgba(212,175,55,0.45)" }}>
                 Additional Sources ({additionalSources.length})

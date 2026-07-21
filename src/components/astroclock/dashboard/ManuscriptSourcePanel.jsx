@@ -11,6 +11,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, BookOpen, AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 const TYPE_ICON = {
   info: Info,
@@ -40,7 +41,8 @@ export default function ManuscriptSourcePanel({ sources = [], title, defaultOpen
   const [open, setOpen] = useState(defaultOpen);
 
   const activeSources = sources.filter(s => s.items && s.items.length > 0);
-  if (activeSources.length === 0) return null;
+  const isOwner = useIsOwner();
+  if (!isOwner || activeSources.length === 0) return null;
 
   // Real unique source count — deduplicate by source label/id, never hide valid sources
   const uniqueSourceIds = new Set();

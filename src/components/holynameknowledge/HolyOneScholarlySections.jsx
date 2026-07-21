@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, BookOpen, ScrollText, Sparkles, Shield, Square, Star, Hand, Gift, AlertTriangle, Clock, Hash, ListChecks, Type, Languages, Library, History } from "lucide-react";
+import { useIsOwner } from "@/hooks/useIsOwner";
 
 // ═══════════════════════════════════════════════════════════════
 // HolyOneScholarlySections — Section-B-only scholarly library panel.
@@ -76,6 +77,7 @@ function EntryCard({ entry }) {
   const text = entry?.text || entry?.verbatim_text || "";
   const arabic = entry?.arabic_text || "";
   const malayalam = entry?.malayalam || entry?.exact_meaning || "";
+  const isOwner = useIsOwner();
   const sourceBook = entry?.source_book || entry?.source_reference || "";
   const author = entry?.author || "";
   const page = entry?.page || entry?.source_page || "";
@@ -116,8 +118,8 @@ function EntryCard({ entry }) {
       )}
       {(sourceBook || author || page || lang || conf || cat) && (
         <div className="text-[11px] text-white/45 border-t border-white/5 pt-2 flex flex-wrap gap-x-3 gap-y-1">
-          {sourceBook && <span>📚 {sourceBook}{author ? ` — ${author}` : ""}</span>}
-          {page && <span>📄 {page}</span>}
+          {isOwner && sourceBook && <span>📚 {sourceBook}{author ? ` — ${author}` : ""}</span>}
+          {isOwner && page && <span>📄 {page}</span>}
           {lang && <span>🌐 {lang}</span>}
           {conf && <span>⭐ {conf}</span>}
           {cat && <span>🏷 {cat}</span>}
@@ -177,6 +179,7 @@ function SourceCard({ src }) {
 
 export default function HolyOneScholarlySections({ card }) {
   const c = card || {};
+  const isOwner = useIsOwner();
 
   const sections = useMemo(() => {
     return SECTIONS.map(s => {
@@ -231,12 +234,15 @@ export default function HolyOneScholarlySections({ card }) {
         </CollapsibleSection>
       ))}
 
+      {isOwner && (
       <CollapsibleSection icon={Library} title_ml="ഉറവിടങ്ങൾ" title_en="Sources Consulted" count={sources.length}>
         {sources.map((src, i) => (
           <SourceCard key={i} src={src} />
         ))}
       </CollapsibleSection>
+      )}
 
+      {isOwner && (
       <CollapsibleSection icon={History} title_ml="സമ്പുഷ്ടന ചരിത്രം" title_en="Enrichment History" count={history.length}>
         {history.map((h, i) => (
           <div key={i} className="rounded-lg border p-3 text-xs" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(212,175,55,0.22)" }}>
@@ -256,6 +262,7 @@ export default function HolyOneScholarlySections({ card }) {
           </div>
         ))}
       </CollapsibleSection>
+      )}
     </motion.div>
   );
 }
