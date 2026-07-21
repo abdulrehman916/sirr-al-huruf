@@ -12,9 +12,7 @@ Deno.serve(async (req) => {
 
     const { 
       subscription_id,
-      action,        // "refund" | "cancel" | "extend"
-      refund_amount,
-      refund_reason,
+      action,        // "cancel" | "extend"
       extend_days
     } = await req.json();
 
@@ -57,105 +55,6 @@ Deno.serve(async (req) => {
       }
 
       return Response.json({ success: true, message: 'Subscription cancelled', status: 'CANCELLED' });
-    }
-
-    if (action === 'refund') {
-      if (!refund_amount || refund_amount <= 0) {
-        return Response.json({ success: false, message: "Valid refund_amount required" }, { status: 400 });
-      }
-
-      // Process refund via gateway
-      let refundStatus = 'pending';
-      const gateway = sub.payment_gateway || 'razorpay';
-
-      if (gateway === 'razorpay' && sub.razorpay_payment_id) {
-        const keyId = Deno.env.get("RAZORPAY_KEY_ID");
-        const keySecret = Deno.env.get("RAZORPAY_KEY_SECRET");
-        
-        if (keyId && keySecret) {
-          const auth = btoa(`${keyId}:${keySecret}`);
-          const refundResponse = await fetch(`https://api.razorpay.com/v1/refunds`, {
-            method: "POST",
-            headers: {
-              "Authorization": `Basic ${auth}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              payment_id: sub.razorpay_payment_id,
-              amount: Math.round(refund_amount * 100),
-              notes: { reason: refund_reason || 'Admin refund' }
-            })
-          });
-          const refundData = await refundResponse.json();
-          if (refundResponse.ok) {
-            refundStatus = 'completed';
-            await base44.asServiceRole.entities.Subscription.update(sub.id, {
-              refund_id: refundData.id,
-              refund_status: 'completed',
-              refund_amount: refund_amount,
-              refund_reason: refund_reason || '',
-              status: 'REFUNDED',
-              last_modified_by: user.id,
-              last_modified_at: now,
-              notes: (sub.notes || '') + `\n[ ${now} ] Refunded ₹${refund_amount} via Razorpay. ID: ${refundData.id}. Reason: ${refund_reason || 'N/A'}`
-            });
-          } else {
-            refundStatus = 'failed';
-          }
-        }
-      } else if (gateway === 'stripe' && sub.stripe_charge_id) {
-        const stripeSecret = Deno.env.get("STRIPE_SECRET_KEY");
-        
-        if (stripeSecret) {
-          const refundResponse = await fetch("https://api.stripe.com/v1/refunds", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${stripeSecret}`,
-              "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: new URLSearchParams({
-              charge: sub.stripe_charge_id,
-              amount: Math.round(refund_amount * 100),
-              reason: refund_reason || 'requested_by_customer'
-            })
-          });
-          const refundData = await refundResponse.json();
-          if (refundResponse.ok) {
-            refundStatus = 'completed';
-            await base44.asServiceRole.entities.Subscription.update(sub.id, {
-              refund_id: refundData.id,
-              refund_status: 'completed',
-              refund_amount: refund_amount,
-              refund_reason: refund_reason || '',
-              status: 'REFUNDED',
-              last_modified_by: user.id,
-              last_modified_at: now,
-              notes: (sub.notes || '') + `\n[ ${now} ] Refunded ${refund_amount} ${sub.currency} via Stripe. ID: ${refundData.id}. Reason: ${refund_reason || 'N/A'}`
-            });
-          } else {
-            refundStatus = 'failed';
-          }
-        }
-      }
-
-      if (refundStatus !== 'completed') {
-        // Manual refund recorded but gateway refund failed/not attempted
-        await base44.asServiceRole.entities.Subscription.update(sub.id, {
-          refund_status: refundStatus,
-          refund_amount: refund_amount,
-          refund_reason: refund_reason || '',
-          last_modified_by: user.id,
-          last_modified_at: now,
-          notes: (sub.notes || '') + `\n[ ${now} ] Manual refund recorded: ${refund_amount}. Reason: ${refund_reason || 'N/A'}`
-        });
-      }
-
-      return Response.json({ 
-        success: true, 
-        message: 'Refund processed', 
-        refund_status: refundStatus,
-        refund_id: refundStatus === 'completed' ? 'gateway_processed' : 'manual_recorded'
-      });
     }
 
     if (action === 'extend') {

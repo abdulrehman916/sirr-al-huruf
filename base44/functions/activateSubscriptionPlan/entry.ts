@@ -15,8 +15,6 @@ Deno.serve(async (req) => {
       duration,           // "1_MONTH" | "6_MONTHS" | "1_YEAR" | "LIFETIME"
       amount,
       currency,
-      payment_id,
-      order_id,
       target_user_id,     // optional: for admin granting on behalf of another user
     } = await req.json();
 
@@ -49,14 +47,12 @@ Deno.serve(async (req) => {
       plan_name: duration,
       amount: amount || 0,
       currency: currency || 'INR',
-      razorpay_order_id: order_id || '',
-      razorpay_payment_id: payment_id || '',
       start_date: now.toISOString(),
       expiry_date: duration === 'LIFETIME' ? null : expiryDate.toISOString(),
       status: 'ACTIVE',
       granted_by: user.id,
       granted_at: now.toISOString(),
-      notes: `Plan: ${plan.plan_name} · Duration: ${duration}${payment_id ? ' · Payment: ' + payment_id : ''}`,
+      notes: `Plan: ${plan.plan_name} · Duration: ${duration}`,
     });
 
     // Grant PagePermissions for every page in the plan

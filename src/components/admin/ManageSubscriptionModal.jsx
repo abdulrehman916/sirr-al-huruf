@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Undo2, CalendarPlus2, Ban, AlertCircle, ChevronDown, Loader2 } from "lucide-react";
+import { X, CalendarPlus2, Ban, AlertCircle, ChevronDown, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -17,25 +17,20 @@ export default function ManageSubscriptionModal({ subscription, onClose, onSucce
   const { toast } = useToast();
   const [action, setAction] = useState(null);
   const [processing, setProcessing] = useState(false);
-  const [refundAmount, setRefundAmount] = useState(subscription.amount || 0);
-  const [refundReason, setRefundReason] = useState("");
   const [extendDays, setExtendDays] = useState(30);
 
   const handleAction = async () => {
     setProcessing(true);
     try {
       const payload = { subscription_id: subscription.subscription_id, action };
-      if (action === "refund") {
-        payload.refund_amount = refundAmount;
-        payload.refund_reason = refundReason;
-      } else if (action === "extend") {
+      if (action === "extend") {
         payload.extend_days = extendDays;
       }
 
       const res = await base44.functions.invoke("adminManageSubscription", payload);
       
       if (res.data?.success) {
-        toast({ title: `✓ ${action === "cancel" ? "Cancelled" : action === "refund" ? "Refunded" : "Extended"}`, description: res.data.message });
+        toast({ title: `✓ ${action === "cancel" ? "Cancelled" : "Extended"}`, description: res.data.message });
         onSuccess();
       } else {
         throw new Error(res.data?.message || "Action failed");
@@ -67,13 +62,7 @@ export default function ManageSubscriptionModal({ subscription, onClose, onSucce
         </div>
 
         {!action ? (
-          <div className="grid grid-cols-3 gap-3">
-            <button onClick={() => setAction("refund")}
-              className="p-4 rounded-xl text-center transition-all"
-              style={{ background: "rgba(168,85,247,0.10)", border: "1px solid rgba(168,85,247,0.30)" }}>
-              <Undo2 className="w-5 h-5 mx-auto mb-2" style={{ color: "#c084fc" }} />
-              <p className="text-xs font-semibold text-white">Refund</p>
-            </button>
+          <div className="grid grid-cols-2 gap-3">
             <button onClick={() => setAction("extend")}
               className="p-4 rounded-xl text-center transition-all"
               style={{ background: "rgba(34,197,94,0.10)", border: "1px solid rgba(34,197,94,0.30)" }}>
@@ -96,22 +85,6 @@ export default function ManageSubscriptionModal({ subscription, onClose, onSucce
               <h4 className="font-inter font-bold text-white text-sm capitalize">{action} Subscription</h4>
             </div>
 
-            {action === "refund" && (
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs text-white/45 mb-1 block">Refund Amount</label>
-                  <input type="number" value={refundAmount} onChange={e => setRefundAmount(parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
-                    style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${G.border}` }} />
-                </div>
-                <div>
-                  <label className="text-xs text-white/45 mb-1 block">Reason</label>
-                  <input value={refundReason} onChange={e => setRefundReason(e.target.value)} placeholder="Why refund?"
-                    className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
-                    style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${G.border}` }} />
-                </div>
-              </div>
-            )}
 
             {action === "extend" && (
               <div>
@@ -139,7 +112,7 @@ export default function ManageSubscriptionModal({ subscription, onClose, onSucce
               <button onClick={handleAction} disabled={processing}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50"
                 style={{ background: action === "cancel" ? "linear-gradient(135deg,#ef4444,#dc2626)" : "linear-gradient(135deg,#f6d860,#c98a14)", color: action === "cancel" ? "white" : "#0d1b2a" }}>
-                {processing ? <><Loader2 className="w-4 h-4 inline mr-1 animate-spin" /> Processing…</> : action === "refund" ? "Confirm Refund" : action === "extend" ? "Extend" : "Confirm Cancel"}
+                {processing ? <><Loader2 className="w-4 h-4 inline mr-1 animate-spin" /> Processing…</> : action === "extend" ? "Extend" : "Confirm Cancel"}
               </button>
             </div>
           </div>

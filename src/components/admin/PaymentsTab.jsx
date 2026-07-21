@@ -23,8 +23,6 @@ export default function PaymentsTab({ subscriptions, users, onRefresh }) {
   const [search, setSearch] = useState("");
   const [actionModal, setActionModal] = useState(null); // { sub, action }
   const [processing, setProcessing] = useState(false);
-  const [refundAmount, setRefundAmount] = useState(0);
-  const [refundReason, setRefundReason] = useState("");
   const [extendDays, setExtendDays] = useState(30);
 
   const enriched = subscriptions.map(sub => {
@@ -40,7 +38,7 @@ export default function PaymentsTab({ subscriptions, users, onRefresh }) {
 
   const totalRevenue = enriched.reduce((sum, s) => sum + (s.amount || 0), 0);
   const activeRevenue = enriched.filter(s => s.status === "ACTIVE").reduce((sum, s) => sum + (s.amount || 0), 0);
-  const refundedCount = enriched.filter(s => s.refund_status === "completed").length;
+
 
   const handleAction = async () => {
     if (!actionModal?.sub) return;
@@ -52,17 +50,14 @@ export default function PaymentsTab({ subscriptions, users, onRefresh }) {
         action: actionModal.action,
       };
 
-      if (actionModal.action === "refund") {
-        payload.refund_amount = refundAmount;
-        payload.refund_reason = refundReason;
-      } else if (actionModal.action === "extend") {
+      if (actionModal.action === "extend") {
         payload.extend_days = extendDays;
       }
 
       const res = await base44.functions.invoke("adminManageSubscription", payload);
 
       if (res.data?.success) {
-        toast({ title: `✓ ${actionModal.action === "refund" ? "Refund processed" : actionModal.action === "extend" ? "Extended" : "Cancelled"}` });
+        toast({ title: `✓ ${actionModal.action === "extend" ? "Extended" : "Cancelled"}` });
         onRefresh();
         setActionModal(null);
       } else {
@@ -78,11 +73,10 @@ export default function PaymentsTab({ subscriptions, users, onRefresh }) {
   return (
     <div className="space-y-4">
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {[
           { label: "Total Revenue", value: enriched[0]?.currency ? `${enriched[0].currency} ${totalRevenue.toLocaleString()}` : totalRevenue.toLocaleString(), color: G.text },
           { label: "Active Revenue", value: enriched[0]?.currency ? `${enriched[0].currency} ${activeRevenue.toLocaleString()}` : activeRevenue.toLocaleString(), color: "#22c55e" },
-          { label: "Refunded", value: refundedCount, color: "#f59e0b" },
           { label: "Total Subs", value: enriched.length, color: "#60a5fa" },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-xl border p-3 text-center" style={{ background: G.bg, borderColor: G.border }}>
@@ -112,8 +106,7 @@ export default function PaymentsTab({ subscriptions, users, onRefresh }) {
       ) : (
         <div className="space-y-2">
           {filtered.map(sub => {
-            const gateway = sub.payment_gateway || (sub.razorpay_payment_id ? "razorpay" : sub.stripe_payment_intent_id ? "stripe" : "manual");
-            const statusColor = { ACTIVE: "#22c55e", EXPIRED: "#ef4444", CANCELLED: "#6b7280", REFUNDED: "#f59e0b", PENDING: "#f59e0b" }[sub.status] || "#888";
+            const statusColor = { ACTIVE: "#22c55e", EXPIRED: "#ef4444", CANCELLED: "#6b7280", PENDING: "#f59e0b" }[sub.status] || "#888";
             return (
               <div key={sub.id} className="rounded-xl border p-4" style={{ background: G.bg, borderColor: G.border }}>
                 <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -126,9 +119,6 @@ export default function PaymentsTab({ subscriptions, users, onRefresh }) {
                       </span>
                       <span className="px-2 py-0.5 rounded text-xs font-semibold" style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.45)" }}>
                         {(sub.plan_name || "").replace(/_/g, " ")}
-                      </span>
-                      <span className="px-2 py-0.5 rounded text-xs font-semibold" style={{ background: gateway === "razorpay" ? "rgba(79, 164, 244, 0.12)" : gateway === "stripe" ? "rgba(100, 115, 255, 0.12)" : "rgba(255,255,255,0.05)", color: gateway === "razorpay" ? "#4FA4F4" : gateway === "stripe" ? "#6473FF" : "rgba(255,255,255,0.45)" }}>
-                        {gateway === "razorpay" ? "Razorpay" : gateway === "stripe" ? "Stripe" : "Manual"}
                       </span>
                       {sub.amount > 0 && (
                         <span className="px-2 py-0.5 rounded text-xs font-semibold" style={{ background: "rgba(34,197,94,0.10)", color: "#4ade80" }}>
@@ -146,11 +136,6 @@ export default function PaymentsTab({ subscriptions, users, onRefresh }) {
                       {fmt(sub.expiry_date)}
                     </p>
                     <div className="flex gap-1.5 mt-2 justify-end">
-                      <button onClick={() => setActionModal({ sub, action: "refund" })} disabled={sub.status === "REFUNDED"}
-                        className="px-2 py-1 rounded text-xs font-semibold disabled:opacity-50"
-                        style={{ background: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.30)" }}>
-                        Refund
-                      </button>
                       <button onClick={() => setActionModal({ sub, action: "extend" })}
                         className="px-2 py-1 rounded text-xs font-semibold"
                         style={{ background: "rgba(34,197,94,0.12)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.30)" }}>
@@ -192,22 +177,6 @@ export default function PaymentsTab({ subscriptions, users, onRefresh }) {
                 {actionModal.sub.userName} · {actionModal.sub.page_name} · {actionModal.sub.subscription_id}
               </p>
 
-              {actionModal.action === "refund" && (
-                <>
-                  <div>
-                    <label className="text-xs text-white/45 mb-1 block">Refund Amount</label>
-                    <input type="number" value={refundAmount} onChange={e => setRefundAmount(parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
-                      style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${G.border}` }} />
-                  </div>
-                  <div>
-                    <label className="text-xs text-white/45 mb-1 block">Reason (Optional)</label>
-                    <input value={refundReason} onChange={e => setRefundReason(e.target.value)} placeholder="Why refund?"
-                      className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
-                      style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${G.border}` }} />
-                  </div>
-                </>
-              )}
 
               {actionModal.action === "extend" && (
                 <div>
@@ -235,7 +204,7 @@ export default function PaymentsTab({ subscriptions, users, onRefresh }) {
                 <button onClick={handleAction} disabled={processing}
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50"
                   style={{ background: actionModal.action === "cancel" ? "linear-gradient(135deg,#ef4444,#dc2626)" : "linear-gradient(135deg,#f6d860,#c98a14)", color: actionModal.action === "cancel" ? "white" : "#0d1b2a" }}>
-                  {processing ? <><Loader2 className="w-4 h-4 inline mr-1 animate-spin" /> Processing…</> : actionModal.action === "refund" ? "Confirm Refund" : actionModal.action === "extend" ? "Extend" : "Confirm Cancel"}
+                  {processing ? <><Loader2 className="w-4 h-4 inline mr-1 animate-spin" /> Processing…</> : actionModal.action === "extend" ? "Extend" : "Confirm Cancel"}
                 </button>
               </div>
             </motion.div>
