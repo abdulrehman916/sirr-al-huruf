@@ -102,3 +102,66 @@ Same as §5 — cannot be fully confirmed without the LLM. Structurally, every P
 8. **Formalize library approval:** set `owner_review_status = approved` on approved Islamic manuscript books in the Master PDF Library so approval is explicit.
 
 **Nothing in this audit modified, deleted, quarantined, moved, rewrote, translated, or invented any data. Awaiting your approval before any change.**
+
+---
+
+## 10. Engine source-filtering verification (Rules 2, 3, 8) — THE KEY CHECK
+
+I traced every read path from the calculation/timing/rule engine to `AstroClockKnowledge`.
+
+### 10a. The calculation / timing / rule engine — CLEAN ✓
+`ritualTimingRuleEngine.js` (the actual decision engine that produces the verdict, score, best hours, warnings) does **NOT query `AstroClockKnowledge` at all**. It uses only:
+- Hardcoded approved-manuscript tables: `PDF_PURPOSE_TABLE`, `ZODIAC_TIMING_A/B`, `ELEMENT_DIRECTION`, `ELEMENT_PLACEMENT`, `HAYR_SIID_*`, `PURPOSE_POLARITY` — all sourced from "Al-Shurut" + "Havâss p.50-56" + Ustad Taha (approved).
+- `getCurrentPlanetaryHour`, `getAllPlanetaryHours`, `getActiveWeekday` from `astroClockLiveEngine.js` (hardcoded Chaldean sequence from Havâss).
+- `getMoonPhase` (astronomical computation, no DB read).
+- `ACTION_RULES` from `astroClockActionTimingAdvisor.js` (hardcoded approved sources).
+
+**Conclusion: no unapproved, Western, internet, or pending-review record can reach the calculation/timing/rule engine.** The 214 flagged + ~205 additional Western + ~39 test records CANNOT influence the verdict, score, best-hour selection, or any timing recommendation. ✓ Rules 2, 3.
+
+### 10b. The card DISPLAY path — NOT filtered ⚠️
+The descriptive knowledge panels attached to Planet/Zodiac/Mansion cards read `AstroClockKnowledge` via:
+- `useEntityKnowledge` (used by `EntityKnowledgePanel`) — filters: `{ source_type: "categorized", is_marker: false, rule_entity }` + client-side exclusion of 4 `module_assignment` values (moved_to_holy_names, moved_to_section_d, reserved_jinn_occult, archived_kabbalah) + wrong-slug legacy categories.
+- `useAstroClockKnowledge` — filters: `{ is_marker: false, source_type, weekday, period, sahath_number, planet }`.
+- `useAstroClockContextKnowledge` — filters: `{ is_marker: false, weekday, period, saat_number, planet }` + client-side `source_type === 'full_context'` + non-empty action arrays.
+
+**None of these hooks filter by source approval, `is_verified`, `verification_status`, or exclude the flagged Western-occult/test book titles.** Therefore unapproved/Western/test records CAN appear as descriptive text inside the entity cards (the "Manuscript Knowledge (Unified Pipeline)" panel and the context-knowledge panel). This is a **display** contamination, not a calculation one — but it violates "unapproved records must never participate in any Astro Clock card" in spirit.
+
+### 10c. Net verdict on Rule 2/3/8
+- **Calculations:** fully isolated from unapproved records. ✓
+- **Card display:** unapproved records still surface in the knowledge panels. ⚠️ This is the single remaining source-reach gap. Fix = add an approved-source allowlist filter to the three display hooks (a read-path change, no data mutation, no calculation change). Awaiting your approval.
+
+## 11. Turkish-text check (Rule 4)
+
+Turkish is still visible to users in these places:
+- `ZodiacDetailCard.jsx` line 235: `house.title_tr` rendered directly (12-house rulership block).
+- `astroClockManuscriptMerger.js` `OP_TR` map (Turkish operation translations) — surfaced only if a consumer renders the `tr` field; `MansionsReference`/`PlanetEncyclopedia` use `ml`/`ar` paths, so likely not visible, but the data exists.
+- `LUNAR_MANSION_DATA.operations_ml` holds Turkish text mislabeled as Malayalam (latent).
+- `astroClockLiveEngine.js` `WEEKDAY_ANALYSIS` English fields (not Turkish, but English — see §4b).
+
+## 12. English UI labels still visible (Rule 4/5)
+
+Confirmed in §4: GIH planet-influence/zodiac blocks (`physical_traits_en`, `character_traits_en`, `moon_phase_note_en`, `ritual_timing_note_en`, `health_vulnerabilities_en`, `compatible_signs_en`, favorable colors/stones/metals/days/months, Venus-Vefk note, Sun-Degree method/months/signs), `WEEKDAY_ANALYSIS` fields, `EntityKnowledgePanel` category labels (properties/traits/timing_rules/ritual_instructions/incense/health/general/warnings/relationships), GIH friend/enemy sign names.
+
+## 13. Final verification answers
+
+| Question | Answer |
+|---|---|
+| Is Astro Clock fully following your approved rule system? | **Engine YES** (hardcoded approved manuscripts only). **Card display PARTIALLY** — unapproved records still surface in knowledge panels. |
+| Are there any calculation bugs? | **No bug found** in the planetary-hour sequence (verified vs manuscript tables). One unverified point: 12-min sunrise/sunset correction in `astroClockSunriseSunset.js` (needs a read check). |
+| Are any Turkish texts still visible? | **YES** — `house.title_tr` in ZodiacDetailCard; latent Turkish in `LUNAR_MANSION_DATA.operations_ml` and `OP_TR` map. |
+| Are any English UI labels still visible? | **YES** — GIH blocks, WEEKDAY_ANALYSIS fields, EntityKnowledgePanel category labels (full list §4/§12). |
+| Is every approved astrology record attached to the correct card? | **Cannot be fully confirmed** without LLM (credits exhausted until 2026-07-30 — a billing limit, not a bug). Structurally all approved channels are wired to the cards. |
+| Is any approved information still missing? | **Cannot be fully confirmed** without LLM (same billing limit). No record-level gap proven. |
+| Are any unapproved records still reaching the calculation engine? | **NO** — the calculation/timing/rule engine never reads `AstroClockKnowledge`; it uses hardcoded approved tables only. ✓ Unapproved records DO still reach the **card display** panels (not calculations). |
+
+## 14. Recommended fixes (awaiting your approval — nothing applied)
+
+1. **Add approved-source allowlist to the 3 display hooks** (`useEntityKnowledge`, `useAstroClockKnowledge`, `useAstroClockContextKnowledge`) so unapproved/Western/test records never appear in cards. Read-path only; no data change; no calculation change. — *safe, no Malayalam invention needed.*
+2. **Localize `EntityKnowledgePanel` category labels** to Malayalam (9 generic UI words; pure UI labels, no manuscript content). — *safe.*
+3. **Replace `house.title_tr`** with a non-Turkish render (Arabic or omit) until a Malayalam manuscript translation is available. — *safe (avoids inventing).*
+4. **GIH blocks + WEEKDAY_ANALYSIS Malayalam content** — needs faithful Malayalam translation of manuscript content → LLM required → blocked until 2026-07-30 (workspace billing limit). Do NOT auto-invent; leave as-is until then.
+5. **Fix `LUNAR_MANSION_DATA.operations_ml` mislabel** — stop exposing Turkish as `_ml`; leave field empty or translate via LLM later.
+6. **Verify 12-min sunrise/sunset correction** in `astroClockSunriseSunset.js` (read-only check).
+7. **Formalize library approval** — set `owner_review_status = approved` on approved Islamic manuscript books in MasterPdfLibrary (your decision).
+
+**No calculation, record, or data was modified. Awaiting your approval before any change.**
