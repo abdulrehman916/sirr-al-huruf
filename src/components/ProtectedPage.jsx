@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
-import { Lock, MessageCircle, KeyRound, Loader2, CheckCircle, AlertCircle, Shield } from "lucide-react";
+import { Lock, MessageCircle, KeyRound, Loader2, CheckCircle, AlertCircle, Shield, Construction } from "lucide-react";
 import { getPageConfig, isPublicPage } from "@/lib/pageRegistry";
 import { getCached, setCached, visibilityKey } from "@/lib/permissionCache";
 import { checkLocalPermission, getSessionId, mergeGrantedPermissions, validateAndCleanPermissions, addRedeemedCode } from "@/lib/sessionId";
@@ -81,6 +81,31 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
     if (isDevMode && !isAuthenticated) {
       setAdminFlag(true);
       setAccessStatus("granted");
+      return;
+    }
+
+    // 0.7. Permanent Lock — Owner-only override. When ON, NOBODY except the
+    //     Owner may open the page (admins included). Fully independent of
+    //     visibility, pricing, permissions, RBAC and FeatureConfig — all
+    //     access/request/purchase options are hidden. Existing config
+    //     beneath is preserved untouched and resumes automatically when
+    //     disabled. Read from PageVisibilityConfig.permanent_lock (cached).
+    const plockKey = `plock:${routePath}`;
+    let plock = getCached(plockKey);
+    if (plock === null || plock === undefined) {
+      try {
+        const plockConfigs = await base44.entities.PageVisibilityConfig.filter(
+          { page_path: routePath, archived: false }, null, 1
+        );
+        plock = plockConfigs.length > 0 ? plockConfigs[0].permanent_lock === true : false;
+        setCached(plockKey, plock);
+      } catch {
+        plock = false;
+        setCached(plockKey, false, 30000);
+      }
+    }
+    if (plock) {
+      setAccessStatus("permanent_lock");
       return;
     }
 
@@ -226,6 +251,27 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
           </div>
           <h2 className="font-inter font-bold text-white text-lg">{t("access_restricted_title", "Access Restricted")}</h2>
           <p className="font-inter text-sm text-white/40">{t("access_restricted_desc", "Your role does not have access to this section.")}</p>
+          <button onClick={() => window.location.href = "/"}
+            className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
+            style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}>
+            {t("back_to_home", "← Back to Home")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (accessStatus === "permanent_lock") {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4"
+        style={{ background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 100%)" }}>
+        <div className="w-full max-w-sm space-y-4 text-center">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+            style={{ background: G.bg, border: `1px solid ${G.border}` }}>
+            <Construction className="w-8 h-8" style={{ color: G.text }} />
+          </div>
+          <h2 className="font-inter font-bold text-white text-lg">{t("permanent_lock_title", "Temporarily Unavailable")}</h2>
+          <p className="font-inter text-sm text-white/50">{t("permanent_lock_msg", "This page is currently under development and is temporarily unavailable.")}</p>
           <button onClick={() => window.location.href = "/"}
             className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
             style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}>

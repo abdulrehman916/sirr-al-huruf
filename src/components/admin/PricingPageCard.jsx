@@ -20,12 +20,17 @@ import {
   ShoppingBag,
   Ban,
   GripVertical,
+  Lock,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { FEATURE_REGISTRY, hasSubFeatures, getFeatures } from "@/lib/featureRegistry";
 import { invalidateFeatureConfigCache } from "@/lib/featureConfigCache";
 import { invalidatePlanCache } from "@/lib/subscriptionPlanCache";
+import { useAuth } from "@/lib/AuthContext";
+import { ROLES } from "@/lib/rbac";
+import { isPublicPage } from "@/lib/pageRegistry";
+import { clearAllCache } from "@/lib/permissionCache";
 import { formatPrice, isSaleActive, getEffectivePrice, formatDuration, inferDurationType } from "@/lib/pricingUtils";
 import PricingPlanEditor from "./PricingPlanEditor";
 import ChildPagePlansSection from "./ChildPagePlansSection";
@@ -43,9 +48,12 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
   const [expanded, setExpanded] = useState(false);
   const [editingPage, setEditingPage] = useState(false);
   const [savingPage, setSavingPage] = useState(false);
+  const [savingPlock, setSavingPlock] = useState(false);
+  const { role } = useAuth();
 
   // Page-level editable fields
   const vc = visibilityConfig;
+  const permanentLock = vc?.permanent_lock === true;
   const [pageTitle, setPageTitle] = useState(vc?.page_name || pageName);
   const [pageDesc, setPageDesc] = useState(vc?.description || "");
   const [pagePrice, setPagePrice] = useState(vc?.price || "");
@@ -83,6 +91,7 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
         updated_at: new Date().toISOString(),
         archived: vc?.archived || false,
         admin_only: vc?.admin_only || false,
+        permanent_lock: vc?.permanent_lock === true,
       };
 
       if (vc?.id) {
@@ -98,6 +107,44 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
       toast({ title: "Save failed", description: e.message, variant: "destructive" });
     } finally {
       setSavingPage(false);
+    }
+  };
+
+  // ── Permanent Lock — Owner-only single-click override ───────────────────
+  // Independent of visibility/pricing/permissions/RBAC/FeatureConfig. When
+  // ON, ProtectedPage blocks ALL non-Owner access (admins included) and
+  // hides every access/request/purchase option. Disabling restores the
+  // existing config exactly as-is (nothing underneath is modified).
+  const togglePermanentLock = async () => {
+    if (role !== ROLES.OWNER) return;
+    setSavingPlock(true);
+    try {
+      const me = await base44.auth.me();
+      const next = !permanentLock;
+      if (vc?.id) {
+        await base44.entities.PageVisibilityConfig.update(vc.id, {
+          permanent_lock: next,
+          updated_by: me?.id || "",
+          updated_at: new Date().toISOString(),
+        });
+      } else {
+        await base44.entities.PageVisibilityConfig.create({
+          page_path: pagePath,
+          page_name: pageName,
+          requires_permission: !isPublicPage(pagePath),
+          permanent_lock: next,
+          is_purchasable: true,
+          updated_by: me?.id || "",
+          updated_at: new Date().toISOString(),
+        });
+      }
+      clearAllCache();
+      toast({ title: next ? "Permanent Lock enabled" : "Permanent Lock disabled", description: pageName });
+      if (onSaved) onSaved();
+    } catch (e) {
+      toast({ title: "Update failed", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingPlock(false);
     }
   };
 
@@ -154,6 +201,15 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
               {isPurchasable ? <ShoppingBag className="w-2 h-2" /> : <Ban className="w-2 h-2" />}
               {isPurchasable ? "Purchasable" : "No Purchase"}
             </span>
+            {permanentLock && (
+              <span
+                className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider flex items-center gap-0.5"
+                style={{ background: "rgba(239,68,68,0.12)", color: "#f87171" }}
+              >
+                <Lock className="w-2 h-2" />
+                Permanent Lock
+              </span>
+            )}
             {activePlans.length > 0 && (
               <span className="text-[9px] text-white/40">
                 {activePlans.length} plan{activePlans.length !== 1 ? "s" : ""}
@@ -195,6 +251,38 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
             style={{ overflow: "hidden" }}
           >
             <div className="px-4 pb-4 space-y-4 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+              {/* ── Permanent Lock (Owner-only) ── */}
+              {role === ROLES.OWNER && (
+                <div className="pt-3">
+                  <div className="rounded-xl border p-3 flex items-center justify-between gap-3" style={{ background: permanentLock ? "rgba(239,68,68,0.08)" : G.bg, borderColor: permanentLock ? "rgba(239,68,68,0.45)" : G.border }}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5" style={{ color: permanentLock ? "#ef4444" : G.text }} />
+                        <span className="text-xs font-bold text-white">Permanent Lock</span>
+                        <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: permanentLock ? "rgba(239,68,68,0.20)" : "rgba(34,197,94,0.12)", color: permanentLock ? "#f87171" : "#22c55e" }}>
+                          {permanentLock ? "ON" : "OFF"}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-white/40 mt-1 leading-snug">
+                        Owner-only override. When ON, nobody except the Owner can open this page — permissions, pricing, access codes and requests are temporarily ignored. Disable to restore everything exactly as configured.
+                      </p>
+                    </div>
+                    <button
+                      onClick={togglePermanentLock}
+                      disabled={savingPlock}
+                      className="flex-shrink-0 px-3 py-2 rounded-lg text-xs font-bold disabled:opacity-50 flex items-center gap-1.5"
+                      style={permanentLock
+                        ? { background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.45)" }
+                        : { background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }
+                      }
+                    >
+                      {savingPlock ? <Loader2 className="w-3 h-3 animate-spin" /> : <Lock className="w-3 h-3" />}
+                      {savingPlock ? "…" : permanentLock ? "Disable" : "Enable"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* ── Page Settings Section ── */}
               <div className="pt-3">
                 <div className="flex items-center justify-between mb-2">

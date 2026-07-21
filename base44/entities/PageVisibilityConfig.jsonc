@@ -25,6 +25,11 @@
       "default": true,
       "description": "Can users purchase/request access to this page? If false, no plans or request buttons are shown \u2014 admin must grant manually. Page is still locked (requires_permission still applies)."
     },
+    "permanent_lock": {
+      "type": "boolean",
+      "default": false,
+      "description": "OWNER-ONLY OVERRIDE \u2014 completely independent of requires_permission (Public/Private visibility), is_purchasable, pricing, subscription plans, access codes, RBAC, Permissions and FeatureConfig. When true, NOBODY except the Owner can open the page: ProtectedPage short-circuits before any existing permission/pricing/RBAC logic and shows a 'temporarily unavailable' screen, hiding all Request Access / WhatsApp / access-code / purchase / subscription options. Existing configuration underneath is never modified \u2014 disabling permanent_lock restores the page exactly as it was. Stored as a dedicated page setting, not merged with Public/Private visibility."
+    },
     "price": {
       "type": "string",
       "description": "Display price for this page e.g. 'AED 50' or 'Free'"
