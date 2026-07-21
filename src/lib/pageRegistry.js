@@ -3,15 +3,14 @@ import ROUTE_MANIFEST from '@/lib/routeManifest';
 /**
  * Dynamic Page Registry
  * Decentralized page registration with O(1) config retrieval
+ *
+ * Only routes that exist in ROUTE_MANIFEST are manually registered here
+ * (for curated names/icons). All other manifest routes are auto-registered
+ * by the loop at the bottom. No orphan entries for removed routes are kept.
  */
 
 const pageRegistry = new Map();
 
-/**
- * Register a page configuration
- * @param {string} path - Route path
- * @param {object} config - Page configuration
- */
 export function registerPage(path, config) {
   pageRegistry.set(path, {
     path,
@@ -24,29 +23,16 @@ export function registerPage(path, config) {
   });
 }
 
-/**
- * Derive permission code from path
- * @param {string} path - Route path
- * @returns {string} Permission code
- */
 export function derivePermissionCode(path) {
   const clean = path.replace(/^\/+/, '').replace(/\/+$/, '');
   if (!clean) return 'HOME_ACCESS';
   return clean.toUpperCase().replace(/[-/]/g, '_') + '_ACCESS';
 }
 
-/**
- * Get page configuration
- * @param {string} path - Route path
- * @returns {object|null} Page config
- */
 export function getPageConfig(path) {
-  // Direct match
   if (pageRegistry.has(path)) {
     return pageRegistry.get(path);
   }
-  
-  // Pattern match (e.g., /plants/:id)
   for (const [pattern, config] of pageRegistry.entries()) {
     if (pattern.includes(':')) {
       const regex = new RegExp('^' + pattern.replace(/:\w+/g, '[^/]+') + '$');
@@ -55,58 +41,32 @@ export function getPageConfig(path) {
       }
     }
   }
-  
   return null;
 }
 
-/**
- * Check if page is public (no permission required)
- * @param {string} path - Route path
- * @returns {boolean}
- */
 export function isPublicPage(path) {
   const config = getPageConfig(path);
   return config ? !config.requiresPermission : false;
 }
 
-/**
- * Get all registered pages
- * @returns {array} All page configs
- */
 export function getAllPages() {
   return Array.from(pageRegistry.values());
 }
 
-/**
- * Alias for getAllPages - for compatibility
- * @returns {array} All page configs
- */
 export const getAllRegisteredPages = getAllPages;
 
-/**
- * Get all visible content pages
- * @returns {array} All page configs
- */
 export function getContentPages() {
   return getAllPages().filter(p => p.pageType === 'content' && p.visible);
 }
 
-/**
- * Get pages visible to admin (for PageVisibilityConfig)
- * @returns {array} Content pages
- */
 export function getAdminVisiblePages() {
-  return getAllPages().filter(p => 
-    p.visible && 
+  return getAllPages().filter(p =>
+    p.visible &&
     !p.adminOnly &&
     p.pageType === 'content'
   );
 }
 
-/**
- * Categorize pages by type
- * @returns {object} Categorized pages
- */
 export function categorizePages() {
   const pages = getAllPages();
   return {
@@ -117,12 +77,13 @@ export function categorizePages() {
   };
 }
 
-// Register core pages — all public by default
+// ── Manual registrations (curated names/icons) — ONLY for routes in ROUTE_MANIFEST ──
+
+// Core
 registerPage('/', { name: 'Home', icon: '🏠', category: 'System', pageType: 'content', visible: true, requiresPermission: false });
 registerPage('/onboarding', { requiresPermission: false, pageType: 'system' });
-registerPage('/otp-login', { requiresPermission: false, pageType: 'system' });
 
-// Content pages — requiresPermission: true means they need a reading code
+// Content pages
 registerPage('/abjad', { name: 'Abjad Calculator', icon: '🔢', category: 'Calculators', pageType: 'content', visible: true, requiresPermission: false });
 registerPage('/anasir', { name: 'Anasir Calculator', icon: '🌊', category: 'Calculators', pageType: 'content', visible: true, requiresPermission: false });
 registerPage('/hadim', { name: 'Hadim Calculator', icon: '👑', category: 'Calculators', pageType: 'content', visible: true, requiresPermission: false });
@@ -134,7 +95,7 @@ registerPage('/faal-hasrath', { name: 'Faal Hasrath', icon: '🔮', category: 'D
 registerPage('/plants', { name: 'Plants Dictionary', icon: '🌿', category: 'Reference', pageType: 'content', visible: true, requiresPermission: true });
 registerPage('/plants/:id', { pageType: 'content', visible: false, requiresPermission: true });
 registerPage('/shop', { name: 'Shop', icon: '🛍️', category: 'Shop', pageType: 'content', visible: true, requiresPermission: true });
-registerPage('/shop/:productId', { pageType: 'content', visible: false, requiresPermission: true });
+registerPage('/shop/:productId', { pageType: 'content', visible: false, requiresPermission: false });
 registerPage('/evil-jinn', { name: 'Evil Jinn Names', icon: '👁️', category: 'Reference', pageType: 'content', visible: true, requiresPermission: true });
 registerPage('/holy-names', { name: 'Magical Holy Names', icon: '✦', category: 'Reference', pageType: 'content', visible: true, requiresPermission: true });
 registerPage('/astro-clock', { name: 'Astro Clock', icon: '🕰️', category: 'Timings', pageType: 'content', visible: true, requiresPermission: true });
@@ -148,84 +109,22 @@ registerPage('/support/voice', { pageType: 'content', visible: false, requiresPe
 registerPage('/support/ticket', { pageType: 'content', visible: false, requiresPermission: false });
 
 // Subscription pages
-registerPage('/subscription/expired', { pageType: 'system', visible: false });
-registerPage('/subscription/pending', { pageType: 'system', visible: false });
-registerPage('/payment/razorpay', { pageType: 'system', visible: false });
-registerPage('/premium/request', { pageType: 'content', visible: true });
-registerPage('/my-subscription', { name: 'My Subscription', icon: '⭐', category: 'System', pageType: 'content', visible: true });
-registerPage('/payment', { pageType: 'system', visible: false });
+registerPage('/subscription/expired', { pageType: 'system', visible: false, requiresPermission: false });
+registerPage('/subscription/pending', { pageType: 'system', visible: false, requiresPermission: false });
+registerPage('/premium/request', { pageType: 'content', visible: true, requiresPermission: false });
+registerPage('/my-subscription', { name: 'My Subscription', icon: '⭐', category: 'System', pageType: 'content', visible: true, requiresPermission: false });
 
-// Admin pages
+// Admin pages (all exist in ROUTE_MANIFEST)
 registerPage('/admin/access-dashboard', { name: 'Admin Dashboard', icon: '👑', category: 'Admin', pageType: 'admin', adminOnly: true, visible: false });
-registerPage('/admin/test', { pageType: 'admin', adminOnly: true, visible: false });
 registerPage('/admin/support', { name: 'Support Messages', icon: '💬', category: 'Admin', pageType: 'admin', adminOnly: true, visible: false });
-registerPage('/admin/permissions', { pageType: 'admin', adminOnly: true, visible: false });
 registerPage('/admin/page-permissions', { name: 'Page Permissions', icon: '🌐', category: 'Admin', pageType: 'admin', adminOnly: true, visible: false });
-registerPage('/admin/subscriptions', { pageType: 'admin', adminOnly: true, visible: false });
-registerPage('/admin/page-subscriptions', { pageType: 'admin', adminOnly: true, visible: false });
-registerPage('/admin/pricing-settings', { pageType: 'admin', adminOnly: true, visible: false });
-registerPage('/admin/user-manager', { pageType: 'admin', adminOnly: true, visible: false });
-registerPage('/admin/user-management', { pageType: 'admin', adminOnly: true, visible: false });
 registerPage('/admin/access-logs', { pageType: 'admin', adminOnly: true, visible: false });
-registerPage('/admin/security-audit', { pageType: 'admin', adminOnly: true, visible: false });
-registerPage('/admin/subscriptions-management', { pageType: 'admin', adminOnly: true, visible: false });
-registerPage('/admin/user-permissions', { pageType: 'admin', adminOnly: true, visible: false });
-registerPage('/admin/user/:userId', { pageType: 'admin', adminOnly: true, visible: false });
-registerPage('/admin/faal-chob-upload', { pageType: 'admin', adminOnly: true, visible: false });
 registerPage('/admin/access-requests', { pageType: 'admin', adminOnly: true, visible: false });
 registerPage('/admin/admins', { name: 'Admins', icon: '🛡️', category: 'Admin', pageType: 'admin', adminOnly: true, visible: false });
-
-// Audit pages
-registerPage('/admin/qa-report', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/launch-checklist', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/pre-launch-report', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/enterprise-audit', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/pre-launch-verification', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/final-production-audit', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/performance-test', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/final-signoff', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/page-visibility-audit', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/verify-vip', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/content-rendering-audit', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/test-customer-content', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/audit-fix-content', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/audit-table-rendering', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/vip-test-customer', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/otp-email-test', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/test-otp-login', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/debug-otp-email', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/test-otp-e2e', { pageType: 'audit', adminOnly: true, visible: false });
-
-// Manuscript audit pages
-registerPage('/admin/hierarchy-audit', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/mizaan-pipeline-test', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/mizaan-audit-report', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/istintak-rules', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/manuscript-pipeline', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/abjad-bast-audit', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/mizan-calc-audit', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/mizan-vefk-audit', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/mizan-method', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/mizan-manuscript-verify', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/mizan-manuscript-analysis', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/mizan-vefk-model', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/mizan-rubai', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/mizan-manuscript-audit', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/manuscript-audit', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/manuscript-action', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/manuscript-library', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/manuscript-final', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/astrology-only', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/manuscript-browser', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/manuscript-rule-audit', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/manuscript-advanced-search', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/manazil-quality', { pageType: 'audit', adminOnly: true, visible: false });
-registerPage('/admin/manuscript-completion', { pageType: 'audit', adminOnly: true, visible: false });
+registerPage('/admin/user/:userId', { pageType: 'admin', adminOnly: true, visible: false });
 
 // ── AUTO-REGISTRATION FROM ROUTE_MANIFEST ──────────────────────────
 // Any route not manually registered above is auto-registered with derived config.
-// This ensures new pages automatically appear in all page selectors (Access Codes,
-// Page Access admin, Redeem Approval, etc.) without any manual work.
 // Manual registrations above always take precedence (curated names/icons win).
 
 function derivePageName(path) {
@@ -235,7 +134,6 @@ function derivePageName(path) {
   const words = clean.split(/[-/]/).filter(Boolean);
   return words
     .map((w) => {
-      // Handle alphanumeric words like "mizaan9" → "Mizaan 9"
       const match = w.match(/^([a-zA-Z]+)(\d+)$/);
       if (match) {
         return match[1].charAt(0).toUpperCase() + match[1].slice(1) + ' ' + match[2];
@@ -253,7 +151,6 @@ function isSystemPath(path) {
     path.startsWith('/my-') ||
     path.startsWith('/redeem-') ||
     path.startsWith('/premium/') ||
-    path.startsWith('/payment') ||
     path.startsWith('/onboarding') ||
     path.startsWith('/otp-') ||
     path.startsWith('/rules-conditions') ||
@@ -266,8 +163,6 @@ for (const entry of ROUTE_MANIFEST) {
   if (pageRegistry.has(entry.path)) continue; // manual registration wins
 
   if (isSystemPath(entry.path)) {
-    // System/admin paths → registered as hidden so getPageConfig() still works
-    // for ProtectedPage, but they don't appear in getContentPages() selectors
     registerPage(entry.path, {
       pageType: entry.path.startsWith('/admin/') ? 'admin' : 'system',
       adminOnly: entry.path.startsWith('/admin/'),
@@ -277,7 +172,6 @@ for (const entry of ROUTE_MANIFEST) {
     continue;
   }
 
-  // Content page → auto-register with derived name, visible in selectors
   const isPublic = entry.flags?.includes('public');
   registerPage(entry.path, {
     name: derivePageName(entry.path),

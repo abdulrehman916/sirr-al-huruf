@@ -99,6 +99,11 @@ export const ROUTE_ACCESS = {
   // PDF Library simultaneously; AI compares all books before results.
   // All future modules obtain knowledge only through this engine.
   "/admin/knowledge-search":     { roles: [ROLES.OWNER] },
+  // Astro Clock Library Status — Owner-only dashboard (Knowledge Management).
+  "/admin/astro-library-status":  { roles: [ROLES.OWNER] },
+  // Owner Approval Queue — READ-ONLY review of flagged Western-source Astro
+  // Clock records (Knowledge Management). Owner-only.
+  "/admin/astro-approval-queue":  { roles: [ROLES.OWNER] },
 };
 
 // Match a concrete path against ROUTE_ACCESS patterns (supports :param).
