@@ -104,10 +104,25 @@ export default function DailyMantras() {
         </div>
       )}
 
-      {/* Guided ritual groups */}
-      {mantraGroups.map((group, i) => (
+      {/* Guided ritual groups — ML mode: full guided cards (data is Malayalam-only).
+          AR mode: Arabic recitation only (approved). EN mode: placeholder. */}
+      {language === "ml" && mantraGroups.map((group, i) => (
         <SourceGroup key={i} sourceGroup={group} defaultExpandedId={defaultExpandedId} />
       ))}
+      {language === "ar" && (
+        <div className="space-y-2">
+          {mantraGroups.flatMap(g => g.mantras).map((m, i) => (
+            <div key={m.id || i} className="rounded-lg p-3" style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.15)" }}>
+              {m.arabic_text && <p className="font-amiri text-center leading-loose" style={{ color: G.text, direction: "rtl", fontSize: "1.25rem" }}>{m.arabic_text}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+      {language === "en" && (
+        <div className="rounded-lg p-3 text-center" style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.15)" }}>
+          <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.55)" }}>English guidance not available yet.</p>
+        </div>
+      )}
 
     </div>
   );

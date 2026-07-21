@@ -70,10 +70,31 @@ export function zodiacEnToML(nameEn) {
 export function natureToML(genelHukum) {
   if (!genelHukum) return "—";
   const lower = genelHukum.toLowerCase();
-  if (lower.includes("nahs") || lower.includes("uğursuz")) return "نحس — പ്രതികൂലം";
-  if (lower.includes("saad") || lower.includes("sa'd") || lower.includes("uğurlu") || lower.includes("uygun")) return "سعد — അനുകൂലം";
-  if (lower.includes("karışık")) return "مختلط — മിശ്രം";
+  if (lower.includes("nahs") || lower.includes("uğursuz")) return "പ്രതികൂലം";
+  if (lower.includes("saad") || lower.includes("sa'd") || lower.includes("uğurlu") || lower.includes("uygun")) return "അനുകൂലം";
+  if (lower.includes("karışık")) return "മിശ്രം";
   return "—";
+}
+
+export function natureToEN(genelHukum) {
+  if (!genelHukum) return "—";
+  const lower = genelHukum.toLowerCase();
+  if (lower.includes("nahs") || lower.includes("uğursuz")) return "Inauspicious";
+  if (lower.includes("saad") || lower.includes("sa'd") || lower.includes("uğurlu") || lower.includes("uygun")) return "Auspicious";
+  if (lower.includes("karışık")) return "Mixed";
+  return "—";
+}
+
+const ZODIAC_TR_TO_EN = {
+  "koç": "Aries", "boğa": "Taurus", "ikizler": "Gemini",
+  "yengeç": "Cancer", "aslan": "Leo", "başak": "Virgo",
+  "terazi": "Libra", "akrep": "Scorpio", "yay": "Sagittarius",
+  "oğlak": "Capricorn", "kova": "Aquarius", "balık": "Pisces",
+};
+
+export function zodiacToEN(zodiacSign) {
+  if (!zodiacSign) return "—";
+  return ZODIAC_TR_TO_EN[zodiacSign.toLowerCase()] || "—";
 }
 
 export function signsToML(signs) {
@@ -101,5 +122,5 @@ export const PLANET_AR_ML = {
 export function planetArabicMLDisplay(planetKey) {
   const parts = PLANET_AR_ML[planetKey];
   if (!parts) return null;
-  return `${parts.ar} — ${parts.ml}`;
+  return parts.ml;
 }

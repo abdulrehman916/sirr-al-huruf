@@ -8,7 +8,7 @@ import { MiniCard } from "./DashboardSection";
 import { Moon } from "lucide-react";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfNightDayRule, getKashfLunarDayInfo } from "@/lib/astroClockManuscriptMerger";
-import { natureToArabic, natureToML, isNahsNature, zodiacEnToML, signsToML } from "@/lib/astroClockLabelMap";
+import { natureToArabic, natureToML, natureToEN, isNahsNature, zodiacEnToML, signsToML } from "@/lib/astroClockLabelMap";
 import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
 
 export default function MoonCenter() {
@@ -34,7 +34,7 @@ export default function MoonCenter() {
   const dignityColor = dignity?.strength === "weakest" ? "#F87171" : dignity?.strength === "very_strong" || dignity?.strength === "strongest" ? "#4ADE80" : "#FBBF24";
 
   const element = d.moonZodiacFull ? (language === "ml" ? d.moonZodiacFull.element_ml : d.moonZodiacFull.element) : "—";
-  const mansionNature = language === "ml" ? natureToML(moonMansion?.genel_hukum) : natureToArabic(moonMansion?.genel_hukum);
+  const mansionNature = language === "ml" ? natureToML(moonMansion?.genel_hukum) : language === "ar" ? natureToArabic(moonMansion?.genel_hukum) : natureToEN(moonMansion?.genel_hukum);
   const isNahs = isNahsNature(moonMansion?.genel_hukum);
   const natureColor = isNahs ? "#F87171" : "#4ADE80";
 

@@ -47,20 +47,21 @@ export default function PlanetEncyclopedia() {
     const isCurrent = key === currentPlanet;
     const isOpen = expanded === key;
     const displayName = language === "ml" ? (planetArabicMLDisplay(key) || info.name_ml_equivalent) : language === "ar" ? (PLANET_AR_ML[key]?.ar || info.name_ar || "") : info.name_en;
-    const nature = normalizeDisplay(language === "ml" ? info.nature_ml : info.nature_en);
+    const nature = language === "ar" ? "—" : normalizeDisplay(language === "ml" ? info.nature_ml : info.nature_en);
     const elements = getPlanetElements(key, d.zodiacSigns);
     const color = isCurrent ? "#F5D060" : "rgba(255,255,255,0.70)";
     const borderColor = isCurrent ? "rgba(212,175,55,0.40)" : "rgba(255,255,255,0.08)";
 
-    const goodActions = normalizeArray(language === "ml" ? info.goodActions_ml : info.goodActions_en);
-    const badActions = normalizeArray(language === "ml" ? info.badActions_ml : info.badActions_en);
-    const benefits = normalizeArray(language === "ml" ? info.benefits_ml : info.benefits_en);
-    const warnings = normalizeArray(language === "ml" ? info.warnings_ml : info.warnings_en);
-    const spiritual = normalizeArray(language === "ml" ? info.spiritualOperations_ml : info.spiritualOperations_en);
+    const goodActions = normalizeArray(language === "ml" ? info.goodActions_ml : language === "ar" ? [] : info.goodActions_en);
+    const badActions = normalizeArray(language === "ml" ? info.badActions_ml : language === "ar" ? [] : info.badActions_en);
+    const benefits = normalizeArray(language === "ml" ? info.benefits_ml : language === "ar" ? [] : info.benefits_en);
+    const warnings = normalizeArray(language === "ml" ? info.warnings_ml : language === "ar" ? [] : info.warnings_en);
+    const spiritual = normalizeArray(language === "ml" ? info.spiritualOperations_ml : language === "ar" ? [] : info.spiritualOperations_en);
 
-    const friendNames = (friends?.friends || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : d.planetInfo[p]?.name_en);
-    const enemyNames = (friends?.enemies || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : d.planetInfo[p]?.name_en);
-    const neutralNames = (friends?.neutral || []).map(p => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : d.planetInfo[p]?.name_en);
+    const planetNameByLang = (p) => language === "ml" ? d.planetInfo[p]?.name_ml_equivalent : language === "ar" ? (PLANET_AR_ML[p]?.ar || d.planetInfo[p]?.name_ar || "—") : d.planetInfo[p]?.name_en;
+    const friendNames = (friends?.friends || []).map(planetNameByLang);
+    const enemyNames = (friends?.enemies || []).map(planetNameByLang);
+    const neutralNames = (friends?.neutral || []).map(planetNameByLang);
     const kashfOps = getKashfOperationsForPlanet(key);
     const kashfDir = getKashfDirectionForElement(elements[0]);
 
@@ -75,7 +76,7 @@ export default function PlanetEncyclopedia() {
             <span className="font-inter text-xs font-bold block truncate" style={{ color }}>{displayName}</span>
             <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>{nature}</span>
           </div>
-          {language !== "ml" && <span className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.40)" }}>{PLANET_AR_ML[key]?.ar || info.name_ar}</span>}
+          {language === "ar" && <span className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.40)" }}>{PLANET_AR_ML[key]?.ar || info.name_ar}</span>}
           {isCurrent && <span className="font-inter text-[7px] uppercase px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.15)", color: "#F5D060" }}>{txt("നിലവിലെ", "Now", "Şimdi")}</span>}
           <ChevronDown className="w-3.5 h-3.5 transition-transform flex-shrink-0" style={{ color: "rgba(212,175,55,0.40)", transform: isOpen ? "rotate(180deg)" : "none" }} />
         </button>
@@ -85,9 +86,9 @@ export default function PlanetEncyclopedia() {
               <div className="px-2.5 pb-2.5 space-y-2">
                 {/* Names */}
                 <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അറബി പദം", "Arabic", "Arapça")}: </span><span className="font-amiri" style={{ color: "rgba(255,255,255,0.65)" }}>{PLANET_AR_ML[key]?.ar || info.name_ar}</span></div>
-                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("മലയാള അർത്ഥം", "Malayalam", "Malayalam")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{PLANET_AR_ML[key]?.ml || info.name_ml_equivalent}</span></div>
-                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("മൂലകം", "Elements", "Elementler")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? (elements.map(e => elementToML(e)).join(", ") || "—") : (elements.join(", ") || "—")}</span></div>
+                  {language === "ar" && <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അറബി പദം", "Arabic", "العربية")}: </span><span className="font-amiri" style={{ color: "rgba(255,255,255,0.65)" }}>{PLANET_AR_ML[key]?.ar || info.name_ar}</span></div>}
+                  {language === "ml" && <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("മലയാള അർത്ഥം", "Malayalam", "مالايالام")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{PLANET_AR_ML[key]?.ml || info.name_ml_equivalent}</span></div>}
+                  <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("മൂലകം", "Elements", "العناصر")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? (elements.map(e => elementToML(e)).join(", ") || "—") : language === "ar" ? "—" : (elements.join(", ") || "—")}</span></div>
                 </div>
 
                 {/* Friendships */}

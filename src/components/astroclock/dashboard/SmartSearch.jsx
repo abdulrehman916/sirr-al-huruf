@@ -23,7 +23,8 @@ import {
   Shield, Scale, GitBranch, Sparkles,
 } from "lucide-react";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
-import { planetArabicMLDisplay } from "@/lib/astroClockLabelMap";
+import { useIsOwner } from "@/hooks/useIsOwner";
+import { planetArabicMLDisplay, PLANET_AR_ML } from "@/lib/astroClockLabelMap";
 import { batchTranslateToMalayalam } from "@/lib/ruleTextTranslator";
 
 const QUICK_TAGS = [
@@ -43,6 +44,7 @@ export default function SmartSearch() {
   const { search, reset, loading, error, result, searched } = useKnowledgeIntelligenceSearch(d);
   const [input, setInput] = useState("");
   const [mlTranslations, setMlTranslations] = useState({});
+  const isOwner = useIsOwner();
 
   // ── Batch translate rule texts to Malayalam when ML is selected ──
   // UI-only: does NOT modify database, search engine, or LLM prompts.
@@ -62,12 +64,12 @@ export default function SmartSearch() {
     return () => { cancelled = true; };
   }, [result, language]);
 
-  // ── Malayalam display helper for Manuscript Knowledge section ──
+  // ── Language-strict display helper (no auto-translation, no English fallback in ML/AR) ──
   const getEkML = (en, ml) => {
-    if (language !== "ml") return (en || "").split("\n---\n")[0];
+    if (language === "en") return (en || "").split("\n---\n")[0];
+    if (language === "ar") return "الترجمة العربية غير متوفرة بعد.";
     if (ml) return ml.split("\n---\n")[0];
-    const snippet = (en || "").split("\n---\n")[0];
-    return mlTranslations[snippet] || snippet;
+    return "മലയാള പരിഭാഷ ഇതുവരെ ലഭ്യമല്ല.";
   };
 
   const handleSearch = () => {
@@ -128,7 +130,12 @@ export default function SmartSearch() {
           const cat = ACTION_CATEGORIES[key];
           const graph = SEMANTIC_GRAPH[key];
           if (!cat && !graph) return null;
-          const label = cat?.label?.[language] || cat?.label?.en || graph?.label?.[language] || graph?.label?.en || key;
+          // ML/AR: hide tags lacking an approved label in the active language (no English leak).
+          if (language !== "en") {
+            const langLabel = cat?.label?.[language] || graph?.label?.[language];
+            if (!langLabel) return null;
+          }
+          const label = cat?.label?.[language] || graph?.label?.[language] || (language === "en" ? (cat?.label?.en || graph?.label?.en || key) : key);
           const isActive = result?.canonicalId === key;
           return (
             <button
@@ -229,7 +236,7 @@ export default function SmartSearch() {
             {/* Action title */}
             <div className="flex items-center gap-2 mb-1.5">
               <span className="font-inter text-[12px] font-bold" style={{ color: G.text }}>
-                {result.canonicalAction[language] || result.canonicalAction.en}
+                {result.canonicalAction[language] || (language === "en" ? result.canonicalAction.en : (language === "ml" ? "മലയാള പരിഭാഷ ഇതുവരെ ലഭ്യമല്ല." : "الترجمة العربية غير متوفرة بعد."))}
               </span>
             </div>
             {/* Suitability badge */}
@@ -246,8 +253,8 @@ export default function SmartSearch() {
             </div>
           </div>
 
-          {/* ── Related Actions ── */}
-          {result.relatedActions.length > 0 && (
+          {/* ── Related Actions ── EN only (topic keys are English) ── */}
+          {language === "en" && result.relatedActions.length > 0 && (
             <div className="rounded-lg p-2" style={{
               background: "rgba(212,175,55,0.04)",
               border: `1px solid ${G.border}`,
@@ -274,11 +281,7 @@ export default function SmartSearch() {
           {result.suitable ? (
             <div className="rounded-lg p-2.5" style={{ background: "rgba(212,175,55,0.06)", border: `1px solid ${G.border}` }}>
               <p className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.70)" }}>
-                {txt(
-                  `${result.canonicalAction.ml || result.canonicalAction.en} ഇന്ന് അനുകൂലമാണ്. ${result.preferredPlanets.map(p => d.planetInfo[p]?.name_ml_equivalent || p).join(", ")} ഗ്രഹങ്ങളുടെ സഅാതുകൾ ഉപയോഗിക്കുക.`,
-                  `${result.canonicalAction.en} is favorable today. Use hours governed by ${result.preferredPlanets.map(p => d.planetInfo[p]?.name_en || p).join(", ")}.`,
-                  `${result.canonicalAction.en} today is favorable. Use ${result.preferredPlanets.map(p => d.planetInfo[p]?.name_en || p).join(", ")} hours.`
-                )}
+                {language === "ml" ? `${result.canonicalAction.ml || result.canonicalAction.en} ഇന്ന് അനുകൂലമാണ്. ${result.preferredPlanets.map(p => d.planetInfo[p]?.name_ml_equivalent || p).join(", ")} ഗ്രഹങ്ങളുടെ സഅാതുകൾ ഉപയോഗിക്കുക.` : language === "ar" ? `موافق اليوم. استخدم ساعات ${result.preferredPlanets.map(p => PLANET_AR_ML[p]?.ar || p).join("، ")}.` : `${result.canonicalAction.en} is favorable today. Use hours governed by ${result.preferredPlanets.map(p => d.planetInfo[p]?.name_en || p).join(", ")}.`}
               </p>
             </div>
           ) : (
@@ -291,7 +294,7 @@ export default function SmartSearch() {
               </div>
               {result.blockingReasons.map((r, i) => (
                 <p key={i} className="font-inter text-[11px] pl-5" style={{ color: "rgba(255,255,255,0.60)" }}>
-                  • {r[language] || r.en}
+                  • {r[language] || (language === "ml" ? "മലയാള പരിഭാഷ ഇതുവരെ ലഭ്യമല്ല." : language === "ar" ? "الترجمة العربية غير متوفرة بعد." : r.en)}
                 </p>
               ))}
               {(result.alternativeHours.length > 0 || result.recommendedHours.length > 0) && (
@@ -468,7 +471,7 @@ export default function SmartSearch() {
           )}
 
           {/* ── Knowledge Sources ── */}
-          {result.sources.length > 0 && (
+          {isOwner && result.sources.length > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap">
               <BookOpen className="w-3 h-3" style={{ color: "rgba(74,222,128,0.50)" }} />
               {result.sources.slice(0, 5).map((s, i) => (
@@ -516,12 +519,12 @@ export default function SmartSearch() {
 // ═══════════════════════════════════════════════════════════════
 function RuleSection({ icon: Icon, title, rules, color, bgColor, borderColor, d, lang, txt, actionMarker, showReason, mlTranslations }) {
   // ── Malayalam display helpers (UI layer only) ──
-  const getActionML = (en, ml) => lang === "ml" ? (ml || mlTranslations[en] || en) : en;
+  const getActionML = (en, ml) => lang === "ml" ? (ml || "മലയാള പരിഭാഷ ഇതുവരെ ലഭ്യമല്ല.") : lang === "ar" ? "الترجمة العربية غير متوفرة بعد." : en;
   const getEkML = (en, ml) => {
-    if (lang !== "ml") return (en || "").split("\n---\n")[0];
+    if (lang === "en") return (en || "").split("\n---\n")[0];
+    if (lang === "ar") return "الترجمة العربية غير متوفرة بعد.";
     if (ml) return ml.split("\n---\n")[0];
-    const snippet = (en || "").split("\n---\n")[0];
-    return mlTranslations[snippet] || snippet;
+    return "മലയാള പരിഭാഷ ഇതുവരെ ലഭ്യമല്ല.";
   };
   return (
     <div>
@@ -542,11 +545,11 @@ function RuleSection({ icon: Icon, title, rules, color, bgColor, borderColor, d,
                   <span className="font-inter text-[9px] px-1.5 py-0.5 rounded" style={{
                     background: "rgba(212,175,55,0.06)", color: "rgba(212,175,55,0.60)",
                   }}>
-                    #{rule.saat > 12 ? rule.saat - 12 : rule.saat} {rule.period === "day" ? txt("പകൽ", "Day") : txt("രാത്രി", "Night")}
-                  </span>
-                  <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
-                    {d.planetInfo[rule.planet]?.[lang === "ml" ? "name_ml_equivalent" : "name_en"] || rule.planet}
-                  </span>
+                    #{rule.saat > 12 ? rule.saat - 12 : rule.saat} {rule.period === "day" ? txt("പകൽ", "Day", "نهار") : txt("രാത്രി", "Night", "ليل")}
+                    </span>
+                    <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+                    {lang === "ml" ? d.planetInfo[rule.planet]?.name_ml_equivalent : lang === "ar" ? (PLANET_AR_ML[rule.planet]?.ar || d.planetInfo[rule.planet]?.name_ar || "—") : (d.planetInfo[rule.planet]?.name_en || rule.planet)}
+                    </span>
                 </div>
                 {rule.actions.map((a, j) => (
                   <p key={j} className="font-inter text-[10px] mb-0.5" style={{ color: "rgba(255,255,255,0.65)" }}>
@@ -594,10 +597,11 @@ function RuleSection({ icon: Icon, title, rules, color, bgColor, borderColor, d,
 function SaatRow({ h, d, lang, avoid }) {
   const planetName = lang === "ml"
     ? (planetArabicMLDisplay(h.planet) || d.planetInfo[h.planet]?.name_ml_equivalent)
+    : lang === "ar" ? (PLANET_AR_ML[h.planet]?.ar || d.planetInfo[h.planet]?.name_ar || "—")
     : d.planetInfo[h.planet]?.name_en;
   const symbol = d.planetInfo[h.planet]?.symbol || "";
   const color = avoid ? "#F87171" : h.status === "current" ? "#F5D060" : "#86EFAC";
-  const statusLabel = h.status === "current" ? (lang === "ml" ? "നിലവിലെ" : "Current") : "";
+  const statusLabel = h.status === "current" ? (lang === "ml" ? "നിലവിലെ" : lang === "ar" ? "الحالي" : "Current") : "";
 
   return (
     <div className="flex items-center gap-2 rounded-lg p-2 mb-1" style={{

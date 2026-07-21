@@ -9,7 +9,7 @@ import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import ManuscriptSourcePanel from "./ManuscriptSourcePanel";
 import { getKashfMansionByNo } from "@/lib/astroClockManuscriptMerger";
-import { natureToArabic, natureToML, isNahsNature, zodiacToArabic, zodiacToML, extractDegree } from "@/lib/astroClockLabelMap";
+import { natureToArabic, natureToML, natureToEN, isNahsNature, zodiacToArabic, zodiacToML, zodiacToEN, extractDegree } from "@/lib/astroClockLabelMap";
 import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
 import EntityKnowledgePanel from "./EntityKnowledgePanel";
 import MagicalPeriodPanel from "./MagicalPeriodPanel";
@@ -62,9 +62,9 @@ export default function MansionsReference() {
           const isOpen = expanded === m.no;
           const color = isCurrent ? "#F5D060" : isNahs ? "#F87171" : "#4ADE80";
           const borderColor = isCurrent ? "rgba(212,175,55,0.40)" : isNahs ? "rgba(248,113,113,0.15)" : "rgba(74,222,128,0.12)";
-          const zodiacDisplay = language === "ml" ? zodiacToML(m.zodiac_sign) : zodiacToArabic(m.zodiac_sign);
-          const natureDisplay = language === "ml" ? natureToML(m.genel_hukum) : natureToArabic(m.genel_hukum);
-          const zodiacFontClass = language === "ml" ? "font-inter" : "font-amiri";
+          const zodiacDisplay = language === "ml" ? zodiacToML(m.zodiac_sign) : language === "ar" ? zodiacToArabic(m.zodiac_sign) : zodiacToEN(m.zodiac_sign);
+          const natureDisplay = language === "ml" ? natureToML(m.genel_hukum) : language === "ar" ? natureToArabic(m.genel_hukum) : natureToEN(m.genel_hukum);
+          const zodiacFontClass = language === "ar" ? "font-amiri" : "font-inter";
 
           return (
             <div key={m.no} className="rounded-lg overflow-hidden" style={{
@@ -74,8 +74,8 @@ export default function MansionsReference() {
               <button onClick={() => setExpanded(isOpen ? null : m.no)}
                 className="w-full flex items-center gap-2 p-2.5 text-left">
                 <span className="font-inter text-[10px] font-bold tabular-nums w-6 text-center" style={{ color }}>#{m.no}</span>
-                <span className="font-inter text-xs font-bold flex-1 truncate" style={{ color: "rgba(255,255,255,0.80)" }}>{MANSION_ML_NAMES[m.name] || m.name}</span>
-                <span className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.50)" }}>{m.name_arabic}</span>
+                <span className={`font-inter text-xs font-bold flex-1 truncate ${language === "ar" ? "font-amiri" : ""}`} style={{ color: "rgba(255,255,255,0.80)", ...(language === "ar" ? { direction: "rtl" } : {}) }}>{language === "ml" ? (MANSION_ML_NAMES[m.name] || m.name) : language === "ar" ? (m.name_arabic || m.name) : m.name}</span>
+                {language === "ar" && <span className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.50)" }}>{m.name_arabic}</span>}
                 {isCurrent && <span className="font-inter text-[7px] uppercase px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.15)", color: "#F5D060" }}>{txt("നിലവിലെ", "Now", "Şimdi")}</span>}
                 <ChevronDown className="w-3.5 h-3.5 transition-transform flex-shrink-0" style={{ color: "rgba(212,175,55,0.40)", transform: isOpen ? "rotate(180deg)" : "none" }} />
               </button>

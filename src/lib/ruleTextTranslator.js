@@ -40,51 +40,9 @@ export async function batchTranslateToMalayalam(texts) {
     }
   }
 
-  if (uncached.length === 0) return result;
-
-  const prompt =
-    "Translate the following English texts to natural, fluent Malayalam.\n\n" +
-    "CRITICAL RULES:\n" +
-    "1. Keep Arabic words, Islamic terminology, and astrological terms EXACTLY as they are " +
-    "(e.g., المريخ, زحل, الشمس, القمر, سعد, نحس, فضة, ذهب, عود, مسك).\n" +
-    "2. Keep proper nouns (book titles, author names, place names) as they are.\n" +
-    "3. Translate ONLY the explanatory English text to natural Malayalam.\n" +
-    "4. Do NOT translate Arabic quotations, Quranic verses, or supplications.\n" +
-    "5. Keep numbers and symbols as they are.\n\n" +
-    "Texts to translate:\n" +
-    uncached.map((t, i) => "[" + i + "] " + t).join("\n\n") +
-    "\n\nReturn JSON: { \"translations\": [\"malayalam_0\", \"malayalam_1\", ...] }";
-
-  try {
-    const response = await base44.integrations.Core.InvokeLLM({
-      prompt,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          translations: {
-            type: "array",
-            items: { type: "string" },
-          },
-        },
-      },
-    });
-
-    const translations = response.translations || [];
-    uncached.forEach((text, i) => {
-      const translated = translations[i] || text;
-      result[text] = translated;
-      cache.set(text.substring(0, 200), translated);
-      if (cache.size > CACHE_MAX) {
-        const firstKey = cache.keys().next().value;
-        cache.delete(firstKey);
-      }
-    });
-  } catch (e) {
-    // If translation fails, fall back to original English
-    uncached.forEach((text) => {
-      result[text] = text;
-    });
-  }
-
+  // AI auto-translation DISABLED per project language-isolation rules (rule #4:
+  // never auto-translate; use only owner-approved content). Returns only cached
+  // entries (none, since the cache is never populated) so callers fall through
+  // to approved Malayalam text or the approved placeholder.
   return result;
 }
