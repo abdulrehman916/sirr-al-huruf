@@ -143,7 +143,7 @@ export default function PlanetEncyclopedia() {
                 )}
 
                 {/* GIH Planet Influence Characteristics */}
-                {GIH_PLANET_INFLUENCE_CHARACTERISTICS[key] && (() => {
+                {language === "en" && GIH_PLANET_INFLUENCE_CHARACTERISTICS[key] && (() => {
                   const infl = GIH_PLANET_INFLUENCE_CHARACTERISTICS[key];
                   return (
                     <div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.15)" }}>
@@ -205,13 +205,13 @@ export default function PlanetEncyclopedia() {
                           </div>
                         ))}
                       </div>
-                      <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(255,255,255,0.50)" }}>{v.ritual_timing_en}</p>
+                      {language === "en" && <p className="font-inter text-[9px] mt-1" style={{ color: "rgba(255,255,255,0.50)" }}>{v.ritual_timing_en}</p>}
                     </div>
                   );
                 })()}
 
                 {/* GIH Sun Degree Table — only for Sun (pp.1420-1422) */}
-                {key === "sun" && (() => {
+                {language === "en" && key === "sun" && (() => {
                   const t = GIH_SUN_DEGREE_TABLE;
                   return (
                     <div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.15)" }}>
@@ -227,8 +227,8 @@ export default function PlanetEncyclopedia() {
                 })()}
 
                 {/* Source */}
-                <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(info.source)}</p>
-                {friends?.source && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(friends.source)}</p>}
+                {language === "en" && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(info.source)}</p>}
+                {language === "en" && friends?.source && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(friends.source)}</p>}
 
                 {(kashfOps.length > 0 || kashfDir) && (
                   <ManuscriptSourcePanel

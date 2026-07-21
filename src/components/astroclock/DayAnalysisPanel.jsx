@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Star, Heart, Briefcase, Plane, Shield, BookOpen, Info } from "lucide-react";
 import { DAY_INFO, PLANET_INFO } from "@/lib/astroClockLiveEngine";
+import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -37,6 +38,7 @@ const DAY_EN_ML = {
 
 export default function DayAnalysisPanel() {
   const [selectedDay, setSelectedDay] = useState(new Date().getDay());
+  const { language } = useAstroClockLanguage();
 
   const dayData = DAY_INFO[selectedDay];
   const dayInfo = WEEKDAYS.find(d => d.id === selectedDay);
@@ -134,6 +136,7 @@ export default function DayAnalysisPanel() {
             </div>
 
             {/* Activities Grid */}
+            {language === "en" && (
             <div className="grid grid-cols-2 gap-3">
               <ActivityCard
                 icon={Briefcase}
@@ -160,8 +163,10 @@ export default function DayAnalysisPanel() {
                 color={G.success}
               />
             </div>
+            )}
 
             {/* Good & Bad Works */}
+            {language === "en" && (
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 rounded-lg" style={{ background: "rgba(34,197,94,0.05)" }}>
                 <p className="font-inter text-[8px] uppercase tracking-widest mb-2" style={{ color: G.success }}>
@@ -184,8 +189,10 @@ export default function DayAnalysisPanel() {
                 </ul>
               </div>
             </div>
+            )}
 
             {/* Spiritual Operations */}
+            {language === "en" && (
             <div className="p-4 rounded-xl" style={{ background: G.bg, border: `1px solid ${G.faint}` }}>
               <div className="flex items-center gap-2 mb-3">
                 <BookOpen className="w-4 h-4" style={{ color: G.dim }} />
@@ -196,14 +203,17 @@ export default function DayAnalysisPanel() {
               <p className="font-inter text-sm text-white/80 mb-2">{dayData.spiritual}</p>
               <p className="font-inter text-[10px] text-white/40">സ്രോതസ്സ്: {dayData.source}</p>
             </div>
+            )}
 
             {/* Malayalam Explanation */}
+            {language === "ml" && (
             <div className="p-4 rounded-xl" style={{ background: "rgba(255,255,255,0.02)" }}>
               <p className="font-amiri text-base font-bold mb-2" style={{ color: G.text }}>
                 മലയാളം വിശദീകരണം:
               </p>
               <p className="font-inter text-sm text-white/70">{dayData.malayalam}</p>
             </div>
+            )}
           </div>
         )}
       </motion.div>

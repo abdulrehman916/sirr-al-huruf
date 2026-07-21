@@ -100,19 +100,19 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
               </div>
 
               {/* ── GIH Favorable Properties ── */}
-              {gih.favorable_colors?.length > 0 && (
+              {language === "en" && gih.favorable_colors?.length > 0 && (
                 <div>
                   <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("അനുകൂല നിറങ്ങൾ", "Favorable Colors", "Colors")} (GIH p.{gih.source_page})</p>
                   <TagList items={normalizeArray(gih.favorable_colors)} color={G} />
                 </div>
               )}
-              {gih.favorable_stones?.length > 0 && (
+              {language === "en" && gih.favorable_stones?.length > 0 && (
                 <div>
                   <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("അനുകൂല രത്നങ്ങൾ", "Favorable Stones", "Stones")} (GIH p.{gih.source_page})</p>
                   <TagList items={normalizeArray(gih.favorable_stones)} color={G} />
                 </div>
               )}
-              {gih.favorable_metals?.length > 0 && (
+              {language === "en" && gih.favorable_metals?.length > 0 && (
                 <div>
                   <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("അനുകൂല ലോഹങ്ങൾ", "Favorable Metals", "Metals")} (GIH p.{gih.source_page})</p>
                   <TagList items={normalizeArray(gih.favorable_metals)} color={G} />
@@ -121,7 +121,7 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
 
               {/* ── GIH Favorable Days, Numbers, Hour, Months ── */}
               <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                {gih.favorable_days?.length > 0 && (
+                {language === "en" && gih.favorable_days?.length > 0 && (
                   <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("ദിവസങ്ങൾ", "Days", "Days")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{normalizeArray(gih.favorable_days).join(", ")}</span></div>
                 )}
                 {gih.favorable_number != null && (
@@ -130,19 +130,19 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
                 {gih.favorable_hour_planet && (
                   <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("ഗ്രഹമണിക്കൂർ", "Hour Planet", "Hour")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? (PLANET_AR_ML[gih.favorable_hour_planet?.toLowerCase()]?.ml || gih.favorable_hour_planet) : gih.favorable_hour_planet}</span></div>
                 )}
-                {gih.favorable_months?.length > 0 && (
+                {language === "en" && gih.favorable_months?.length > 0 && (
                   <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("മാസങ്ങൾ", "Months", "Months")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{gih.favorable_months.join(", ")}</span></div>
                 )}
-                {gih.favorable_night && (
+                {language === "en" && gih.favorable_night && (
                   <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("രാത്രി", "Fav. Night", "Night")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{gih.favorable_night}</span></div>
                 )}
-                {gih.favorable_incense?.length > 0 && (
+                {language === "en" && gih.favorable_incense?.length > 0 && (
                   <div><span className="font-bold" style={{ color: G_DIM }}>📖 {txt("തൂപം", "Incense", "Incense")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{normalizeArray(gih.favorable_incense).join(", ")}</span></div>
                 )}
               </div>
 
               {/* ── GIH Health Vulnerabilities ── */}
-              {gih.health_vulnerabilities_en?.length > 0 && (
+              {language === "en" && gih.health_vulnerabilities_en?.length > 0 && (
                 <div>
                   <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(248,113,113,0.50)" }}>📖 {txt("ആരോഗ്യ ദൗർബല്യങ്ങൾ", "Health Vulnerabilities", "Health")} (GIH p.{gih.source_page})</p>
                   <TagList items={normalizeArray(gih.health_vulnerabilities_en)} color="#F87171" />
@@ -150,7 +150,7 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
               )}
 
               {/* ── GIH Ritual Timing ── */}
-              {gih.ritual_timing_note_en && (
+              {language === "en" && gih.ritual_timing_note_en && (
                 <div className="rounded-lg p-2" style={{ background: "rgba(129,140,248,0.04)", border: "1px solid rgba(129,140,248,0.12)" }}>
                   <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: "rgba(129,140,248,0.60)" }}>📖 {txt("ആചാര സമയം", "Ritual Timing", "Ritual")} (GIH p.{gih.source_page})</p>
                   <p className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>{gih.ritual_timing_note_en}</p>
@@ -240,7 +240,7 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
               {/* ── GIH Ritual Incense (per-sign protection ritual) ── */}
               {(() => {
                 const ritual = GIH_RITUAL_INCENSE.universal_protection_ritual[`${signKey}_ritual`];
-                if (!ritual) return null;
+                if (!ritual || language !== "en") return null;
                 return (
                   <div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.15)" }}>
                     <p className="font-inter text-[8px] uppercase tracking-wider font-bold mb-0.5" style={{ color: G_DIM }}>📖 {txt("ആചാര തൂപം", "Ritual Incense", "Ritual Incense")} (GIH p.{ritual.source_page})</p>
@@ -261,8 +261,8 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
 
               {/* ── Source References ── */}
               <div className="pt-2" style={{ borderTop: "1px solid rgba(212,175,55,0.10)" }}>
-                <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay("Havâss'ın Derinlikleri")} — {zodiacData.date_range}</p>
-                {gih.source && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(gih.source)} — pp.{gih.source_page}</p>}
+                {language === "en" && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay("Havâss'ın Derinlikleri")} — {zodiacData.date_range}</p>}
+                {language === "en" && gih.source && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {normalizeDisplay(gih.source)} — pp.{gih.source_page}</p>}
               </div>
             </div>
           </motion.div>
