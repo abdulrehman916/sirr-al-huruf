@@ -68,6 +68,13 @@ const FILTERS = [
   { value: "NOT_PURCHASABLE", label: "Not Purchasable" },
 ];
 
+// Visual grouping (Owner management view ONLY) — does NOT merge permission models.
+// Section C and D remain independent top-level pages with their own route-based
+// permissions and their own PageVisibilityConfig. They are only visually nested
+// under the Holy Names row in this admin screen so the Owner sees all four
+// Holy Names sections together. No FeatureConfig / RBAC / route changes.
+const HOLY_NAMES_MEMBERS = ['/section-c', '/section-d'];
+
 export default function PagePermissions() {
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState(null);
@@ -170,9 +177,18 @@ export default function PagePermissions() {
     return map;
   }, [allPlans]);
 
+  // Lookup: page path -> registry entry (name/icon) for grouped member cards
+  const pageByPath = useMemo(() => {
+    const m = {};
+    allPages.forEach((p) => { m[p.path] = p; });
+    return m;
+  }, [allPages]);
+
   // Filtered + searched pages
   const filteredPages = useMemo(() => {
     return pageOrder.filter((page) => {
+      // Visual grouping: Section C/D render inside the Holy Names row, not standalone
+      if (HOLY_NAMES_MEMBERS.includes(page.path)) return false;
       // Search
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -434,6 +450,7 @@ export default function PagePermissions() {
                     const configs = configMap[page.path] || [];
                     const plans = plansMap[page.path] || [];
 
+                    const isHolyNamesParent = page.path === '/holy-names';
                     return (
                       <Draggable key={page.path} draggableId={page.path} index={index}>
                         {(dragProvided, snapshot) => (
@@ -445,6 +462,30 @@ export default function PagePermissions() {
                               opacity: snapshot.isDragging ? 0.9 : 1,
                             }}
                           >
+                            {isHolyNamesParent && (
+                              <div
+                                style={{
+                                  marginBottom: 8,
+                                  padding: "6px 10px",
+                                  borderRadius: 10,
+                                  border: `1px solid ${G.border}`,
+                                  background: G.bg,
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontFamily: "Inter, sans-serif",
+                                    fontSize: 9,
+                                    fontWeight: 700,
+                                    letterSpacing: "0.18em",
+                                    textTransform: "uppercase",
+                                    color: G.text,
+                                  }}
+                                >
+                                  Holy Names Sections
+                                </span>
+                              </div>
+                            )}
                             <PricingPageCard
                               pagePath={page.path}
                               pageName={page.name}
@@ -455,6 +496,25 @@ export default function PagePermissions() {
                               onSaved={() => handleSaved(page.path)}
                               index={index}
                             />
+                            {isHolyNamesParent &&
+                              HOLY_NAMES_MEMBERS.map((mp) => {
+                                const mPage = pageByPath[mp];
+                                if (!mPage) return null;
+                                return (
+                                  <div key={mp} style={{ marginTop: 8 }}>
+                                    <PricingPageCard
+                                      pagePath={mp}
+                                      pageName={mPage.name}
+                                      pageIcon={mPage.icon}
+                                      visibilityConfig={visMap[mp]}
+                                      configs={configMap[mp] || []}
+                                      plans={plansMap[mp] || []}
+                                      onSaved={() => handleSaved(mp)}
+                                      index={0}
+                                    />
+                                  </div>
+                                );
+                              })}
                           </div>
                         )}
                       </Draggable>
