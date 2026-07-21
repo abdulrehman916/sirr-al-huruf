@@ -34,13 +34,13 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
   const gih = GIH_SIGN_PROPERTIES[signKey] || {};
   const gihRel = GIH_ZODIAC_RELATIONSHIPS.find(r => r.sign_en === zodiacData.name_en);
 
-  const zName = language === "ml" ? zodiacEnToML(zodiacData.name_en) : zodiacData.name_en;
+  const zName = language === "ml" ? zodiacEnToML(zodiacData.name_en) : language === "ar" ? (zodiacData.name_ar || "") : zodiacData.name_en;
   const zElement = normalizeDisplay(language === "ml" ? zodiacData.element_ml : zodiacData.element);
   const zGender = normalizeDisplay(language === "ml" ? zodiacData.gender_ml : zodiacData.gender);
   const zRuler = normalizeDisplay(language === "ml" ? zodiacData.ruling_planet_ml : zodiacData.ruling_planet);
   const zMetal = normalizeDisplay(language === "ml" ? zodiacData.metal_ml : zodiacData.metal);
   const zIncense = normalizeDisplay(language === "ml" ? zodiacData.incense_ml : zodiacData.incense);
-  const zExplanation = normalizeDisplay(language === "ml" ? zodiacData.explanation_ml : zodiacData.explanation_en);
+  const zExplanation = language === "ar" ? "" : normalizeDisplay(language === "ml" ? zodiacData.explanation_ml : zodiacData.explanation_en);
   const friendlyDisplay = language === "ml"
     ? (signsToML(zodiacData.friendly_signs).join(", ") || "—")
     : (zodiacData.friendly_signs?.join(", ") || "—");
@@ -64,7 +64,7 @@ export default function ZodiacDetailCard({ signKey, zodiacData, isCurrent, isExp
           <span className="font-inter text-xs font-bold block truncate" style={{ color }}>{zName}</span>
           <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>{zElement} · {zRuler}</span>
         </div>
-        <span className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.50)" }}>{zodiacData.name_ar}</span>
+        {language === "en" && <span className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.50)" }}>{zodiacData.name_ar}</span>}
         {isCurrent && <span className="font-inter text-[7px] uppercase px-1.5 py-0.5 rounded"
           style={{ background: "rgba(212,175,55,0.15)", color: "#F5D060" }}>{txt("നിലവിലെ", "Now", "Şimdi")}</span>}
         <ChevronDown className="w-3.5 h-3.5 transition-transform flex-shrink-0"

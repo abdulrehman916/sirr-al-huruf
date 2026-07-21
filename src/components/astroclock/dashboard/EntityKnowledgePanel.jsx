@@ -103,13 +103,23 @@ export default function EntityKnowledgePanel({ entityType, entityKey }) {
                   </span>
                 )}
                 {/* Split merged text by separator and show each piece */}
-                {(language === 'ml' && rec.knowledge_text_ml ? rec.knowledge_text_ml : (rec.knowledge_text_en || ''))
-                  .split('\n---\n').filter(t => t.trim()).map((textPiece, pi) => (
-                  <p key={pi} className="font-inter text-[10px] leading-snug mb-1" style={{ color: "rgba(255,255,255,0.65)" }}>
-                    {textPiece.trim()}
-                  </p>
-                ))}
-                {rec.knowledge_text_ar && (
+                {(() => {
+                  const txtByLang = language === 'ml' ? (rec.knowledge_text_ml || '') : language === 'ar' ? (rec.knowledge_text_ar || '') : (rec.knowledge_text_en || '');
+                  const pieces = txtByLang.split('\n---\n').filter(t => t.trim());
+                  if (pieces.length === 0) {
+                    return (
+                      <p className="font-inter text-[10px] leading-snug" style={{ color: "rgba(255,255,255,0.30)" }}>
+                        {language === 'ml' ? 'മലയാള പരിഭാഷ ഇതുവരെ ലഭ്യമല്ല.' : language === 'ar' ? 'الترجمة العربية غير متوفرة بعد.' : ''}
+                      </p>
+                    );
+                  }
+                  return pieces.map((textPiece, pi) => (
+                    <p key={pi} className={`font-inter text-[10px] leading-snug mb-1 ${language === 'ar' ? 'font-amiri' : ''}`} style={{ color: "rgba(255,255,255,0.65)", ...(language === 'ar' ? { direction: 'rtl' } : {}) }}>
+                      {textPiece.trim()}
+                    </p>
+                  ));
+                })()}
+                {language === 'en' && rec.knowledge_text_ar && (
                   <p className="font-amiri text-[11px] mt-1" style={{ color: "rgba(212,175,55,0.40)", direction: "rtl" }}>
                     {rec.knowledge_text_ar}
                   </p>

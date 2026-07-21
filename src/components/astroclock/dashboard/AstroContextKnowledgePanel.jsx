@@ -101,6 +101,12 @@ const SECTION_ORDER = {
 function ActionList({ items, config, language }) {
   const isOwner = useIsOwner();
   if (!items || items.length === 0) return null;
+  // Mono-language rule: in ML mode show only items with `ml`; AR only `ar`; EN all.
+  // Items lacking the active-language text are hidden (no English fallback in ML/AR).
+  const langItems = items
+    .map(it => ({ ...it, _text: language === "ml" ? (it.ml || "") : language === "ar" ? (it.ar || "") : (it.en || "") }))
+    .filter(it => it._text.trim().length > 0);
+  if (langItems.length === 0) return null;
   const Icon = config.icon;
 
   return (
@@ -110,19 +116,14 @@ function ActionList({ items, config, language }) {
         <span className="font-inter text-[8px] uppercase tracking-wider font-bold" style={{ color: config.color }}>
           {language === "ml" ? config.label_ml : language === "ar" ? config.label_ar : config.label_en}
           {" "}
-          <span className="opacity-50">({items.length})</span>
+          <span className="opacity-50">({langItems.length})</span>
         </span>
       </div>
-      {items.map((item, i) => (
+      {langItems.map((item, i) => (
         <div key={i} className="mb-1.5 last:mb-0">
-          <p className="font-inter text-[10px] leading-snug" style={{ color: "rgba(255,255,255,0.65)" }}>
-            • {language === "ml" ? (item.ml || item.en) : language === "ar" ? (item.ar || item.en) : item.en}
+          <p className={`font-inter text-[10px] leading-snug ${language === "ar" ? "font-amiri" : ""}`} style={{ color: "rgba(255,255,255,0.65)", ...(language === "ar" ? { direction: "rtl" } : {}) }}>
+            • {item._text}
           </p>
-          {item.ar && language !== "ar" && (
-            <p className="font-amiri text-[11px] mt-0.5" style={{ color: "rgba(212,175,55,0.40)", direction: "rtl" }}>
-              {item.ar}
-            </p>
-          )}
           {/* Source references — Owner only (preserve every source) */}
           {isOwner && item.sources && item.sources.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-0.5">

@@ -53,8 +53,9 @@ export default function ManuscriptSourcePanel({ sources = [], title, defaultOpen
   const realSourceCount = uniqueSourceIds.size;
 
   const pickLang = (item) => {
-    if (language === "ml") return item.ml || item.en;
-    return item.en;
+    if (language === "ml") return item.ml || "";
+    if (language === "ar") return item.ar || "";
+    return item.en || "";
   };
 
   const panelTitle = title || txt("കൂടുതൽ ഗ്രന്ഥ സ്രോതസ്സുകൾ", "Additional Manuscript Sources", "Ek Kaynaklar");
@@ -85,14 +86,16 @@ export default function ManuscriptSourcePanel({ sources = [], title, defaultOpen
                   {source.items.map((item, i) => {
                     const Icon = TYPE_ICON[item.type] || Info;
                     const color = TYPE_COLOR[item.type] || TYPE_COLOR.info;
+                    const langText = pickLang(item);
+                    if (!langText.trim()) return null;
                     return (
                       <div key={i} className="flex items-start gap-1.5 mb-1">
                         <Icon className="w-3 h-3 flex-shrink-0 mt-0.5" style={{ color }} />
                         <div className="flex-1 min-w-0">
-                          <p className="font-inter text-[10px] leading-snug" style={{ color: "rgba(255,255,255,0.60)" }}>
-                            {pickLang(item)}
+                          <p className={`font-inter text-[10px] leading-snug ${language === "ar" ? "font-amiri" : ""}`} style={{ color: "rgba(255,255,255,0.60)", ...(language === "ar" ? { direction: "rtl" } : {}) }}>
+                            {langText}
                           </p>
-                          {item.ar && (
+                          {language === "en" && item.ar && (
                             <p className="font-amiri text-[11px] mt-0.5" style={{ color: "rgba(212,175,55,0.40)", direction: "rtl" }}>{item.ar}</p>
                           )}
                           {item.source && (

@@ -181,13 +181,25 @@ export default function CategoryKnowledgePanel() {
                         background: "rgba(129,140,248,0.03)",
                         border: "1px solid rgba(129,140,248,0.10)",
                       }}>
-                        <p className="font-inter text-[10px] leading-snug mb-1" style={{ color: "rgba(255,255,255,0.65)" }}>
-                          {(language === "ml" && rec.knowledge_text_ml ? rec.knowledge_text_ml : rec.knowledge_text_en || "")
-                            .split("\n---\n").filter(t => t.trim()).map((textPiece, pi) => (
-                              <span key={pi} className="block mb-0.5">{textPiece.trim()}</span>
-                            ))}
-                        </p>
-                        {rec.knowledge_text_ar && (
+                        {(() => {
+                          const txtByLang = language === "ml" ? (rec.knowledge_text_ml || "") : language === "ar" ? (rec.knowledge_text_ar || "") : (rec.knowledge_text_en || "");
+                          const pieces = txtByLang.split("\n---\n").filter(t => t.trim());
+                          if (pieces.length === 0) {
+                            return (
+                              <p className="font-inter text-[10px] leading-snug" style={{ color: "rgba(255,255,255,0.30)" }}>
+                                {language === "ml" ? "മലയാള പരിഭാഷ ഇതുവരെ ലഭ്യമല്ല." : language === "ar" ? "الترجمة العربية غير متوفرة بعد." : ""}
+                              </p>
+                            );
+                          }
+                          return (
+                            <p className="font-inter text-[10px] leading-snug mb-1" style={{ color: "rgba(255,255,255,0.65)" }}>
+                              {pieces.map((textPiece, pi) => (
+                                <span key={pi} className={`block mb-0.5 ${language === "ar" ? "font-amiri" : ""}`} style={language === "ar" ? { direction: "rtl" } : undefined}>{textPiece.trim()}</span>
+                              ))}
+                            </p>
+                          );
+                        })()}
+                        {language === "en" && rec.knowledge_text_ar && (
                           <p className="font-amiri text-[11px] mt-1" style={{ color: "rgba(212,175,55,0.40)", direction: "rtl" }}>
                             {rec.knowledge_text_ar.split("\n---\n")[0].trim()}
                           </p>

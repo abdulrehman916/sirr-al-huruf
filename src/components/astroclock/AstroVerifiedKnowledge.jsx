@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ShieldCheck, Database, BookOpen, ChevronDown, Sparkles, FileText } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useIsOwner } from "@/hooks/useIsOwner";
+import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 
 // ═══════════════════════════════════════════════════════════════
 // AstroVerifiedKnowledge — Knowledge Intelligence Engine reader
@@ -111,6 +112,7 @@ export default function AstroVerifiedKnowledge({ query }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const isOwner = useIsOwner();
+  const { language } = useAstroClockLanguage();
 
   useEffect(() => {
     let alive = true;
@@ -135,7 +137,7 @@ export default function AstroVerifiedKnowledge({ query }) {
     return () => { alive = false; };
   }, [query]);
 
-  if (!isOwner || loading || error || !data) return null; // Owner-only verified-knowledge reader; cache miss → existing Astro Clock panels remain
+  if (language !== "en" || !isOwner || loading || error || !data) return null; // EN + Owner-only: cache entries & all UI labels are English/Arabic (no Malayalam/Arabic labels) — hide in ML/AR to prevent English leakage
 
   const entries = data.scholarly_entries || {};
   const sourceBooks = data.source_books || [];
