@@ -49,11 +49,14 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
   const [editingPage, setEditingPage] = useState(false);
   const [savingPage, setSavingPage] = useState(false);
   const [savingPlock, setSavingPlock] = useState(false);
+  const [savingReason, setSavingReason] = useState(false);
   const { role } = useAuth();
 
   // Page-level editable fields
   const vc = visibilityConfig;
   const permanentLock = vc?.permanent_lock === true;
+  const [lockReason, setLockReason] = useState(vc?.permanent_lock_reason || "");
+  const [customMsg, setCustomMsg] = useState(vc?.permanent_lock_custom_message || "");
   const [pageTitle, setPageTitle] = useState(vc?.page_name || pageName);
   const [pageDesc, setPageDesc] = useState(vc?.description || "");
   const [pagePrice, setPagePrice] = useState(vc?.price || "");
@@ -68,6 +71,8 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
     setRequiresPermission(vc?.requires_permission !== false);
     setIsPurchasable(vc?.is_purchasable !== false);
     setDisplayOrder(vc?.display_order || 0);
+    setLockReason(vc?.permanent_lock_reason || "");
+    setCustomMsg(vc?.permanent_lock_custom_message || "");
   }, [vc, pageName]);
 
   const isMultiFeature = hasSubFeatures(pagePath);
@@ -92,6 +97,8 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
         archived: vc?.archived || false,
         admin_only: vc?.admin_only || false,
         permanent_lock: vc?.permanent_lock === true,
+        permanent_lock_reason: vc?.permanent_lock_reason || "",
+        permanent_lock_custom_message: vc?.permanent_lock_custom_message || "",
       };
 
       if (vc?.id) {
@@ -121,9 +128,13 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
     try {
       const me = await base44.auth.me();
       const next = !permanentLock;
+      const reasonPayload = next
+        ? { permanent_lock_reason: "temporarily_unavailable", permanent_lock_custom_message: "" }
+        : { permanent_lock_reason: "", permanent_lock_custom_message: "" };
       if (vc?.id) {
         await base44.entities.PageVisibilityConfig.update(vc.id, {
           permanent_lock: next,
+          ...reasonPayload,
           updated_by: me?.id || "",
           updated_at: new Date().toISOString(),
         });
@@ -134,10 +145,13 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
           requires_permission: !isPublicPage(pagePath),
           permanent_lock: next,
           is_purchasable: true,
+          ...reasonPayload,
           updated_by: me?.id || "",
           updated_at: new Date().toISOString(),
         });
       }
+      setLockReason(next ? "temporarily_unavailable" : "");
+      setCustomMsg("");
       clearAllCache();
       toast({ title: next ? "Permanent Lock enabled" : "Permanent Lock disabled", description: pageName });
       if (onSaved) onSaved();
@@ -145,6 +159,40 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
       toast({ title: "Update failed", description: e.message, variant: "destructive" });
     } finally {
       setSavingPlock(false);
+    }
+  };
+
+  // ── Lock Reason — Owner sets the reason shown on the locked screen ──────
+  const saveLockReason = async () => {
+    if (role !== ROLES.OWNER) return;
+    setSavingReason(true);
+    try {
+      const me = await base44.auth.me();
+      const data = {
+        permanent_lock_reason: lockReason,
+        permanent_lock_custom_message: lockReason === "custom" ? customMsg.trim() : "",
+        updated_by: me?.id || "",
+        updated_at: new Date().toISOString(),
+      };
+      if (vc?.id) {
+        await base44.entities.PageVisibilityConfig.update(vc.id, data);
+      } else {
+        await base44.entities.PageVisibilityConfig.create({
+          page_path: pagePath,
+          page_name: pageName,
+          requires_permission: !isPublicPage(pagePath),
+          permanent_lock: true,
+          is_purchasable: true,
+          ...data,
+        });
+      }
+      clearAllCache();
+      toast({ title: "Lock reason saved", description: pageName });
+      if (onSaved) onSaved();
+    } catch (e) {
+      toast({ title: "Save failed", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingReason(false);
     }
   };
 
@@ -280,6 +328,51 @@ export default function PricingPageCard({ pagePath, pageName, pageIcon, visibili
                       {savingPlock ? "…" : permanentLock ? "Disable" : "Enable"}
                     </button>
                   </div>
+
+                  {permanentLock && (
+                    <div className="mt-2 rounded-xl border p-3 space-y-2.5" style={{ background: "rgba(255,255,255,0.02)", borderColor: G.border }}>
+                      <div>
+                        <label className="text-[10px] text-white/40 block mb-1">Lock Reason (shown to customers)</label>
+                        <select
+                          value={lockReason}
+                          onChange={(e) => setLockReason(e.target.value)}
+                          className="w-full px-2 py-1.5 rounded text-sm text-white outline-none"
+                          style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}` }}
+                        >
+                          <option value="">Select a reason…</option>
+                          <option value="under_development">Under Development</option>
+                          <option value="coming_soon">Coming Soon</option>
+                          <option value="content_update">Content Update in Progress</option>
+                          <option value="scholarly_review">Under Scholarly Review</option>
+                          <option value="maintenance">Under Maintenance</option>
+                          <option value="temporarily_unavailable">Temporarily Unavailable</option>
+                          <option value="custom">Custom Reason</option>
+                        </select>
+                      </div>
+                      {lockReason === "custom" && (
+                        <div>
+                          <label className="text-[10px] text-white/40 block mb-1">Custom Message (shown to customers)</label>
+                          <textarea
+                            value={customMsg}
+                            onChange={(e) => setCustomMsg(e.target.value)}
+                            rows={2}
+                            placeholder="Enter the message customers will see…"
+                            className="w-full px-2 py-1.5 rounded text-sm text-white outline-none resize-none"
+                            style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}` }}
+                          />
+                        </div>
+                      )}
+                      <button
+                        onClick={saveLockReason}
+                        disabled={savingReason || !lockReason}
+                        className="w-full py-2 rounded-lg text-xs font-bold disabled:opacity-50 flex items-center justify-center gap-1.5"
+                        style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}
+                      >
+                        {savingReason ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                        {savingReason ? "Saving…" : "Save Reason"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

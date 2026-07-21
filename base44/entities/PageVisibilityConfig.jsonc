@@ -30,6 +30,16 @@
       "default": false,
       "description": "OWNER-ONLY OVERRIDE \u2014 completely independent of requires_permission (Public/Private visibility), is_purchasable, pricing, subscription plans, access codes, RBAC, Permissions and FeatureConfig. When true, NOBODY except the Owner can open the page: ProtectedPage short-circuits before any existing permission/pricing/RBAC logic and shows a 'temporarily unavailable' screen, hiding all Request Access / WhatsApp / access-code / purchase / subscription options. Existing configuration underneath is never modified \u2014 disabling permanent_lock restores the page exactly as it was. Stored as a dedicated page setting, not merged with Public/Private visibility."
     },
+    "permanent_lock_reason": {
+      "type": "string",
+      "default": "",
+      "description": "Lock Reason shown to customers on the Permanently Locked screen. Free string; known values used by the Owner UI: 'under_development', 'coming_soon', 'content_update', 'Content Update in Progress' is 'content_update', 'scholarly_review', 'maintenance', 'temporarily_unavailable', 'custom'. Empty when Permanent Lock is OFF (cleared automatically on disable). Completely independent from visibility, pricing, subscription plans, permissions, RBAC and access codes."
+    },
+    "permanent_lock_custom_message": {
+      "type": "string",
+      "default": "",
+      "description": "Custom message shown to customers when permanent_lock_reason === 'custom'. Displayed instead of the standard reason label on the locked screen. Empty for all predefined reasons and when Permanent Lock is OFF. Cleared automatically when Permanent Lock is disabled."
+    },
     "price": {
       "type": "string",
       "description": "Display price for this page e.g. 'AED 50' or 'Free'"

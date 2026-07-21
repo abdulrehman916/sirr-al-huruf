@@ -40,6 +40,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
   const { t } = useTranslation();
   const [accessStatus, setAccessStatus] = useState("checking");
   const [pageName, setPageName] = useState("");
+  const [plockInfo, setPlockInfo] = useState({ reason: "", custom_message: "" });
 
   // Post-signin redirect: when a Guest signs in via Google from a locked
   // page, send Owner → Owner Dashboard, Admin → Admin Dashboard. Guests
@@ -91,20 +92,26 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
     //     beneath is preserved untouched and resumes automatically when
     //     disabled. Read from PageVisibilityConfig.permanent_lock (cached).
     const plockKey = `plock:${routePath}`;
-    let plock = getCached(plockKey);
-    if (plock === null || plock === undefined) {
+    let plockData = getCached(plockKey);
+    if (plockData === null || plockData === undefined) {
       try {
         const plockConfigs = await base44.entities.PageVisibilityConfig.filter(
           { page_path: routePath, archived: false }, null, 1
         );
-        plock = plockConfigs.length > 0 ? plockConfigs[0].permanent_lock === true : false;
-        setCached(plockKey, plock);
+        const rec = plockConfigs[0];
+        plockData = {
+          locked: rec?.permanent_lock === true,
+          reason: rec?.permanent_lock_reason || "",
+          custom_message: rec?.permanent_lock_custom_message || "",
+        };
+        setCached(plockKey, plockData);
       } catch {
-        plock = false;
-        setCached(plockKey, false, 30000);
+        plockData = { locked: false, reason: "", custom_message: "" };
+        setCached(plockKey, plockData, 30000);
       }
     }
-    if (plock) {
+    if (plockData.locked) {
+      setPlockInfo({ reason: plockData.reason, custom_message: plockData.custom_message });
       setAccessStatus("permanent_lock");
       return;
     }
@@ -262,6 +269,17 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
   }
 
   if (accessStatus === "permanent_lock") {
+    const REASON_LABELS = {
+      under_development: "Under Development",
+      coming_soon: "Coming Soon",
+      content_update: "Content Update in Progress",
+      scholarly_review: "Under Scholarly Review",
+      maintenance: "Under Maintenance",
+      temporarily_unavailable: "Temporarily Unavailable",
+    };
+    const reasonText = plockInfo.reason === "custom"
+      ? (plockInfo.custom_message || "Temporarily Unavailable")
+      : (REASON_LABELS[plockInfo.reason] || "Temporarily Unavailable");
     return (
       <div className="min-h-screen flex items-center justify-center p-4"
         style={{ background: "linear-gradient(180deg, #020710 0%, #050d1a 30%, #08101f 100%)" }}>
@@ -270,8 +288,8 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
             style={{ background: G.bg, border: `1px solid ${G.border}` }}>
             <Construction className="w-8 h-8" style={{ color: G.text }} />
           </div>
-          <h2 className="font-inter font-bold text-white text-lg">{t("permanent_lock_title", "Temporarily Unavailable")}</h2>
-          <p className="font-inter text-sm text-white/50">{t("permanent_lock_msg", "This page is currently under development and is temporarily unavailable.")}</p>
+          <h2 className="font-inter font-bold text-white text-lg">{t("permanent_lock_title", "This page is temporarily unavailable.")}</h2>
+          <p className="font-inter text-sm text-white/50">{reasonText}</p>
           <button onClick={() => window.location.href = "/"}
             className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
             style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}>
