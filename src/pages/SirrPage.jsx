@@ -173,14 +173,36 @@ export default function SirrPage() {
             "Kaser",
             "Ghutm",
             "Final Result",
-          ].map((label) => (
-            <div key={label} className="card-dark p-5">
-              <h3 className="font-inter text-xs uppercase tracking-[0.2em] mb-3" style={{ color: "rgba(212,175,55,0.70)" }}>
-                {label}
-              </h3>
-              <div className="min-h-[6rem]" />
-            </div>
-          ))}
+          ].map((label) => {
+            const sourceMap = { talib, matlub, talab };
+            const resultMap = { talib: results?.talib, matlub: results?.matlub, talab: results?.talab };
+            let assign = null;
+            if (relationship === "talib_matlub") assign = { "كر": "talib", "دفر": "matlub" };
+            else if (relationship === "talib_talab") assign = { "كر": "talib", "دفر": "talab" };
+            else if (relationship === "matlub_talab") assign = { "كر": "talab", "دفر": "matlub" };
+            const key = assign?.[label];
+            const word = key ? sourceMap[key] : "";
+            const total = key ? resultMap[key]?.total : null;
+            return (
+              <div key={label} className="card-dark p-5">
+                <h3 className="font-inter text-xs uppercase tracking-[0.2em] mb-3" style={{ color: "rgba(212,175,55,0.70)" }}>
+                  {label}
+                </h3>
+                {key && total != null ? (
+                  <div className="space-y-2 text-center">
+                    <div className="font-inter text-sm" style={{ color: "rgba(212,175,55,0.70)" }}>
+                      Word: <span className="font-amiri text-xl" style={{ color: "#fff" }}>{word}</span>
+                    </div>
+                    <div className="font-inter text-sm" style={{ color: "rgba(212,175,55,0.70)" }}>
+                      Abjad Total: <span className="font-amiri text-2xl" style={{ color: "#D4AF37" }}>{total}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="min-h-[6rem]" />
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </PageLayout>
