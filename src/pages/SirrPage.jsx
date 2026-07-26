@@ -9,6 +9,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { useState } from "react";
 import PageLayout from "@/components/PageLayout";
+import KasrRulesEngine from "@/components/sirr/KasrRulesEngine";
 
 // ── Standard Arabic Abjad (Jumal) values — first calculation stage ──
 const ABJAD = {
@@ -170,7 +171,6 @@ export default function SirrPage() {
             "دفر Jafr Table",
             "First Jafr Total",
             "Second Jafr Total",
-            "Kaser",
             "Ghutm",
             "Final Result",
           ].map((label) => {
@@ -204,6 +204,9 @@ export default function SirrPage() {
             );
           })}
         </div>
+
+        {/* ── Kasr Rules Engine (independent module) ── */}
+        <KasrRulesEngine />
       </div>
     </PageLayout>
   );
