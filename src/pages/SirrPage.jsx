@@ -75,6 +75,7 @@ export default function SirrPage() {
   const [matlub, setMatlub] = useState("");
   const [talab, setTalab] = useState("");
   const [results, setResults] = useState(null);
+  const [relationship, setRelationship] = useState("");
 
   const handleCalculate = () => {
     setResults({
@@ -123,11 +124,45 @@ export default function SirrPage() {
           </button>
         </div>
 
-        {/* ── Sections ── */}
+        {/* ── Abjad Sections ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <AbjadSection title="طالب Abjad" data={results?.talib} />
           <AbjadSection title="مطلوب Abjad" data={results?.matlub} />
           <AbjadSection title="طلب Abjad" data={results?.talab} />
+        </div>
+
+        {/* ── Relationship Selection ── */}
+        <div className="card-dark p-5">
+          <h3 className="font-inter text-xs uppercase tracking-[0.2em] mb-4 text-center" style={{ color: "rgba(212,175,55,0.70)" }}>
+            Relationship Selection
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { key: "talib_matlub", label: "طالب + مطلوب" },
+              { key: "talib_talab", label: "طالب + طلب" },
+              { key: "matlub_talab", label: "مطلوب + طلب" },
+            ].map((opt) => {
+              const active = relationship === opt.key;
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => setRelationship(opt.key)}
+                  className="py-3 rounded-lg font-amiri text-xl text-center transition-colors"
+                  style={{
+                    background: active ? "rgba(212,175,55,0.14)" : "rgba(255,255,255,0.03)",
+                    border: `1px solid ${active ? "rgba(212,175,55,0.65)" : "rgba(212,175,55,0.25)"}`,
+                    color: active ? "#D4AF37" : "rgba(255,255,255,0.70)",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── Remaining Placeholder Sections ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             "كر",
             "دفر",
