@@ -10,6 +10,7 @@
 import { useState } from "react";
 import PageLayout from "@/components/PageLayout";
 import KasrRulesEngine from "@/components/sirr/KasrRulesEngine";
+import KasrFixedEngine from "@/components/sirr/KasrFixedEngine";
 
 // ── Standard Arabic Abjad (Jumal) values — first calculation stage ──
 const ABJAD = {
@@ -207,6 +208,9 @@ export default function SirrPage() {
 
         {/* ── Kasr Rules Engine (independent module) ── */}
         <KasrRulesEngine />
+
+        {/* ── Kasr Fixed Engine (1420 → 20) — independent ── */}
+        <KasrFixedEngine />
       </div>
     </PageLayout>
   );
