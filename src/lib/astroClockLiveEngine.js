@@ -403,15 +403,15 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
   const isDaytime = !isNighttime;
 
   const dayOfWeek = date.getDay();
-  // Day ruler: when before sunrise, Day Sahaths belong to the PREVIOUS daylight
-  // period (the day that ended at yesterday's sunset). Otherwise (after sunset
-  // or during daytime), they belong to the current calendar day.
-  const dayRuler = getDayRuler(isBeforeSunrise ? (dayOfWeek - 1 + 7) % 7 : dayOfWeek);
-  // Night ruler: when after sunset, the active night belongs to the NEXT day
-  // (manuscript: "Friday evening = night of Saturday"). Otherwise (before sunrise
-  // or during daytime), the night belongs to the CURRENT day ("Thursday evening
-  // = night of Friday").
-  const nightDayRuler = getDayRuler(isAfterSunset ? (dayOfWeek + 1) % 7 : dayOfWeek);
+  // ── Manuscript weekday rule — consistent with getActiveWeekday (sunset boundary) ──
+  // Day hours  [today sunrise → today sunset] belong to the CURRENT weekday
+  //   (first hour after sunrise = current weekday).
+  // Night hours [today sunset → next sunrise] belong to the FOLLOWING weekday
+  //   (first hour after sunset = following weekday; night = laylat al-<next>).
+  // This is the same rule getActiveWeekday applies to the live current hour,
+  // so the grid and the current-hour card always agree on the weekday.
+  const dayRuler = getDayRuler(dayOfWeek);
+  const nightDayRuler = getDayRuler((dayOfWeek + 1) % 7);
   
   const dayDuration = sunset - sunrise;
   const nightDuration = 24 - dayDuration;

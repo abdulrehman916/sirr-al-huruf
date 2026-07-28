@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Calendar, Star, Heart, Briefcase, Plane, Shield, BookOpen, Info } from "lucide-react";
 import { DAY_INFO, PLANET_INFO } from "@/lib/astroClockLiveEngine";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
+import { useAstroData } from "./dashboard/useAstroData";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -37,7 +38,10 @@ const DAY_EN_ML = {
 };
 
 export default function DayAnalysisPanel() {
-  const [selectedDay, setSelectedDay] = useState(new Date().getDay());
+  // Default to the active manuscript weekday (sunset boundary, same rule as
+  // getActiveWeekday via useAstroData) — not the browser's civil getDay().
+  const { activeDayIndex } = useAstroData();
+  const [selectedDay, setSelectedDay] = useState(activeDayIndex);
   const { language } = useAstroClockLanguage();
 
   const dayData = DAY_INFO[selectedDay];
