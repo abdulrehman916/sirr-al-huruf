@@ -258,6 +258,13 @@ function AstroClockContent() {
           </DashboardSection>
         </AstroClockErrorBoundary>
 
+        {/* ── NEW CARD: Fixed Stars (النجوم الثوابت) — no existing card covered this ── */}
+        <AstroClockErrorBoundary label="Fixed Stars">
+          <DashboardSection icon="⭐" title="النجوم الثوابت" subtitle="Fixed Stars">
+            <SourceBookPanel topicId="fixedStars" />
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
         <AstroClockErrorBoundary label="Mansions">
           <DashboardSection icon="⭐" title={txt("28 ചാന്ദ്ര നക്ഷത്രങ്ങൾ", "28 Lunar Mansions", "28 Ay Menzili")}
             subtitle={txt("മന്സിൽ / നക്ഷത്ര റഫറൻസ്", "Manzil / Nakshatra Reference", "Menzil / Nakşatra Referansı")}>

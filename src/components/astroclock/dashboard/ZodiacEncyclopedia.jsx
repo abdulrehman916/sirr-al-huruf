@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useAstroData } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import ZodiacDetailCard from "./ZodiacDetailCard";
+import SourceBookPanel from "./SourceBookPanel";
 
 const SIGN_ORDER = ["aries", "taurus", "gemini", "cancer", "leo", "virgo", "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"];
 const ELEMENT_FILTERS = ["all", "Fire", "Earth", "Air", "Water"];
@@ -50,6 +51,9 @@ export default function ZodiacEncyclopedia() {
           />
         ))}
       </div>
+
+      {/* ── Source Book: Zodiac signs & their qualities poetry (appended) ── */}
+      <SourceBookPanel topicId="zodiacQualitiesPoem" />
     </div>
   );
 }
