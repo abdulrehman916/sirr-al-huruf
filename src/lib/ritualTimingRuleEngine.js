@@ -19,6 +19,7 @@ import { getCurrentPlanetaryHour, getDayRuler, getActiveWeekday, PLANET_SEQUENCE
 import { calculateSunriseSunset, getUserLocation } from './astroClockSunriseSunset.js';
 import { calculateMoonPosition } from './astroClockMoonPosition.js';
 import { ACTION_RULES } from './astroClockActionTimingAdvisor.js';
+import { BENEFIC_PLANETS, MALEFIC_PLANETS } from './manuscriptRuleEngine.js';
 
 // ── Mizan key → English planet name (used by live engine) ──
 const MIZAN_TO_EN_PLANET = {
@@ -90,8 +91,8 @@ const ELEMENT_PLACEMENT = {
 // ═══════════════════════════════════════════════════════════════
 const HAYR_SIID_DAYS = ['sun', 'mon', 'thu', 'fri'];
 const HAYR_SIID_HOURS = [1, 8];
-const BENEFIC_PLANETS = ['Sun', 'Jupiter', 'Venus', 'Moon'];
-const MALEFIC_PLANETS = ['Saturn', 'Mars'];
+// BENEFIC_PLANETS / MALEFIC_PLANETS now imported from the shared manuscript
+// rule engine (manuscriptRuleEngine.js) — derived from Sa'd/Nahs nature.
 
 const NIGHT_REQUIRED_WORKS = ['celb', 'tard', 'sekam'];
 

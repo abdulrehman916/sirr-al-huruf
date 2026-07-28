@@ -157,4 +157,28 @@ export function getSharedActionRule(purposeKey) {
   return SHARED_ACTION_RULES[purposeKey] || null;
 }
 
+// ── Benefic / Malefic classification — derived from manuscript Sa'd/Nahs ──
+// SINGLE source for benefic/malefic planet lists across Astro Clock and every
+// Ritual Timing module. Derived from PLANETARY_HOUR_RULES.nature (Havâss).
+// Benefic = nature contains "Sa'd"; Malefic = nature contains "Nahs".
+// Mercury is Sa'd Asghar → Benefic (per manuscript), even where legacy code
+// omitted it. Every module reads THIS list — no local duplicates.
+function capPlanetName(nameEn) {
+  return nameEn ? nameEn.charAt(0).toUpperCase() + nameEn.slice(1).toLowerCase() : nameEn;
+}
+export const BENEFIC_PLANETS = Object.values(PLANETARY_HOUR_RULES)
+  .filter(r => r.nature && /sa'd|saad/i.test(r.nature))
+  .map(r => capPlanetName(r.name_en));
+export const MALEFIC_PLANETS = Object.values(PLANETARY_HOUR_RULES)
+  .filter(r => r.nature && /nahs/i.test(r.nature))
+  .map(r => capPlanetName(r.name_en));
+export function isPlanetBenefic(planetName) {
+  const n = String(planetName || "").toLowerCase();
+  return BENEFIC_PLANETS.some(p => p.toLowerCase() === n);
+}
+export function isPlanetMalefic(planetName) {
+  const n = String(planetName || "").toLowerCase();
+  return MALEFIC_PLANETS.some(p => p.toLowerCase() === n);
+}
+
 export { PLANETARY_HOUR_RULES, PLANET_FRIENDSHIPS };

@@ -22,6 +22,7 @@ import { getCurrentPlanetaryHour, getDayRuler, getActiveWeekday, PLANET_SEQUENCE
 import { calculateSunriseSunset, getUserLocation } from "./astroClockSunriseSunset.js";
 import { calculateMoonPosition } from "./astroClockMoonPosition.js";
 import { AY_MANAZILLERI } from "./astroClockData.js";
+import { BENEFIC_PLANETS as BENEFIC, MALEFIC_PLANETS as MALEFIC } from "./manuscriptRuleEngine.js";
 
 // ── PLANNING OVERRIDE (optional — Ritual Planning Mode) ──
 // Module-level: when set, getTodayAllHours() uses this location instead of
@@ -71,8 +72,8 @@ const MIZAN_DAY_NAMES = {
 };
 const DAY_KEY_BY_INDEX = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
-const BENEFIC = ["Sun", "Jupiter", "Venus", "Moon"];
-const MALEFIC = ["Saturn", "Mars"];
+// BENEFIC / MALEFIC now imported from the shared manuscript rule engine
+// (manuscriptRuleEngine.js) — derived from Sa'd/Nahs nature.
 
 // ═══════════════════════════════════════════════════════════════
 // ASTROLOGY CLOCK PURPOSE MATCHING

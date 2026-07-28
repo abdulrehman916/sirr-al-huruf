@@ -14,7 +14,7 @@
  */
 
 import { AY_MANAZILLERI } from './astroClockData.js';
-import { PLANETARY_HOUR_RULES } from './astroClockPlanetaryHourRules.js';
+import { PLANETARY_HOUR_RULES } from './manuscriptRuleEngine.js';
 import { getRulesForTopic } from './astroClockKnowledgeBaseFramework.js';
 import { classifyActionType } from './actionTypeClassification.js';
 import { getCurrentPlanetaryHour, getActiveWeekday } from './astroClockLiveEngine.js';
@@ -348,18 +348,9 @@ export function calculateNextSuitableTime(manuscriptRules, now, sunrise = 6.5, s
 }
 
 // Helper functions
-function calculatePlanetaryHour(date, sunrise, sunset) {
-  const hour = date.getHours() + date.getMinutes() / 60;
-  const isDaytime = hour >= sunrise && hour < sunset;
-  const dayIndex = date.getDay();
-  const planetSequence = ["saturn", "jupiter", "mars", "sun", "venus", "mercury", "moon"];
-  const planetIndex = (dayIndex * 12 + Math.floor((hour - sunrise) / ((sunset - sunrise) / 12))) % 7;
-  
-  return {
-    planet: planetSequence[planetIndex] || "sun",
-    planetInfo: PLANETARY_HOUR_RULES[planetSequence[planetIndex] || "sun"]
-  };
-}
+// (Removed local calculatePlanetaryHour — it duplicated the Astro Clock engine.
+//  getCurrentLiveConditions above already uses the shared getCurrentPlanetaryHour
+//  from astroClockLiveEngine.js, the single source of truth for planetary hours.)
 
 function extractMansionNumbers(text) {
   const matches = text.match(/\d+/g);
