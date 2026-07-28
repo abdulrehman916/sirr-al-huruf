@@ -7,8 +7,7 @@
 
 import { TAHA_HOUR_TABLE_DAY, TAHA_WEEKDAY_RULERS } from './astroClockTahaData.js';
 import { PLANETARY_DAY_RULERS } from './astroClockData.js';
-import { PLANETARY_HOUR_RULES } from './astroClockPlanetaryHourRules.js';
-import { PLANET_FRIENDSHIPS } from './astroClockPlanetFriendships.js';
+import { applyManuscriptPlanetOverrides, applyManuscriptWeekdayOverrides } from './manuscriptRuleEngine.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PLANET DATA — Combined from all sources with detailed actions
@@ -163,30 +162,12 @@ export const PLANET_INFO = {
   }
 };
 
-// ── MANUSCRIPT-ONLY INTERPRETATION OVERRIDE (audit 2026-07-28) ──
-// Replace generated planetary labels/dignity/benefits with manuscript-sourced
-// content from PLANETARY_HOUR_RULES (Havâss'ın Derinlikleri). Western dignity
-// (own/exalted/debilitated), generic labels ("King of Planets"), "karmic
-// cleansing", and mantras/deities NOT in the manuscripts are removed.
-// Astronomical calculation functions below are unchanged.
-Object.entries(PLANET_INFO).forEach(([key, info]) => {
-  const r = PLANETARY_HOUR_RULES[key];
-  if (!r) return;
-  info.nature_en = r.nature;                                   // manuscript Sa'd/Nahs
-  info.nature_ml = r.nature_ml;
-  info.goodActions_en = (r.suitableActions && r.suitableActions.en) || [];
-  info.goodActions_ml = (r.suitableActions && r.suitableActions.ml) || [];
-  info.badActions_en = (r.unsuitableActions && r.unsuitableActions.en) || [];
-  info.badActions_ml = (r.unsuitableActions && r.unsuitableActions.ml) || [];
-  info.benefits_en = [];        // generated → removed (NOT YET IMPLEMENTED)
-  info.benefits_ml = [];
-  info.warnings_en = [];        // Western dignity → removed (NOT YET IMPLEMENTED)
-  info.warnings_ml = [];
-  info.spiritualOperations_en = [];  // mantras/deities/karmic NOT in manuscripts
-  info.spiritualOperations_ml = [];
-});
-
-// ... rest of the file is unchanged, only PLANET_INFO is modified ...
+// ── MANUSCRIPT-ONLY INTERPRETATION (audit 2026-07-28, unified 2026-07-28) ──
+// SINGLE shared manuscript interpretation layer: manuscriptRuleEngine.js.
+// Both Astro Clock and Ritual Timing import the same overrides from there.
+// No Western, no AI-generated, no generic astrology. Astronomical calculations
+// below are unchanged.
+applyManuscriptPlanetOverrides(PLANET_INFO);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DAY DATA
@@ -683,37 +664,9 @@ export const WEEKDAY_ANALYSIS = {
   }
 };
 
-// ── MANUSCRIPT-ONLY WEEKDAY OVERRIDE (audit 2026-07-28) ──
-// Replace generated per-action advice (business/love/marriage/travel/healing/
-// spiritual) and Malayalam summaries — these were AI-generated, not in the
-// manuscripts. friendlyDays/enemyDays are derived from PLANET_FRIENDSHIPS
-// (manuscript). goodWorks/badWorks from PLANETARY_HOUR_RULES suitable/unsuitable
-// actions (manuscript). Generated per-field advice set to "" (NOT YET IMPLEMENTED).
-(function () {
-  const DAY_PLANET_KEY = ['sun', 'moon', 'mars', 'mercury', 'jupiter', 'venus', 'saturn'];
-  const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  Object.entries(WEEKDAY_ANALYSIS).forEach(([idxStr, w]) => {
-    const idx = Number(idxStr);
-    const rulerKey = DAY_PLANET_KEY[idx];
-    const fr = PLANET_FRIENDSHIPS[rulerKey];
-    if (fr) {
-      w.friendlyDays = DAY_NAMES.filter((_, d) => fr.friends.includes(DAY_PLANET_KEY[d]));
-      w.enemyDays = DAY_NAMES.filter((_, d) => fr.enemies.includes(DAY_PLANET_KEY[d]));
-    }
-    const r = PLANETARY_HOUR_RULES[rulerKey];
-    if (r) {
-      w.goodWorks = (r.suitableActions && r.suitableActions.en) || [];
-      w.badWorks = (r.unsuitableActions && r.unsuitableActions.en) || [];
-    }
-    w.business = "";   // NOT YET IMPLEMENTED (not in manuscripts)
-    w.love = "";
-    w.marriage = "";
-    w.travel = "";
-    w.healing = "";
-    w.spiritual = "";
-    w.malayalam = "";
-  });
-})();
+// ── MANUSCRIPT-ONLY WEEKDAY OVERRIDE (unified 2026-07-28) ──
+// SINGLE shared manuscript interpretation layer: manuscriptRuleEngine.js.
+applyManuscriptWeekdayOverrides(WEEKDAY_ANALYSIS);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ENGINE STATUS
