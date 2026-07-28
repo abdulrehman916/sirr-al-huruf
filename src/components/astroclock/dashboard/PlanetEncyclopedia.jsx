@@ -140,7 +140,7 @@ export default function PlanetEncyclopedia() {
                     </Topic>
 
                     {/* ── TOPIC: Friendships — manuscripts CONTRADICT → shown separately ── */}
-                    <Topic title={txt("ഗ്രഹ ബന്ധങ്ങൾ (സ്രോതസ്സുകൾ വ്യത്യാസമുണ്ട്)", "Friendships (sources differ)", "Gezegen İlişkileri (kaynaklar farklı)")}>
+                    <Topic title={txt("ഗ്രഹ ബന്ധങ്ങൾ (രണ്ട് ഗ്രന്ഥ പട്ടികകൾ)", "Friendships (two manuscript tables)", "Gezegen İlişkileri (iki kaynak tablo)")}>
                       {/* Havâss opinion */}
                       {friends && (
                         <div className="rounded p-1.5 space-y-1" style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.12)" }}>
@@ -180,7 +180,7 @@ export default function PlanetEncyclopedia() {
                             </div>
                           </div>
                           <p className="font-inter text-[8px] italic" style={{ color: "rgba(255,255,255,0.35)" }}>
-                            {txt("ഈ സ്രോതസ്സ് ഹാവാസ്സിൽ നിന്ന് വ്യത്യാസപ്പെട്ട അഭിപ്രായം നൽകുന്നു.", "This source gives a different opinion from Havâss.", "Bu kaynak Havâss'tan farklı bir görüş verir.")}
+                            {txt("ഹാവാസ്സ് പൂർണ്ണ സുഹൃത്/ശത്രു/നിരപേക്ഷ പട്ടിക നൽകുന്നു; GIH ഒരു സുഹൃത്/ശത്രു ജോഡി മാത്രം നൽകുന്നു. വ്യത്യാസങ്ങൾ യഥാർത്ഥ വിരോധമാണോ അതോ വ്യത്യസ്ത വർഗ്ഗീകരണമാണോ എന്നത് മൂല ഗ്രന്ഥങ്ങൾ (ഹാവാസ്സ് പേ.88-92, GIH പേ.1419) സ്ഥിരീകരിക്കേണ്ടതാണ്.", "Havâss gives a full friends/enemies/neutral list; GIH gives a single friend/enemy pair. Whether specific differences are real contradictions or different categorizations must be verified against the original manuscripts (Havâss p.88-92, GIH p.1419).", "Havâss tam dost/düşman/nötr listesi verir; GIH tek dost/düşman çifti verir. Farkların gerçek çelişki mi yoksa farklı sınıflandırma mı olduğu orijinal kaynaklarda (Havâss s.88-92, GIH s.1419) doğrulanmalıdır.")}
                           </p>
                         </div>
                       )}
