@@ -403,15 +403,22 @@ export function getAllPlanetaryHours(date, sunrise = 6.5, sunset = 18.25) {
   const isDaytime = !isNighttime;
 
   const dayOfWeek = date.getDay();
-  // ── Manuscript weekday rule — consistent with getActiveWeekday (sunset boundary) ──
-  // Day hours  [today sunrise → today sunset] belong to the CURRENT weekday
-  //   (first hour after sunrise = current weekday).
-  // Night hours [today sunset → next sunrise] belong to the FOLLOWING weekday
-  //   (first hour after sunset = following weekday; night = laylat al-<next>).
-  // This is the same rule getActiveWeekday applies to the live current hour,
-  // so the grid and the current-hour card always agree on the weekday.
-  const dayRuler = getDayRuler(dayOfWeek);
-  const nightDayRuler = getDayRuler((dayOfWeek + 1) % 7);
+  // ── Manuscript weekday rule (Havâss p.51/54, Kashf p.65) ──
+  // Daytime begins at sunrise; the night after a sunset belongs to the FOLLOWING
+  // day (laylat al-<next>). Three viewing windows:
+  //   • Daytime  [sunrise → sunset]:  Day Hours = today (current/upcoming).
+  //                                  Night Hours = tomorrow's night (upcoming).
+  //   • After sunset [sunset → midnight]: Day Hours = today (just completed).
+  //                                      Night Hours = tomorrow's night (current).
+  //   • Before sunrise [midnight → sunrise]: Day Hours = PREVIOUS day (completed
+  //     daytime — the daylight that just ended belongs to yesterday, not today).
+  //     Night Hours = TODAY's night (current — laylat al-<today>, the night that
+  //     began at the previous sunset and is still in progress).
+  // This keeps the completed daytime attributed to the day that actually owned it
+  // and prevents the next weekday's daytime from appearing "completed" before its
+  // sunrise (Havâss p.51: each day's first hour begins at sunrise).
+  const dayRuler = getDayRuler(isBeforeSunrise ? (dayOfWeek - 1 + 7) % 7 : dayOfWeek);
+  const nightDayRuler = getDayRuler(isBeforeSunrise ? dayOfWeek : (dayOfWeek + 1) % 7);
   
   const dayDuration = sunset - sunrise;
   const nightDuration = 24 - dayDuration;
