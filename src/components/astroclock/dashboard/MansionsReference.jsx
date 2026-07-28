@@ -16,6 +16,7 @@ import MagicalPeriodPanel from "./MagicalPeriodPanel";
 import AstroClockCategoryVisuals from "@/components/astroclock/AstroClockCategoryVisuals";
 import { useIsOwner } from "@/hooks/useIsOwner";
 import SourceBookPanel from "./SourceBookPanel";
+import { SourceBadge, MANUSCRIPT_SOURCES, ManuscriptTopic } from "./manuscriptSource";
 
 export default function MansionsReference() {
   const d = useAstroData();
@@ -84,16 +85,29 @@ export default function MansionsReference() {
                 {isOpen && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
                     <div className="px-2.5 pb-2.5 space-y-1.5">
-                      {/* Properties */}
-                      <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അതിര്", "Boundary", "Sınır")}: </span><span className={zodiacFontClass} style={{ color: "rgba(255,255,255,0.65)" }}>{zodiacDisplay} {extractDegree(m.baslama_siniri)}°</span></div>
-                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("രാശി", "Zodiac", "Burç")}: </span><span className={zodiacFontClass} style={{ color: "rgba(255,255,255,0.65)" }}>{zodiacDisplay} ({m.zodiac_degree}°)</span></div>
-                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അക്ഷരം", "Letter", "Harf")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{m.harfi} <span className="font-amiri">{m.harf_arabic}</span></span></div>
-                        <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("വിധി", "Ruling", "Hüküm")}: </span><span className={zodiacFontClass} style={{ color: isNahs ? "#F87171" : "#4ADE80" }}>{natureDisplay}</span></div>
-                      </div>
+                      {/* ── TOPIC: Identity & Boundaries (Havâss) ── */}
+                      <ManuscriptTopic title={txt("അതിരുകളും മൂലവും", "Identity & Boundaries", "Sınırlar & Kimlik")}>
+                        <div className="flex items-center gap-1 mb-0.5"><SourceBadge source={MANUSCRIPT_SOURCES.HAVASS} page="316-904" language={language} isOwner={isOwner} /></div>
+                        <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                          <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അതിര്", "Boundary", "Sınır")}: </span><span className={zodiacFontClass} style={{ color: "rgba(255,255,255,0.65)" }}>{zodiacDisplay} {extractDegree(m.baslama_siniri)}°</span></div>
+                          <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("രാശി", "Zodiac", "Burç")}: </span><span className={zodiacFontClass} style={{ color: "rgba(255,255,255,0.65)" }}>{zodiacDisplay} ({m.zodiac_degree}°)</span></div>
+                          <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അക്ഷരം", "Letter", "Harf")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{m.harfi} <span className="font-amiri">{m.harf_arabic}</span></span></div>
+                        </div>
+                      </ManuscriptTopic>
 
-                      {/* Manuscript operations — Arabic source shown via Kashf panel below */}
-                      {isOwner && <p className="font-inter text-[8px]" style={{ color: "rgba(74,222,128,0.35)" }}>📖 {txt("ഗ്രന്ഥം", "Manuscript", "Manuscript")}: كشف الحقائق</p>}
+                      {/* ── TOPIC: Nature (Sa'd / Nahs) — each manuscript shown independently, not merged ── */}
+                      <ManuscriptTopic title={txt("സ്വഭാവം (Sa'd / Nahs)", "Nature (Sa'd / Nahs)", "Doğa (Sa'd / Nahs)")}>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <SourceBadge source={MANUSCRIPT_SOURCES.HAVASS} page="316-904" language={language} isOwner={isOwner} />
+                          <span className={zodiacFontClass} style={{ color: isNahs ? "#F87171" : "#4ADE80" }}>{natureDisplay}</span>
+                        </div>
+                        {kashfMansion && (kashfMansion.nature_ml || kashfMansion.nature_en) && (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <SourceBadge source={MANUSCRIPT_SOURCES.KASHF} page={kashfMansion.source_page || ""} language={language} isOwner={isOwner} />
+                            <span className={zodiacFontClass} style={{ color: "rgba(255,255,255,0.65)" }}>{language === "ml" ? kashfMansion.nature_ml : language === "ar" ? (kashfMansion.nature_ar || kashfMansion.nature_en) : kashfMansion.nature_en}</span>
+                          </div>
+                        )}
+                      </ManuscriptTopic>
 
                       {/* Kashf Omani tradition */}
                       {kashfMansion && (
