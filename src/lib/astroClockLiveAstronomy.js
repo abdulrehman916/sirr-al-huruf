@@ -6,6 +6,7 @@
 
 import { getEnhancedMoonPosition, getAllPlanetaryPositions } from './astroClockJPLHorizons.js';
 import { AY_MANAZILLERI } from './astroClockData.js';
+import { PLANETARY_HOUR_RULES } from './astroClockPlanetaryHourRules.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ENHANCED MOON POSITION WITH JPL DATA
@@ -258,26 +259,15 @@ export function getPlanetaryInfluences(astronomicalData) {
  * @param {string} sign - Zodiac sign
  * @returns {number} Strength score (0-100)
  */
-function calculatePlanetaryStrength(planet, sign) {
-  // Traditional dignities (simplified)
-  const dignities = {
-    sun: { own: ['Leo'], exalted: ['Aries'], debilitated: ['Libra'] },
-    moon: { own: ['Cancer'], exalted: ['Taurus'], debilitated: ['Scorpio'] },
-    mercury: { own: ['Gemini', 'Virgo'], exalted: ['Virgo'], debilitated: ['Pisces'] },
-    venus: { own: ['Taurus', 'Libra'], exalted: ['Pisces'], debilitated: ['Virgo'] },
-    mars: { own: ['Aries', 'Scorpio'], exalted: ['Capricorn'], debilitated: ['Cancer'] },
-    jupiter: { own: ['Sagittarius', 'Pisces'], exalted: ['Cancer'], debilitated: ['Capricorn'] },
-    saturn: { own: ['Capricorn', 'Aquarius'], exalted: ['Libra'], debilitated: ['Aries'] }
+function calculatePlanetaryStrength(planet, _sign) {
+  // MANUSCRIPT-ONLY (audit 2026-07-28): Western essential dignity (own/exalted/
+  // debilitated) is NOT found in the uploaded manuscripts. Strength is now derived
+  // solely from the manuscript Sa'd/Nahs planetary nature. The `sign` argument is
+  // intentionally unused — no per-sign dignity exists in the manuscripts.
+  const NATURE_STRENGTH = {
+    jupiter: 4, sun: 3, venus: 3, moon: 3, mercury: 2, mars: 2, saturn: 1
   };
-  
-  const planetDignities = dignities[planet];
-  if (!planetDignities) return 50; // Neutral
-  
-  if (planetDignities.own.includes(sign)) return 90; // Own sign - very strong
-  if (planetDignities.exalted.includes(sign)) return 95; // Exalted - strongest
-  if (planetDignities.debilitated.includes(sign)) return 20; // Debilitated - weak
-  
-  return 50; // Neutral
+  return NATURE_STRENGTH[planet] ?? 2; // neutral fallback
 }
 
 /**
@@ -286,17 +276,11 @@ function calculatePlanetaryStrength(planet, sign) {
  * @returns {string} Nature description
  */
 function getPlanetaryNature(planet) {
-  const natures = {
-    sun: 'King of Planets',
-    moon: 'Most Influential',
-    mercury: 'Planet of Wealth',
-    venus: 'Planet of Love',
-    mars: 'Malefic Planet',
-    jupiter: 'Most Benefic',
-    saturn: 'Greater Malefic'
-  };
-  
-  return natures[planet] || 'Unknown';
+  // MANUSCRIPT-ONLY (audit 2026-07-28): return manuscript Sa'd/Nahs nature label
+  // from PLANETARY_HOUR_RULES (Havâss'ın Derinlikleri). Generic English labels
+  // ("King of Planets", "Greater Malefic") removed.
+  const r = PLANETARY_HOUR_RULES[planet];
+  return r ? r.nature : 'Not found in uploaded manuscripts';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

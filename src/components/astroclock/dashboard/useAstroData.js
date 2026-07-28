@@ -30,13 +30,10 @@ export const PLANET_AR = {
 export const DAY_AR = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 export const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
-// Moon dignity (traditional manuscript rules)
-export const MOON_DIGNITY = {
-  cancer: { type: "home", type_ml: "സ്വന്തം ഭവനം", type_en: "Home", type_tr: "Ev", strength: "strongest" },
-  taurus: { type: "exalted", type_ml: "ഉച്ചം", type_en: "Exalted", type_tr: "Yüce", strength: "very_strong" },
-  scorpio: { type: "debilitated", type_ml: "നീചം", type_en: "Debilitated", type_tr: "Düşük", strength: "weakest" },
-  capricorn: { type: "fall", type_ml: "പതനം", type_en: "Fall", type_tr: "Düşüş", strength: "weak" },
-};
+// Moon dignity — Western dignity (home/exalted/debilitated/fall) is NOT found in
+// the uploaded manuscripts. Removed per manuscript-only rule (audit 2026-07-28).
+// moonDignity resolves to null → Moon Center shows no dignity (NOT YET IMPLEMENTED).
+export const MOON_DIGNITY = {};
 
 // Purpose → planet/day mapping for Smart Search
 export const PURPOSE_MAP = {

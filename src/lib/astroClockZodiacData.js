@@ -512,6 +512,18 @@ const GIH_SIGN_ENRICHMENT = {
   pisces:      { favorable_colors_gih: ["blue","green","white","saffron"], favorable_stones_gih: ["topaz","turquoise","emerald"], favorable_metals_gih: ["tin","silver"], favorable_days_gih: ["Thursday"], favorable_hour_planet_gih: "jupiter", health_vulnerabilities_en_gih: ["bile problems","stomach problems","dizziness"], compatible_signs_gih: ["Cancer","Scorpio","Taurus","Capricorn"], incompatible_signs_gih: ["Gemini","Virgo"] }
 };
 
+// ── MANUSCRIPT-ONLY ZODIAC OVERRIDE (audit 2026-07-28) ──
+// Remove generated Western zodiac personality descriptions (explanation_en/ml).
+// These were generic Western-style prose, not from the uploaded manuscripts.
+// Zodiac properties (element, ruler, metal, letters, friendships, incense) and
+// GIH enrichment remain — all manuscript-sourced. Explanations set to "".
+Object.keys(ZODIAC_SIGNS).forEach(key => {
+  if (ZODIAC_SIGNS[key]) {
+    ZODIAC_SIGNS[key].explanation_en = "";
+    ZODIAC_SIGNS[key].explanation_ml = "";
+  }
+});
+
 // Apply enrichment to ZODIAC_SIGNS
 Object.keys(GIH_SIGN_ENRICHMENT).forEach(key => {
   if (ZODIAC_SIGNS[key]) {
