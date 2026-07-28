@@ -15,6 +15,7 @@ import EntityKnowledgePanel from "./EntityKnowledgePanel";
 import MagicalPeriodPanel from "./MagicalPeriodPanel";
 import AstroClockCategoryVisuals from "@/components/astroclock/AstroClockCategoryVisuals";
 import { useIsOwner } from "@/hooks/useIsOwner";
+import SourceBookPanel from "./SourceBookPanel";
 
 export default function MansionsReference() {
   const d = useAstroData();
@@ -128,6 +129,9 @@ export default function MansionsReference() {
           );
         })}
       </div>
+
+      {/* ── Source Book: 28 Mansions & their actions (الشيخ ناصر بن جاعد الخروصي) — appended, existing cards preserved ── */}
+      <SourceBookPanel topicId="manazilActions" />
     </div>
   );
 }

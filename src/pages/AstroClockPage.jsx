@@ -31,6 +31,7 @@ const ReferenceLibrary = lazy(() => import("@/components/astroclock/dashboard/Re
 const ImportHistory = lazy(() => import("@/components/astroclock/dashboard/ImportHistory"));
 const EntityKnowledgeReviewQueue = lazy(() => import("@/components/astroclock/dashboard/EntityKnowledgeReviewQueue"));
 const AstroVerifiedKnowledge = lazy(() => import("@/components/astroclock/AstroVerifiedKnowledge"));
+import SourceBookPanel from "@/components/astroclock/dashboard/SourceBookPanel";
 
 
 function LangSelector() {
@@ -263,6 +264,43 @@ function AstroClockContent() {
             <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
               <MansionsReference />
             </Suspense>
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
+        {/* ── Source Book dedicated cards (Arabic master, ml/en ready) ── */}
+        <AstroClockErrorBoundary label="Weekday Planetary Luck">
+          <DashboardSection icon="🪐" title="سعود الكواكب من الأيام السبعة" subtitle="Weekday Planetary Luck">
+            <SourceBookPanel topicId="weekdayLuck" />
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
+        <AstroClockErrorBoundary label="Inauspicious Directions">
+          <DashboardSection icon="🧭" title="نحوس الاتجاهات" subtitle="Inauspicious Directions">
+            <SourceBookPanel topicId="inauspiciousDirections" />
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
+        <AstroClockErrorBoundary label="Inauspicious Days">
+          <DashboardSection icon="⛔" title="أيام الكوامل السبع" subtitle="Inauspicious Days (Al-Kawamil)">
+            <SourceBookPanel topicId="kawamilDays" />
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
+        <AstroClockErrorBoundary label="Lunar Month Days">
+          <DashboardSection icon="🗓️" title="بيان بأيام الشهر وأعمالها" subtitle="Lunar Month Days 1–30">
+            <SourceBookPanel topicId="lunarMonthDays" />
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
+        <AstroClockErrorBoundary label="Planting & Building">
+          <DashboardSection icon="🌱" title="ما يصلح لغرس الشجر والبناء" subtitle="Planting & Building">
+            <SourceBookPanel topicId="plantingPoem" />
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
+        <AstroClockErrorBoundary label="Clothing">
+          <DashboardSection icon="👔" title="ومما وجدته في اللباس" subtitle="Clothing (Al-Libas)">
+            <SourceBookPanel topicId="clothingPoem" />
           </DashboardSection>
         </AstroClockErrorBoundary>
 

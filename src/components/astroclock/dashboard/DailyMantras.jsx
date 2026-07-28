@@ -23,6 +23,7 @@ import {
   getDailyMantrasForDay,
   getTotalMantraCount,
 } from "@/lib/astroClockDailyMantrasData";
+import SourceBookPanel from "./SourceBookPanel";
 
 const G = { text: "#F5D060", dim: "rgba(212,175,55,0.55)", border: "rgba(212,175,55,0.20)" };
 const AR = "#818CF8";
@@ -124,6 +125,8 @@ export default function DailyMantras() {
         </div>
       )}
 
+      {/* ── Source Book: Salawat & Hizb (الإمام محمد بن عبدالله الخليلي) — appended, existing day groups preserved ── */}
+      <SourceBookPanel topicId="salawatPrayers" />
     </div>
   );
 }
