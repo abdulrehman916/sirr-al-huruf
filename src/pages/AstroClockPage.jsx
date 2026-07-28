@@ -161,6 +161,14 @@ function AstroClockContent() {
   // on cache miss this layer renders nothing and the existing Astro Clock panels remain.
   const currentWeekday = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
+  // ── VERIFICATION PAUSE ───────────────────────────────────────────
+  // Newly transcribed Arabic-only source-book cards are HIDDEN from the UI
+  // until every line is verified against a clearer source image / original PDF.
+  // Data is preserved untouched in src/lib/astroClockSourceBookData.js.
+  // Set to false to restore the cards after verification.
+  const HIDE_UNVERIFIED_ARABIC = true;
+  // ────────────────────────────────────────────────────────────────
+
   // Request GPS permission + start continuous location watch on mount.
   useEffect(() => {
     requestLocationPermission();
@@ -258,26 +266,32 @@ function AstroClockContent() {
           </DashboardSection>
         </AstroClockErrorBoundary>
 
-        {/* ── NEW CARD: Fixed Stars (النجوم الثوابت) — no existing card covered this ── */}
+        {/* ── HIDDEN: Fixed Stars — pending Arabic verification ── */}
+        {!HIDE_UNVERIFIED_ARABIC && (
         <AstroClockErrorBoundary label="Fixed Stars">
           <DashboardSection icon="⭐" title="النجوم الثوابت" subtitle="Fixed Stars">
             <SourceBookPanel topicId="fixedStars" />
           </DashboardSection>
         </AstroClockErrorBoundary>
+        )}
 
-        {/* ── NEW CARD: Gregorian/Rumi/Coptic months + Moon mansions per month ── */}
+        {/* ── HIDDEN: Months Calendar — pending Arabic verification ── */}
+        {!HIDE_UNVERIFIED_ARABIC && (
         <AstroClockErrorBoundary label="Months Calendar">
           <DashboardSection icon="📅" title="أسماء الأشهر الميلادية والرومية والقبطية" subtitle="Months Calendar">
             <SourceBookPanel topicId="monthsCalendar" />
           </DashboardSection>
         </AstroClockErrorBoundary>
+        )}
 
-        {/* ── NEW CARD: التحصينات (Hijabs / Protective Formulas) ── */}
+        {/* ── HIDDEN: التحصينات — pending Arabic verification ── */}
+        {!HIDE_UNVERIFIED_ARABIC && (
         <AstroClockErrorBoundary label="Tahsinat">
           <DashboardSection icon="🛡" title="التحصينات" subtitle="Protective Formulas">
             <SourceBookPanel topicId="tahsinatHijabs" />
           </DashboardSection>
         </AstroClockErrorBoundary>
+        )}
 
         <AstroClockErrorBoundary label="Mansions">
           <DashboardSection icon="⭐" title={txt("28 ചാന്ദ്ര നക്ഷത്രങ്ങൾ", "28 Lunar Mansions", "28 Ay Menzili")}
@@ -288,42 +302,59 @@ function AstroClockContent() {
           </DashboardSection>
         </AstroClockErrorBoundary>
 
-        {/* ── Source Book dedicated cards (Arabic master, ml/en ready) ── */}
+        {/* ── HIDDEN: Weekday Planetary Luck — pending Arabic verification ── */}
+        {!HIDE_UNVERIFIED_ARABIC && (
         <AstroClockErrorBoundary label="Weekday Planetary Luck">
           <DashboardSection icon="🪐" title="سعود الكواكب من الأيام السبعة" subtitle="Weekday Planetary Luck">
             <SourceBookPanel topicId="weekdayLuck" />
           </DashboardSection>
         </AstroClockErrorBoundary>
+        )}
 
+        {/* ── HIDDEN: Inauspicious Directions — pending Arabic verification ── */}
+        {!HIDE_UNVERIFIED_ARABIC && (
         <AstroClockErrorBoundary label="Inauspicious Directions">
           <DashboardSection icon="🧭" title="نحوس الاتجاهات" subtitle="Inauspicious Directions">
             <SourceBookPanel topicId="inauspiciousDirections" />
           </DashboardSection>
         </AstroClockErrorBoundary>
+        )}
 
+        {/* ── HIDDEN: Inauspicious Days — pending Arabic verification ── */}
+        {!HIDE_UNVERIFIED_ARABIC && (
         <AstroClockErrorBoundary label="Inauspicious Days">
           <DashboardSection icon="⛔" title="أيام الكوامل السبع" subtitle="Inauspicious Days (Al-Kawamil)">
             <SourceBookPanel topicId="kawamilDays" />
           </DashboardSection>
         </AstroClockErrorBoundary>
+        )}
 
+        {/* ── HIDDEN: Lunar Month Days — pending Arabic verification ── */}
+        {!HIDE_UNVERIFIED_ARABIC && (
         <AstroClockErrorBoundary label="Lunar Month Days">
           <DashboardSection icon="🗓️" title="بيان بأيام الشهر وأعمالها" subtitle="Lunar Month Days 1–30">
             <SourceBookPanel topicId="lunarMonthDays" />
           </DashboardSection>
         </AstroClockErrorBoundary>
+        )}
 
+        {/* ── HIDDEN: Planting & Building — pending Arabic verification ── */}
+        {!HIDE_UNVERIFIED_ARABIC && (
         <AstroClockErrorBoundary label="Planting & Building">
           <DashboardSection icon="🌱" title="ما يصلح لغرس الشجر والبناء" subtitle="Planting & Building">
             <SourceBookPanel topicId="plantingPoem" />
           </DashboardSection>
         </AstroClockErrorBoundary>
+        )}
 
+        {/* ── HIDDEN: Clothing — pending Arabic verification ── */}
+        {!HIDE_UNVERIFIED_ARABIC && (
         <AstroClockErrorBoundary label="Clothing">
           <DashboardSection icon="👔" title="ومما وجدته في اللباس" subtitle="Clothing (Al-Libas)">
             <SourceBookPanel topicId="clothingPoem" />
           </DashboardSection>
         </AstroClockErrorBoundary>
+        )}
 
         <AstroClockErrorBoundary label="Planets">
           <DashboardSection icon="🪐" title={txt("ഗ്രഹ വിജ്ഞാനകോശം", "Planet Encyclopedia", "Gezegen Ansiklopedisi")}

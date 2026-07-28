@@ -52,8 +52,8 @@ export default function ZodiacEncyclopedia() {
         ))}
       </div>
 
-      {/* ── Source Book: Zodiac signs & their qualities poetry (appended) ── */}
-      <SourceBookPanel topicId="zodiacQualitiesPoem" />
+      {/* ── HIDDEN: Source Book zodiac poetry — pending Arabic verification ── */}
+      {false && <SourceBookPanel topicId="zodiacQualitiesPoem" />}
     </div>
   );
 }

@@ -130,11 +130,11 @@ export default function MansionsReference() {
         })}
       </div>
 
-      {/* ── Source Book: 28 Mansions & their actions (الشيخ ناصر بن جاعد الخروصي) — appended, existing cards preserved ── */}
-      <SourceBookPanel topicId="manazilActions" />
+      {/* ── HIDDEN: Source Book mansions actions — pending Arabic verification ── */}
+      {false && <SourceBookPanel topicId="manazilActions" />}
 
-      {/* ── Source Book: Moon in Mansions for marriage (دخول العروس) — appended ── */}
-      <SourceBookPanel topicId="manazilMarriage" />
+      {/* ── HIDDEN: Source Book mansions marriage — pending Arabic verification ── */}
+      {false && <SourceBookPanel topicId="manazilMarriage" />}
     </div>
   );
 }
