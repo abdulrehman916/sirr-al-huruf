@@ -265,6 +265,20 @@ function AstroClockContent() {
           </DashboardSection>
         </AstroClockErrorBoundary>
 
+        {/* ── NEW CARD: Gregorian/Rumi/Coptic months + Moon mansions per month ── */}
+        <AstroClockErrorBoundary label="Months Calendar">
+          <DashboardSection icon="📅" title="أسماء الأشهر الميلادية والرومية والقبطية" subtitle="Months Calendar">
+            <SourceBookPanel topicId="monthsCalendar" />
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
+        {/* ── NEW CARD: التحصينات (Hijabs / Protective Formulas) ── */}
+        <AstroClockErrorBoundary label="Tahsinat">
+          <DashboardSection icon="🛡" title="التحصينات" subtitle="Protective Formulas">
+            <SourceBookPanel topicId="tahsinatHijabs" />
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
         <AstroClockErrorBoundary label="Mansions">
           <DashboardSection icon="⭐" title={txt("28 ചാന്ദ്ര നക്ഷത്രങ്ങൾ", "28 Lunar Mansions", "28 Ay Menzili")}
             subtitle={txt("മന്സിൽ / നക്ഷത്ര റഫറൻസ്", "Manzil / Nakshatra Reference", "Menzil / Nakşatra Referansı")}>
