@@ -130,13 +130,12 @@ function Row({ label, value, color }) {
   );
 }
 
-// ── Current Decision Summary ── compact, always-visible top block.
+// ── Current Decision Summary ── compact, always-visible decision card.
 // Answers "What should I do right now?" in one glance. The detailed
-// sections below explain WHY (manuscript evidence).
+// sections below act as supporting manuscript evidence (the WHY).
 function DecisionSummary({ dec, d, language, pl, txt }) {
   const targetEpoch = parseHourEndToEpoch(dec.nextChange.hourEnd, d.localNow || d.now);
   const countdown = useLiveCountdown(targetEpoch);
-  const G = { text: "#F5D060" };
   const statusLabel = pl(dec.status.ml, dec.status.en, dec.status.ar);
   const best = dec.bestOperations || [];
   const avoid = dec.avoidOperations || [];
@@ -145,109 +144,93 @@ function DecisionSummary({ dec, d, language, pl, txt }) {
     : language === "ml" ? (planetArabicMLDisplay(dec.nextChange.nextPlanet) || dec.nextChange.nextPlanet)
     : dec.nextChange.nextPlanet;
 
+  const chip = (it, color) => (
+    <span className="font-inter text-[11px] px-2 py-1 rounded-md leading-tight" style={{
+      background: `${color}14`, color: `${color}ee`, border: `1px solid ${color}33`,
+    }} dir={language === "ar" ? "rtl" : "auto"}>
+      {language === "ar" ? it.ar : (language === "ml" ? (it.ml || it.en) : it.en)}
+    </span>
+  );
+  const col = (color, label, Icon, items) => (
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color }} />
+        <span className="font-inter text-[9px] uppercase tracking-wider font-bold" style={{ color }}>{label}</span>
+      </div>
+      {items.length === 0
+        ? <span className="font-inter text-[11px]" style={{ color: "rgba(255,255,255,0.30)" }}>—</span>
+        : <div className="flex flex-wrap gap-1">
+            {items.slice(0, 5).map((it, i) => <span key={i}>{chip(it, color)}</span>)}
+            {items.length > 5 && <span className="font-inter text-[9px] self-center px-1" style={{ color: `${color}99` }}>+{items.length - 5}</span>}
+          </div>}
+    </div>
+  );
+
   return (
-    <div className="rounded-xl p-3" style={{
-      background: "linear-gradient(145deg, rgba(212,175,55,0.08), rgba(8,16,38,0.6))",
-      border: "1px solid rgba(212,175,55,0.35)",
-      boxShadow: "0 0 24px rgba(212,175,55,0.10), inset 0 1px 0 rgba(212,175,55,0.10)",
+    <div className="rounded-xl overflow-hidden" style={{
+      background: "linear-gradient(160deg, rgba(212,175,55,0.10) 0%, rgba(8,16,38,0.85) 60%)",
+      border: "1px solid rgba(212,175,55,0.40)",
+      boxShadow: "0 6px 30px rgba(0,0,0,0.45), 0 0 18px rgba(212,175,55,0.10), inset 0 1px 0 rgba(212,175,55,0.15)",
     }}>
-      {/* Live indicator + title */}
-      <div className="flex items-center gap-1.5 mb-2.5">
-        <Radio className="w-3.5 h-3.5" style={{ color: "#4ADE80" }} />
-        <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#4ADE80" }}>
-          {txt("തത്സമയ തീരുമാന സംഗ്രഹം", "Live Decision Summary", "ملخص القرار الحي")}
+      {/* Header band */}
+      <div className="flex items-center gap-2 px-3.5 py-2" style={{ borderBottom: "1px solid rgba(212,175,55,0.18)", background: "rgba(212,175,55,0.04)" }}>
+        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: "#4ADE80", boxShadow: "0 0 8px #4ADE80", animation: "sh-bloom 2s ease-in-out infinite" }} />
+        <span className="font-inter text-[11px] uppercase tracking-[0.18em] font-bold" style={{ color: "#F5D060" }}>
+          {txt("തീരുമാനം", "DECISION", "القرار")}
         </span>
-        <span className="ml-auto flex items-center gap-1 font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+        <span className="font-inter text-[9px] font-medium ml-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+          {txt("തത്സമയ സംഗ്രഹം", "Live Summary", "ملخص حي")}
+        </span>
+        <span className="ml-auto flex items-center gap-1 font-inter text-[8px] font-bold tracking-wider" style={{ color: "#4ADE80" }}>
           <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#4ADE80", boxShadow: "0 0 6px #4ADE80" }} />
           LIVE
         </span>
       </div>
 
-      {/* Overall status row */}
-      <div className="flex items-center gap-2 mb-2.5 pb-2.5" style={{ borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
-        <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
-          {txt("സമഗ്ര നില", "Overall Status", "الحالة الإجمالية")}:
-        </span>
-        <span className="font-inter text-sm font-bold" style={{ color: dec.status.color }}>
-          {statusLabel}
-        </span>
-      </div>
-
-      {/* Best / Avoid / Special — compact inline */}
-      <div className="space-y-2">
-        <div className="flex items-start gap-2">
-          <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#4ADE80" }} />
-          <div className="flex-1 min-w-0">
-            <span className="font-inter text-[9px] uppercase tracking-wider font-bold block mb-0.5" style={{ color: "#4ADE80" }}>
-              {txt("ഇപ്പോൾ ചെയ്യാൻ മികച്ചത്", "Best Right Now", "الأفضل الآن")}
+      <div className="p-3.5 space-y-3">
+        {/* Overall status — prominent */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{
+            background: `${dec.status.color}1a`, border: `1px solid ${dec.status.color}55`,
+          }}>
+            <Sparkles className="w-5 h-5" style={{ color: dec.status.color }} />
+          </div>
+          <div className="min-w-0">
+            <span className="font-inter text-[9px] uppercase tracking-wider block" style={{ color: "rgba(255,255,255,0.40)" }}>
+              {txt("സമഗ്ര നില", "Overall Status", "الحالة الإجمالية")}
             </span>
-            {best.length === 0
-              ? <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>—</span>
-              : <div className="flex flex-wrap gap-1">
-                  {best.slice(0, 6).map((it, i) => (
-                    <span key={i} className="font-inter text-[10px] px-1.5 py-0.5 rounded" style={{
-                      background: "rgba(74,222,128,0.10)", color: "#4ADE80cc", border: "1px solid rgba(74,222,128,0.25)",
-                    }} dir={language === "ar" ? "rtl" : "auto"}>
-                      {language === "ar" ? it.ar : (language === "ml" ? (it.ml || it.en) : it.en)}
-                    </span>
-                  ))}
-                  {best.length > 6 && <span className="font-inter text-[9px] self-center" style={{ color: "rgba(74,222,128,0.50)" }}>+{best.length - 6}</span>}
-                </div>}
+            <span className="font-inter text-base font-bold leading-tight" style={{ color: dec.status.color }}>
+              {statusLabel}
+            </span>
           </div>
         </div>
 
-        <div className="flex items-start gap-2">
-          <Ban className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#F87171" }} />
-          <div className="flex-1 min-w-0">
-            <span className="font-inter text-[9px] uppercase tracking-wider font-bold block mb-0.5" style={{ color: "#F87171" }}>
-              {txt("ഇപ്പോൾ ഒഴിവാക്കുക", "Avoid Right Now", "تجنب الآن")}
-            </span>
-            {avoid.length === 0
-              ? <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>—</span>
-              : <div className="flex flex-wrap gap-1">
-                  {avoid.slice(0, 6).map((it, i) => (
-                    <span key={i} className="font-inter text-[10px] px-1.5 py-0.5 rounded" style={{
-                      background: "rgba(248,113,113,0.10)", color: "#F87171cc", border: "1px solid rgba(248,113,113,0.25)",
-                    }} dir={language === "ar" ? "rtl" : "auto"}>
-                      {language === "ar" ? it.ar : (language === "ml" ? (it.ml || it.en) : it.en)}
-                    </span>
-                  ))}
-                  {avoid.length > 6 && <span className="font-inter text-[9px] self-center" style={{ color: "rgba(248,113,113,0.50)" }}>+{avoid.length - 6}</span>}
-                </div>}
-          </div>
+        {/* Best / Avoid — two clean columns */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-1" style={{ borderTop: "1px solid rgba(212,175,55,0.10)" }}>
+          {col("#4ADE80", txt("ഇപ്പോൾ ചെയ്യാൻ", "Best Right Now", "الأفضل الآن"), CheckCircle2, best)}
+          <div className="hidden sm:block w-px flex-shrink-0 self-stretch" style={{ background: "rgba(212,175,55,0.12)" }} />
+          {col("#F87171", txt("ഇപ്പോൾ ഒഴിവാക്കുക", "Avoid Right Now", "تجنب الآن"), Ban, avoid)}
         </div>
 
+        {/* Special — only when applicable */}
         {special.length > 0 && (
-          <div className="flex items-start gap-2">
-            <Crosshair className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#C084FC" }} />
-            <div className="flex-1 min-w-0">
-              <span className="font-inter text-[9px] uppercase tracking-wider font-bold block mb-0.5" style={{ color: "#C084FC" }}>
-                {txt("വിശേഷ പ്രവൃത്തികൾ", "Special Operations", "أعمال خاصة")}
-              </span>
-              <div className="flex flex-wrap gap-1">
-                {special.slice(0, 6).map((it, i) => (
-                  <span key={i} className="font-inter text-[10px] px-1.5 py-0.5 rounded" style={{
-                    background: "rgba(192,132,252,0.10)", color: "#C084FCcc", border: "1px solid rgba(192,132,252,0.25)",
-                  }} dir={language === "ar" ? "rtl" : "auto"}>
-                    {language === "ar" ? it.ar : (language === "ml" ? (it.ml || it.en) : it.en)}
-                  </span>
-                ))}
-              </div>
-            </div>
+          <div className="pt-1" style={{ borderTop: "1px solid rgba(192,132,252,0.18)" }}>
+            {col("#C084FC", txt("വിശേഷ പ്രവൃത്തികൾ", "Special Operations", "أعمال خاصة"), Crosshair, special)}
           </div>
         )}
-      </div>
 
-      {/* Next live change countdown */}
-      <div className="flex items-center gap-2 mt-2.5 pt-2.5" style={{ borderTop: "1px solid rgba(212,175,55,0.15)" }}>
-        <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#818CF8" }} />
-        <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>
-          {txt("അടുത്ത ഗ്രഹ മണിക്കൂർ", "Next planetary hour", "الساعة الكوكبية التالية")}:
-        </span>
-        <span className="font-inter text-[10px] font-bold" style={{ color: "#818CF8" }}>{nextPlanet}</span>
-        <span className="ml-auto font-inter text-xs font-bold tabular-nums" style={{ color: countdown ? "#4ADE80" : "rgba(255,255,255,0.50)" }}>
-          {countdown != null ? `⏱ ${countdown}` : dec.nextChange.remainingTime}
-        </span>
+        {/* Next live change — footer band */}
+        <div className="flex items-center gap-2 pt-2.5 -mx-3.5 px-3.5 pb-0.5" style={{ borderTop: "1px solid rgba(212,175,55,0.15)" }}>
+          <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#818CF8" }} />
+          <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>
+            {txt("അടുത്ത മാറ്റം", "Next Change", "التغيير التالي")}
+          </span>
+          <span className="font-inter text-[10px] font-bold" style={{ color: "#818CF8" }}>{nextPlanet}</span>
+          <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.35)" }}>· {dec.nextChange.hourEnd}</span>
+          <span className="ml-auto font-inter text-sm font-bold tabular-nums flex items-center gap-1" style={{ color: countdown ? "#4ADE80" : "rgba(255,255,255,0.50)" }}>
+            {countdown != null ? <><span style={{ color: "rgba(255,255,255,0.35)" }}>⏱</span> {countdown}</> : dec.nextChange.remainingTime}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -288,6 +271,15 @@ export default function IntelligentDashboard() {
 
       {/* ══ 0 · CURRENT DECISION SUMMARY (always visible · answers "what now?") ══ */}
       <DecisionSummary dec={dec} d={d} language={language} pl={pl} txt={txt} />
+
+      {/* ── Decision / Evidence separator ── */}
+      <div className="flex items-center gap-2 py-1">
+        <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.25), transparent)" }} />
+        <span className="font-inter text-[8px] uppercase tracking-[0.3em] font-bold" style={{ color: "rgba(212,175,55,0.55)" }}>
+          {txt("ഗ്രന്ഥ തെളിവുകൾ", "MANUSCRIPT EVIDENCE", "الأدلة")}
+        </span>
+        <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.25), transparent)" }} />
+      </div>
 
       {/* ══ 1 · Overall Current Status ══ */}
       <div className="rounded-xl p-3 flex items-center gap-3" style={{
