@@ -208,6 +208,17 @@ function AstroClockContent() {
           </Suspense>
         </AstroClockErrorBoundary>
 
+        {/* ── Preserved: legacy Today Dashboard (kept collapsed; not removed) ── */}
+        <AstroClockErrorBoundary label="Today Dashboard">
+          <DashboardSection icon="📅" title={txt("ഇന്നത്തെ ഡാഷ്ബോർഡ് (പഴയത്)", "Today's Dashboard (legacy)", "Bugün Paneli (eski)")}
+            subtitle={txt("ദിവസം, സഅാത്, കവ്കബ്, പ്രവൃത്തികൾ, മുന്നറിയിപ്പുകൾ", "Day, Saat, Kawkab, Activities, Warnings", "Gün, Saat, Kavkeb, Eylemler, Uyarılar")}
+            badge="●">
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <TodayDashboard />
+            </Suspense>
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
         {/* ── Section 2 — Daily Mantras & Spiritual Recitations ── */}
         <AstroClockErrorBoundary label="Daily Mantras">
           <DashboardSection icon="📿" title={txt("ദൈനംദിന മന്ത്രങ്ങൾ", "Daily Mantras", "Günlük Mantralar")}
@@ -236,6 +247,24 @@ function AstroClockContent() {
           </DashboardSection>
         </AstroClockErrorBoundary>
 
+        {/* ── Preserved panels (kept collapsed; not removed) ── */}
+        <AstroClockErrorBoundary label="Moon Center">
+          <DashboardSection icon="🌙" title={txt("ചന്ദ്ര കേന്ദ്രം", "Moon Center", "Ay Merkezi")}
+            subtitle={txt("രാശി, ഘട്ടം, നക്ഷത്രം, ശക്തി, സ്വഭാവം", "Zodiac, Phase, Mansion, Strength, Nature", "Burç, Evre, Menzil, Güç, Doğa")}>
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <MoonCenter />
+            </Suspense>
+          </DashboardSection>
+        </AstroClockErrorBoundary>
+
+        <AstroClockErrorBoundary label="Moon Zodiac">
+          <DashboardSection icon="♈" title={txt("ചന്ദ്രന്റെ രാശി", "Moon in Zodiac", "Burçta Ay")}
+            subtitle={txt("നിലവിലെ രാശി + അടുത്ത മാറ്റം", "Current Zodiac + Next Transition", "Mevcut Burç + Sonraki Geçiş")}>
+            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+              <MoonZodiac />
+            </Suspense>
+          </DashboardSection>
+        </AstroClockErrorBoundary>
 
         <AstroClockErrorBoundary label="Zodiac Encyclopedia">
           <DashboardSection icon="♈" title={txt("12 രാശികൾ", "12 Zodiac Signs", "12 Burç")}
