@@ -275,21 +275,69 @@ export default function IntelligentDashboard() {
   // hour boundary from the location's tz.
   const isLiveLocation = d.location?.source !== "manual";
   const isLiveMode = !customDate && isLiveLocation;
-  if (!d.currentHour) return null;
 
-  const dec = computeAstroDecision(d);
+  // ── Manual Exploration (Preview / Custom Date only) ──────────────────────
+  // The Kawkab (planet) is NEVER chosen manually. It is always derived from
+  // (Planetary Day) + (Layl/Nahar) + (Saat) via the Chaldean sequence — the
+  // SAME sequence the live engine precomputes into d.allHours[]. We simply
+  // pick the grid entry for the selected period + saat. No manuscript
+  // calculation is duplicated, changed, or invented.
+  // In Live Mode all of this collapses to the auto values, so Live Mode is
+  // byte-for-byte unchanged. Hooks are declared before any early return.
+  const [periodOverride, setPeriodOverride] = useState(null); // "day" | "night" | null
+  const [saatOverride, setSaatOverride] = useState(null);      // 1..12 | null
+  useEffect(() => {
+    if (isLiveMode) { setPeriodOverride(null); setSaatOverride(null); }
+  }, [isLiveMode]);
+  useEffect(() => { setPeriodOverride(null); setSaatOverride(null); }, [customDate]);
+
+  if (!d.currentHour || !d.allHours?.length) return null;
+
+  const autoPeriod = d.isNight ? "night" : "day";
+  const autoSaat = d.currentHour.hourNumber || 1;
+  const effPeriod = isLiveMode ? autoPeriod : (periodOverride || autoPeriod);
+  const effSaat = isLiveMode ? autoSaat : (saatOverride || autoSaat);
+
+  // Pick the precomputed hour from the 24-hour grid (Chaldean sequence intact).
+  const hourIdx = (effPeriod === "night" ? 12 : 0) + (effSaat - 1);
+  const picked = d.allHours[hourIdx];
+  const effHour = (!isLiveMode && picked) ? {
+    ...d.currentHour,
+    hourNumber: effSaat,
+    planet: picked.planet,
+    planetInfo: picked.planetInfo,
+    isDay: effPeriod === "day",
+    hourStart: picked.startTime,
+    hourEnd: picked.endTime,
+    duration: picked.duration,
+    durationMinutes: picked.durationMinutes,
+    remainingTime: picked.timeRemaining || picked.duration,
+    nextPlanet: (d.allHours[hourIdx + 1]?.planet) || d.currentHour.nextPlanet,
+  } : d.currentHour;
+
+  // Effective data object fed to the decision engine — only currentHour /
+  // isNight / laylNahar are overridden; every manuscript layer (planetary day,
+  // lunar day, mansion, moon, zodiac, phase…) stays from the selected date.
+  const ed = {
+    ...d,
+    currentHour: effHour,
+    isNight: effPeriod === "night",
+    laylNahar: effPeriod === "night" ? "Layl" : "Nahar",
+  };
+
+  const dec = computeAstroDecision(ed);
   if (!dec) return null;
 
   const L = dec.layers;
   const G = { text: "#F5D060", dim: "rgba(212,175,55,0.55)" };
   const friend = FRIEND_LABEL[dec.friend] || FRIEND_LABEL.neutral;
 
-  // Context strip values
-  const dayName = language === "ar" ? DAY_AR[d.activeDayIndex]
-    : language === "ml" ? d.dayInfo?.name_ml : d.dayInfo?.name_en;
-  const planetName = language === "ar" ? (PLANET_AR[d.currentHour.planet] || d.currentHour.planet)
-    : language === "ml" ? (planetArabicMLDisplay(d.currentHour.planet) || d.currentHour.planet)
-    : d.planetInfo?.[d.currentHour.planet]?.name_en || d.currentHour.planet;
+  // Context strip values (reflect manual exploration in preview mode)
+  const dayName = language === "ar" ? DAY_AR[ed.activeDayIndex]
+    : language === "ml" ? ed.dayInfo?.name_ml : ed.dayInfo?.name_en;
+  const planetName = language === "ar" ? (PLANET_AR[effHour.planet] || effHour.planet)
+    : language === "ml" ? (planetArabicMLDisplay(effHour.planet) || effHour.planet)
+    : d.planetInfo?.[effHour.planet]?.name_en || effHour.planet;
 
   const pl = (en, ml, ar) => (language === "ar" ? ar : language === "ml" ? ml : en);
 
@@ -298,15 +346,64 @@ export default function IntelligentDashboard() {
       {/* ══ Context strip ══ */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <MiniCard icon="📅" label={txt("ദിവസം", "Day", "يوم")} value={dayName} color={G.text} />
-        <MiniCard icon={d.isNight ? "🌙" : "☀"} label={txt("ليل / نهار", "Layl / Nahar", "ليل / نهار")}
-          value={language === "ar" ? (d.isNight ? "ليل" : "نهار") : d.laylNahar} color={d.isNight ? "#818CF8" : "#FBBF24"} />
-        <MiniCard icon="⏰" label={txt("ساعة", "Saat", "ساعة")} value={`#${d.currentHour.hourNumber}`} color={G.text} />
-        <MiniCard icon={d.planetInfo?.[d.currentHour.planet]?.symbol || "☉"}
+        <MiniCard icon={ed.isNight ? "🌙" : "☀"} label={txt("ليل / نهار", "Layl / Nahar", "ليل / نهار")}
+          value={language === "ar" ? (ed.isNight ? "ليل" : "نهار") : ed.laylNahar} color={ed.isNight ? "#818CF8" : "#FBBF24"} />
+        <MiniCard icon="⏰" label={txt("ساعة", "Saat", "ساعة")} value={`#${effSaat}`} color={G.text} />
+        <MiniCard icon={d.planetInfo?.[effHour.planet]?.symbol || "☉"}
           label={txt("كوكب", "Kawkab", "كوكب")} value={planetName} color={G.text} />
       </div>
 
+      {/* ══ Manual Exploration Controls (Preview / Custom Date only — never affects Live Mode) ══ */}
+      {!isLiveMode && (
+        <div className="rounded-lg p-2.5 flex flex-wrap items-center gap-3" style={{
+          background: "rgba(129,140,248,0.06)", border: "1px solid rgba(129,140,248,0.22)",
+        }}>
+          <span className="font-inter text-[9px] uppercase tracking-[0.18em] font-bold" style={{ color: "#818CF8" }}>
+            {txt("അന്വേഷണം", "Explore", "استكشاف")}
+          </span>
+          {/* Layl / Nahar toggle — viewing mode only */}
+          <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid rgba(212,175,55,0.30)" }}>
+            {(["day", "night"]).map(p => (
+              <button key={p} onClick={() => setPeriodOverride(p)}
+                className="px-3 py-1.5 font-inter text-[10px] font-bold uppercase tracking-wider"
+                style={{
+                  background: effPeriod === p ? "rgba(212,175,55,0.18)" : "transparent",
+                  color: effPeriod === p ? "#F5D060" : "rgba(255,255,255,0.45)",
+                }}>
+                {p === "day" ? txt("നഹർ", "Nahar", "نهار") : txt("ലൈൽ", "Layl", "ليل")}
+              </button>
+            ))}
+          </div>
+          {/* Saat selector (1–12) — planet is auto-derived, never manually chosen */}
+          <div className="flex items-center gap-1" style={{ border: "1px solid rgba(212,175,55,0.30)", borderRadius: "0.5rem" }}>
+            <button onClick={() => setSaatOverride(s => Math.max(1, (s ?? autoSaat) - 1))}
+              className="px-2 py-1.5 font-inter text-[12px] font-bold" style={{ color: "#F5D060" }}>‹</button>
+            <span className="font-inter text-[10px] font-bold px-1" style={{ color: "#F5D060" }}>
+              {txt("ساعة", "Saat", "ساعة")} #{effSaat}
+            </span>
+            <button onClick={() => setSaatOverride(s => Math.min(12, (s ?? autoSaat) + 1))}
+              className="px-2 py-1.5 font-inter text-[12px] font-bold" style={{ color: "#F5D060" }}>›</button>
+          </div>
+          {/* Derived Kawkab (auto from the Chaldean sequence) */}
+          <span className="font-inter text-[10px] flex items-center gap-1" style={{ color: "rgba(255,255,255,0.55)" }}>
+            {txt("كوكب", "Kawkab", "كوكب")}:
+            <b style={{ color: "#F5D060" }}>{planetName}</b>
+            <span className="font-inter text-[8px]" style={{ color: "rgba(255,255,255,0.30)" }}>
+              ({txt("സ്വയം", "auto", "تلقائي")})
+            </span>
+          </span>
+          {(periodOverride || saatOverride) && (
+            <button onClick={() => { setPeriodOverride(null); setSaatOverride(null); }}
+              className="px-2 py-1.5 rounded-lg font-inter text-[10px] font-bold uppercase tracking-wider"
+              style={{ background: "rgba(74,222,128,0.10)", color: "#4ADE80", border: "1px solid rgba(74,222,128,0.25)" }}>
+              ↻ {txt("സ്വയം", "Auto", "تلقائي")}
+            </button>
+          )}
+        </div>
+      )}
+
       {/* ══ 0 · CURRENT DECISION SUMMARY (always visible · answers "what now?") ══ */}
-      <DecisionSummary dec={dec} d={d} language={language} pl={pl} txt={txt} isLiveMode={isLiveMode} />
+      <DecisionSummary dec={dec} d={ed} language={language} pl={pl} txt={txt} isLiveMode={isLiveMode} />
 
       {/* ── Decision / Evidence separator ── */}
       <div className="flex items-center gap-2 py-1">
