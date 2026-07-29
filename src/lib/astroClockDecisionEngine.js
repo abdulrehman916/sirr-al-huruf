@@ -27,13 +27,20 @@ import {
   getKashfMansionByNo,
   getKashfHourAttributes,
   getKashfDirectionForElement,
+  getKashfNightDayRule,
 } from "./astroClockManuscriptMerger";
 import {
   KASHF_OPERATION_TIMING,
   KASHF_TRAVEL_DIRECTION_NAHS,
+  KASHF_ANSWER_HOURS,
+  KASHF_DOMINANCE_HOURS,
+  KASHF_JAAD_HOUR_TABLE,
+  KASHF_MOON_ZODIAC_HOURS,
+  KASHF_ASTRO_PRINCIPLES,
 } from "./astroClockKashfData";
 
 const DAY_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const ZODIAC_EN_MAP = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
 
 // ── Strength labels (3 languages) ──
 const STRENGTH = {
@@ -290,6 +297,96 @@ export function computeAstroDecision(d) {
     sources.push({ book: "Kashf al-Haqa'iq", author: "Omani Scholar (Falaj Bani Rabi'a)", topic: "Lunar day, mansion, daily operations, restrictions, directions" });
   }
 
+  // ── Per-layer detail (for inline dashboard sections) ──
+  const practiceRule = getKashfNightDayRule();
+  const answerHour = KASHF_ANSWER_HOURS.table.find(t => t.day_en === dayName) || null;
+  const dominanceHour = KASHF_DOMINANCE_HOURS.table.find(t => t.day_en === dayName) || null;
+  const jaadEntry = KASHF_JAAD_HOUR_TABLE.table[d.activeDayIndex] || null;
+  const moonZodiacEn = d.moonPosition?.zodiacSign?.name_en || null;
+  const zIdx = ZODIAC_EN_MAP.indexOf(moonZodiacEn);
+  const moonZodiacHour = zIdx >= 0 ? KASHF_MOON_ZODIAC_HOURS.table[zIdx] : null;
+  const principle18 = KASHF_ASTRO_PRINCIPLES.find(p => p.id === "kashf_principle_002") || null;
+
+  const isAnswerNow = answerHour && d.currentHour?.hourNumber === answerHour.hour_number && d.currentHour?.isDay;
+  const isDomNow = dominanceHour && d.currentHour?.hourNumber === dominanceHour.hour_number && d.currentHour?.isDay;
+
+  const layers = {
+    planetaryDay: dayRule ? {
+      planet: dayRulerKey, name_en: dayRule.name_en, name_ml: dayRule.name_ml, name_ar: dayRule.name_ar,
+      nature: dayRule.nature, nature_ml: dayRule.nature_ml, element: dayRule.element,
+      suitable: dayRule.suitableActions || { en: [], ml: [] },
+      unsuitable: dayRule.unsuitableActions || { en: [], ml: [] },
+      source: `Havâss'ın Derinlikleri, ${dayRule.pdf_pages}`,
+    } : null,
+    lunarDay: lunarDayInfo ? {
+      day: d.lunarDay, nature_en: lunarDayInfo.nature_en, nature_ml: lunarDayInfo.nature_ml,
+      summary_ar: lunarDayInfo.summary_ar, nahsStatus, source: lunarDayInfo.source,
+    } : null,
+    moonMansion: mansionInfo ? {
+      no: d.currentMansion?.no, name_ar: mansionInfo.name_ar,
+      nature_en: mansionInfo.nature_en, nature_ml: mansionInfo.nature_ml,
+      operation_ar: mansionInfo.operation_ar, planet_ar: mansionInfo.planet_ar,
+      source: mansionInfo.source,
+    } : null,
+    moonZodiac: {
+      name_en: d.moonZodiacFull?.name_en || null,
+      name_ar: d.moonZodiacFull?.name_ar || null,
+      longitude: d.moonPosition ? parseFloat(d.moonPosition.longitude).toFixed(1) : null,
+      bestSaatPlanet: moonZodiacHour ? moonZodiacHour.planet_en : null,
+      bestSaatPlanetAr: moonZodiacHour ? moonZodiacHour.planet_ar : null,
+      source: moonZodiacHour ? `Kashf al-Haqa'iq, p.54` : null,
+      // No dignity data in manuscripts (audit 2026-07-28) — information only.
+      dignityNote: "Not in manuscripts",
+    },
+    moonPhase: d.moonPhaseDesc ? {
+      en: d.moonPhaseDesc.en, ml: d.moonPhaseDesc.ml,
+      pct: d.moonPosition ? parseFloat(d.moonPosition.phase).toFixed(0) : 0,
+      isWaxing: !!d.moonPosition?.isWaxing,
+      source: "Havâss'ın Derinlikleri, p.63",
+    } : null,
+    dayNight: {
+      isNight: d.isNight,
+      laylNahar: d.laylNahar,
+      source: "Kashf al-Haqa'iq, p.65 (day-boundary rule)",
+    },
+    currentHour: hourRule ? {
+      hourNumber: d.currentHour.hourNumber, planet: hourPlanetKey,
+      name_en: hourRule.name_en, name_ml: hourRule.name_ml, name_ar: hourRule.name_ar,
+      nature: hourRule.nature, nature_ml: hourRule.nature_ml,
+      hourStart: d.currentHour.hourStart, hourEnd: d.currentHour.hourEnd,
+      remainingTime: d.currentHour.remainingTime, isDay: d.currentHour.isDay,
+      suitable: hourRule.suitableActions || { en: [], ml: [] },
+      unsuitable: hourRule.unsuitableActions || { en: [], ml: [] },
+      friendVsDay: friend,
+      source: `Havâss'ın Derinlikleri, ${hourRule.pdf_pages}`,
+    } : null,
+    direction: {
+      facing: dayDirection,
+      travelNahs: travelNahs ? { direction_en: travelNahs.direction_en, days_en: travelNahs.days_en } : null,
+      source: "Kashf al-Haqa'iq, p.42 (facing) · p.57 (travel)",
+    },
+    practiceRule: {
+      ar: practiceRule.ar, en: practiceRule.en, ml: practiceRule.ml,
+      exception_en: practiceRule.exception_en,
+      source: practiceRule.source,
+    },
+    kashfHour: {
+      answerHour: answerHour ? { planet_ar: answerHour.planet_ar, hour_number: answerHour.hour_number, isNow: isAnswerNow } : null,
+      dominanceHour: dominanceHour ? { planet_ar: dominanceHour.planet_ar, hour_number: dominanceHour.hour_number, isNow: isDomNow } : null,
+      jaad: jaadEntry ? {
+        saad: jaadEntry.saad_planet, dominance: jaadEntry.dominance_planet,
+        answer: jaadEntry.answer_planet, blessing: jaadEntry.blessing_planet,
+      } : null,
+      principle: principle18 ? { ar: principle18.rule_ar, en: principle18.rule_en, ml: principle18.rule_ml } : null,
+      source: "Kashf al-Haqa'iq, p.53 (answer/dominance) · p.54 (Jaad) · p.20 (1st/8th rule)",
+    },
+    dayOperations: kashfToday.map(op => ({
+      en: op.operation_en, ml: op.operation_ml || op.operation_en, ar: op.operation_ar,
+      planet_en: op.planet_en, planet_ar: op.planet_ar,
+      source: `Kashf al-Haqa'iq, p.${op.source.page}`,
+    })),
+  };
+
   return {
     status: STRENGTH[statusKey],
     totalScore: total,
@@ -299,6 +396,7 @@ export function computeAstroDecision(d) {
     compatibility: compat,
     hourAttrs,
     dayDirection,
+    layers,
     nextChange: {
       hourEnd: d.currentHour.hourEnd,
       remainingTime: d.currentHour.remainingTime,

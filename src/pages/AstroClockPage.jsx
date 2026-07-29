@@ -19,12 +19,10 @@ const AstroScreenshotUploader = lazy(() => import("@/components/astroclock/Astro
 
 // Lazy-load all sections — only renders when expanded
 const IntelligentDashboard = lazy(() => import("@/components/astroclock/dashboard/IntelligentDashboard"));
-const ManuscriptDashboard = lazy(() => import("@/components/astroclock/manuscript/ManuscriptDashboard"));
 const DailyMantras = lazy(() => import("@/components/astroclock/dashboard/DailyMantras"));
 const SmartSearch = lazy(() => import("@/components/astroclock/dashboard/SmartSearch"));
 const SaatGrid = lazy(() => import("@/components/astroclock/dashboard/SaatGrid"));
 const MoonCenter = lazy(() => import("@/components/astroclock/dashboard/MoonCenter"));
-const MoonZodiac = lazy(() => import("@/components/astroclock/dashboard/MoonZodiac"));
 const MansionsReference = lazy(() => import("@/components/astroclock/dashboard/MansionsReference"));
 const PlanetEncyclopedia = lazy(() => import("@/components/astroclock/dashboard/PlanetEncyclopedia"));
 const ZodiacEncyclopedia = lazy(() => import("@/components/astroclock/dashboard/ZodiacEncyclopedia"));
@@ -213,14 +211,7 @@ function AstroClockContent() {
           </DashboardSection>
         </AstroClockErrorBoundary>
 
-        {/* ── Section 1b — Manuscript-compliant Dashboard (secondary · cards collapsed by default) ── */}
-        <AstroClockErrorBoundary label="Manuscript Dashboard">
-          <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
-            <ManuscriptDashboard />
-          </Suspense>
-        </AstroClockErrorBoundary>
-
-        {/* ── Section 2 — Daily Mantras & Spiritual Recitations ── */}
+        {/* ── Reference & Study sections (non-operational) ── */}
         <AstroClockErrorBoundary label="Daily Mantras">
           <DashboardSection icon="📿" title={txt("ദൈനംദിന മന്ത്രങ്ങൾ", "Daily Mantras", "Günlük Mantralar")}
             subtitle={txt("ഇന്നത്തെ ആത്മിക പാരായണങ്ങൾ", "Today's Spiritual Recitations", "Bugünün Ruani Zikirleri")}>
@@ -254,15 +245,6 @@ function AstroClockContent() {
             subtitle={txt("രാശി, ഘട്ടം, നക്ഷത്രം, ശക്തി, സ്വഭാവം", "Zodiac, Phase, Mansion, Strength, Nature", "Burç, Evre, Menzil, Güç, Doğa")}>
             <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
               <MoonCenter />
-            </Suspense>
-          </DashboardSection>
-        </AstroClockErrorBoundary>
-
-        <AstroClockErrorBoundary label="Moon Zodiac">
-          <DashboardSection icon="♈" title={txt("ചന്ദ്രന്റെ രാശി", "Moon in Zodiac", "Burçta Ay")}
-            subtitle={txt("നിലവിലെ രാശി + അടുത്ത മാറ്റം", "Current Zodiac + Next Transition", "Mevcut Burç + Sonraki Geçiş")}>
-            <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
-              <MoonZodiac />
             </Suspense>
           </DashboardSection>
         </AstroClockErrorBoundary>
