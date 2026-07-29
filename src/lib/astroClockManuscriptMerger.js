@@ -74,6 +74,11 @@ const PURPOSE_KEYWORDS = {
   wealth: ["livelihood", "provision"],
   courage: ["awe", "fear", "dread"],
   spiritual: ["elders", "rulers", "meetings"],
+  // ── New canonical categories (deterministic fallback support) ──
+  // Additive only — manuscript operations from Kashf al-Haqa'iq pp.12-27.
+  separation: ["separation", "hatred", "repelling", "clearing", "removing"],
+  enemy: ["war", "strife", "enmity", "awe", "fear", "dread"],
+  binding: ["binding", "silencing", "irresolvable"],
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
