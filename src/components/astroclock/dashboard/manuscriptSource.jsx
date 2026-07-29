@@ -75,3 +75,15 @@ export function DifferentOpinion({ language, children }) {
     </div>
   );
 }
+
+// Conflict badge — marks a field where two manuscripts genuinely disagree.
+// Phase 2.3 manuscript conflict engine. Display-only.
+export function ConflictBadge({ language }) {
+  const lbl = { en: "Conflict", ml: "ഭിന്നത", ar: "خلاف" }[language] || "Conflict";
+  return (
+    <span
+      className="font-inter text-[7px] uppercase tracking-wider px-1 py-0.5 rounded font-bold"
+      style={{ background: "rgba(248,113,113,0.12)", color: "#F87171", border: "1px solid rgba(248,113,113,0.30)" }}
+    >⚠ {lbl}</span>
+  );
+}
