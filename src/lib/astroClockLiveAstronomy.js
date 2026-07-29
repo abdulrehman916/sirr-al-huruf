@@ -7,6 +7,7 @@
 import { getEnhancedMoonPosition, getAllPlanetaryPositions } from './astroClockJPLHorizons.js';
 import { AY_MANAZILLERI } from './astroClockData.js';
 import { PLANETARY_HOUR_RULES } from './astroClockPlanetaryHourRules.js';
+import { mansionIndexFromLongitude } from './astroClockMoonPosition.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ENHANCED MOON POSITION WITH JPL DATA
@@ -109,9 +110,9 @@ export function getLiveLunarMansion(longitude) {
     return null;
   }
   
-  // Each mansion spans 12°51'26" = 12.857°
-  const mansionWidth = 360 / 28;
-  const mansionIndex = Math.floor(longitude / mansionWidth);
+  // Manuscript mansion boundaries (unequal widths) from Havâss PDF2 p.64-74.
+  // Shared helper in astroClockMoonPosition.js (MANSION_START_DEGREES).
+  const mansionIndex = mansionIndexFromLongitude(longitude);
   
   if (mansionIndex >= 0 && mansionIndex < 28) {
     const mansion = AY_MANAZILLERI[mansionIndex];

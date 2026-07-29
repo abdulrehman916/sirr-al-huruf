@@ -83,6 +83,11 @@ export function calculateMoonPosition(date) {
     latitude: latitude.toFixed(2),
     distance: distance.toFixed(3),
     phase: (phase * 100).toFixed(1),
+    // Mean elongation D (Moon longitude − Sun longitude, mean), 0..360.
+    // Source: Kashf al-Haqa'iq principle_004 (pp.65-66): lunar day is computed
+    // astronomically from conjunction, not by crescent sighting. Used to derive
+    // the synodic lunar day (tithi) in useAstroData.
+    elongation: D.toFixed(2),
     // Mean elongation D (0..360) determines waxing (0<D<180) vs waning (180<D<360).
     // Illumination % alone cannot distinguish the two halves — both give the same value.
     isWaxing: D > 0 && D < 180,
@@ -127,11 +132,38 @@ function degToRad(degrees) {
   return degrees * Math.PI / 180;
 }
 
+// Manuscript mansion start boundaries (absolute tropical degrees), in
+// mansion order 1..28. Source: Havâss'ın Derinlikleri, PDF2 p.64-74 —
+// AY_MANAZILLERI[].baslama_siniri. The manuscript gives UNEQUAL widths
+// (mostly 13°, some 12°), so equal 360/28 division is NOT used.
+//   1 Sheratayn 25°, 2 Buteyn 38°, 3 Süreyya 51°, 4 Düberan 63°,
+//   5 Hak'a 76°, 6 Hena 89°, 7 Zira 102°, 8 Nesre 115°, 9 Tarfe 128°,
+//   10 Cebhe 141°, 11 Zebra 153°, 12 Surfa 166°, 13 Ava 179°,
+//   14 Semmak 192°, 15 Gufur 205°, 16 Zibana 218°, 17 İklil 231°,
+//   18 Kalp 243°, 19 Şevle 256°, 20 Neayim 269°, 21 Belde 282°,
+//   22 Saadüzzabih 295°, 23 Saudbela 308°, 24 Saadüssuud 321°,
+//   25 Saadülahbiyye 333°, 26 Ferülmukaddem 346°, 27 Ferülmüahhir 359°,
+//   28 Erreşa 12° (wraps). Tropical frame (Havâss uses tropical sign names).
+export const MANSION_START_DEGREES = [
+  25, 38, 51, 63, 76, 89, 102, 115, 128, 141, 153, 166, 179, 192, 205, 218,
+  231, 243, 256, 269, 282, 295, 308, 321, 333, 346, 359, 12,
+];
+
+// Map a tropical ecliptic longitude (0..360) to its manuscript mansion index
+// (0..27, = AY_MANAZILLERI index). Handles the wrap: m27 spans [359,360)∪[0,12),
+// m28 spans [12,25), m1 starts at 25°.
+export function mansionIndexFromLongitude(longitude) {
+  const lon = ((longitude % 360) + 360) % 360;
+  if (lon >= 12 && lon < 25) return 27;            // m28 Erreşa
+  if (lon >= 359 || lon < 12) return 26;           // m27 Ferülmüahhir (wraps 0°)
+  for (let i = 0; i < 26; i++) {
+    if (lon >= MANSION_START_DEGREES[i] && lon < MANSION_START_DEGREES[i + 1]) return i;
+  }
+  return 0;
+}
+
 function findLunarMansion(longitude) {
-  // Each mansion spans 12°51'26" = 12.857°
-  const mansionWidth = 360 / 28;
-  const mansionIndex = Math.floor(longitude / mansionWidth);
-  
+  const mansionIndex = mansionIndexFromLongitude(longitude);
   if (mansionIndex >= 0 && mansionIndex < 28) {
     return AY_MANAZILLERI[mansionIndex];
   }
@@ -218,10 +250,14 @@ export function calculateMoonTransits(fromDate = new Date()) {
     });
   }
   
-  // Calculate mansion transits
-  const mansionWidth = 360 / 28; // ~12.857 degrees per mansion
-  const currentMansionIndex = Math.floor(currentLongitude / mansionWidth);
+  // Calculate mansion transits — manuscript boundaries (Havâss PDF2 p.64-74),
+  // unequal widths via MANSION_START_DEGREES (not equal 360/28 division).
+  const currentMansionIndex = mansionIndexFromLongitude(currentLongitude);
   const mansions = AY_MANAZILLERI;
+  // Width of the CURRENT mansion (for time-to-next-mansion estimate).
+  const curStart = MANSION_START_DEGREES[currentMansionIndex];
+  const nextStart = MANSION_START_DEGREES[(currentMansionIndex + 1) % 28];
+  const mansionWidth = ((nextStart - curStart + 360) % 360) || 12.857;
   
   // Current mansion
   const degreesToNextMansion = mansionWidth - (currentLongitude % mansionWidth);

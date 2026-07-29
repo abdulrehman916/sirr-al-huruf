@@ -103,7 +103,11 @@ export function useAstroData() {
     const moonZodiacFull = ZODIAC_SIGNS[moonZodiacKey] || null;
     const moonDignity = MOON_DIGNITY[moonZodiacKey] || null;
     const currentMansion = moonPosition?.mansion;
-    const lunarDay = moonPosition ? Math.floor(parseFloat(moonPosition.longitude) / (360 / 29.53)) + 1 : null;
+    // Lunar day (tithi) = Moon age in days since conjunction, from mean elongation D.
+    // Source: Kashf al-Haqa'iq principle_004 (pp.65-66) — "astronomical, not sighting-based";
+    // Havâss PDF2 p.63 — lunar month = crescent→full→crescent (synodic cycle).
+    // D≈0 → day 1 (new moon), D≈180 → day ~15 (full), D≈360 → day 30/1 (next conjunction).
+    const lunarDay = moonPosition ? Math.floor((parseFloat(moonPosition.elongation) / 360) * 29.53) + 1 : null;
 
     return {
       now, localNow, location: loc,
