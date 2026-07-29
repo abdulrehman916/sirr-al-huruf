@@ -24,29 +24,35 @@ import {
 // Live countdown to the next planetary-hour transition.
 // Parses the engine's "hourEnd" label (e.g. "6:51 AM") into today's epoch
 // and ticks every second. Falls back to the static remainingTime string.
-function parseHourEndToEpoch(hourEndStr, baseDate) {
-  if (!hourEndStr || typeof hourEndStr !== "string") return null;
-  const m = hourEndStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
-  if (!m) return null;
-  let h = parseInt(m[1], 10);
-  const min = parseInt(m[2], 10);
-  const ap = (m[3] || "").toUpperCase();
-  if (ap === "PM" && h < 12) h += 12;
-  if (ap === "AM" && h === 12) h = 0;
-  const d = new Date(baseDate);
-  d.setHours(h, min, 0, 0);
-  return d.getTime();
+// Live countdown to the next planetary-hour boundary.
+// TIMEZONE-INDEPENDENT: anchors to the engine's computed `remainingTime`
+// (a duration string "Xh Ym" derived from the astronomical hour boundary),
+// never to browser-local wall-clock. Re-anchors whenever the engine
+// recomputes (60s tick, GPS, date, or location change), so the countdown
+// always targets the same hour boundary as the engine's "Next Live Change".
+function parseRemainingToSeconds(str) {
+  if (!str || typeof str !== "string") return 0;
+  let s = 0;
+  const h = str.match(/(\d+)\s*h/i);
+  const m = str.match(/(\d+)\s*m/i);
+  if (h) s += parseInt(h[1], 10) * 3600;
+  if (m) s += parseInt(m[1], 10) * 60;
+  return s;
 }
-function useLiveCountdown(targetEpoch) {
+function useRemainingCountdown(remainingStr) {
+  const [anchor, setAnchor] = useState(() => ({ total: parseRemainingToSeconds(remainingStr), at: Date.now() }));
+  useEffect(() => {
+    setAnchor({ total: parseRemainingToSeconds(remainingStr), at: Date.now() });
+  }, [remainingStr]);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
-  if (!targetEpoch) return null;
-  const diff = Math.max(0, targetEpoch - now);
-  const mm = Math.floor(diff / 60000);
-  const ss = Math.floor((diff % 60000) / 1000);
+  const elapsed = Math.floor((now - anchor.at) / 1000);
+  const remaining = Math.max(0, anchor.total - elapsed);
+  const mm = Math.floor(remaining / 60);
+  const ss = remaining % 60;
   return `${mm}:${String(ss).padStart(2, "0")}`;
 }
 
@@ -134,8 +140,7 @@ function Row({ label, value, color }) {
 // Answers "What should I do right now?" in one glance. The detailed
 // sections below act as supporting manuscript evidence (the WHY).
 function DecisionSummary({ dec, d, language, pl, txt }) {
-  const targetEpoch = parseHourEndToEpoch(dec.nextChange.hourEnd, d.localNow || d.now);
-  const countdown = useLiveCountdown(targetEpoch);
+  const countdown = useRemainingCountdown(dec.nextChange.remainingTime);
   const statusLabel = pl(dec.status.ml, dec.status.en, dec.status.ar);
   const best = dec.bestOperations || [];
   const avoid = dec.avoidOperations || [];
@@ -227,8 +232,8 @@ function DecisionSummary({ dec, d, language, pl, txt }) {
           </span>
           <span className="font-inter text-[10px] font-bold" style={{ color: "#818CF8" }}>{nextPlanet}</span>
           <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.35)" }}>· {dec.nextChange.hourEnd}</span>
-          <span className="ml-auto font-inter text-sm font-bold tabular-nums flex items-center gap-1" style={{ color: countdown ? "#4ADE80" : "rgba(255,255,255,0.50)" }}>
-            {countdown != null ? <><span style={{ color: "rgba(255,255,255,0.35)" }}>⏱</span> {countdown}</> : dec.nextChange.remainingTime}
+          <span className="ml-auto font-inter text-sm font-bold tabular-nums flex items-center gap-1" style={{ color: "#4ADE80" }}>
+            <span style={{ color: "rgba(255,255,255,0.35)" }}>⏱</span> {countdown}
           </span>
         </div>
       </div>

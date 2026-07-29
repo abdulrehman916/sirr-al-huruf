@@ -215,8 +215,11 @@ export function computeAstroDecision(d) {
       });
     });
   }
-  // From Kashf operations prescribed today that match special categories
-  kashfToday.forEach(op => {
+  // From Kashf operations prescribed for THIS DAY + THIS HOUR (planet) that
+  // match special categories. Reuses kashfThisHour (same hour-gating as Best
+  // Operations) — a manuscript operation is only valid in its prescribed
+  // weekday AND planetary hour, so it must not persist across other hours.
+  kashfThisHour.forEach(op => {
     if (isSpecial(op.operation_en)) special.push({
       en: op.operation_en, ml: op.operation_ml || op.operation_en, ar: op.operation_ar,
       source: `Kashf al-Haqa'iq, p.${op.source.page}`,
