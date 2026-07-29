@@ -2,7 +2,16 @@
  * ASTRO CLOCK — NASA JPL HORIZONS API INTEGRATION
  * Real-time astronomical data from NASA JPL Solar System Dynamics
  * Astro Clock module only — completely isolated
+ *
+ * PRECISION PATH (audit 2026-07-29, Phase 2.2): the browser cannot fetch JPL
+ * Horizons directly (CORS), so the primary path invokes the backend function
+ * `getLiveMoonPosition` (server-side Deno fetch, no CORS). The direct browser
+ * fetch here is kept as a secondary fallback (correct params/parser, but
+ * usually CORS-blocked), and the local simplified formula is the tertiary
+ * fallback. The `source` field is always transparent — never silently downgraded.
  */
+
+import { base44 } from '@/api/base44Client';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NASA JPL HORIZONS API CONFIGURATION
@@ -11,23 +20,16 @@
 const JPL_HORIZONS_API = 'https://ssd.jpl.nasa.gov/api/horizons.api';
 
 /**
- * Build JPL Horizons API URL for planetary ephemeris
- * @param {string} target - Target body (e.g., 'Moon', 'Mars', 'Jupiter')
- * @param {Date} date - Date/time for ephemeris
- * @param {number} lat - Observer latitude
- * @param {number} lng - Observer longitude
- * @returns {string} API URL
+ * Build JPL Horizons API URL for geocentric apparent ecliptic longitude.
+ * JPL requires the ISO 'T' date separator (a space produces "Too many
+ * constants"). Validated against the live API 2026-07-29.
  */
-function buildHorizonsUrl(target, date, lat = 0, lng = 0) {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const hour = String(date.getUTCHours()).padStart(2, '0');
-  const minute = String(date.getUTCMinutes()).padStart(2, '0');
-  
-  const startTime = `${year}-${month}-${day} ${hour}:${minute}`;
-  const endTime = `${year}-${month}-${day} ${String(date.getUTCHours() + 1).padStart(2, '0')}:${minute}`;
-  
+function buildHorizonsUrl(target, date, _lat = 0, _lng = 0) {
+  const pad = (n) => String(n).padStart(2, '0');
+  const isoT = (d) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+  const startTime = isoT(date);
+  const stopTime = isoT(new Date(date.getTime() + 60000));
+
   // JPL Horizons body IDs
   const bodyIds = {
     'sun': '0',
@@ -40,23 +42,24 @@ function buildHorizonsUrl(target, date, lat = 0, lng = 0) {
     'uranus': '799',
     'neptune': '899'
   };
-  
+
   const targetId = bodyIds[target.toLowerCase()] || target;
-  
-  // Build API parameters
+
+  // Geocentric apparent ecliptic longitude/latitude (QUANTITIES=31),
+  // Earth center (CENTER=399) — manuscript engine uses geocentric tropical
+  // ecliptic longitude. No observer coords needed (was 'coord@399').
   const params = new URLSearchParams({
     format: 'json',
-    COMMAND: `'${targetId}'`,
-    OBJ_DATA: 'YES',
+    COMMAND: String(targetId),
     MAKE_EPHEM: 'YES',
     EPHEM_TYPE: 'OBSERVER',
-    CENTER: `'coord@399'`, // Geocentric
-    START_TIME: `'${startTime}'`,
-    STOP_TIME: `'${endTime}'`,
-    STEP_SIZE: `'1m'`,
-    QUANTITIES: `'1,2,3,4,5,6,9,19,20,23,24'` // RA, DEC, AZ, EL, range, velocity, etc.
+    CENTER: '399',
+    START_TIME: startTime,
+    STOP_TIME: stopTime,
+    STEP_SIZE: '1m',
+    QUANTITIES: '31'
   });
-  
+
   return `${JPL_HORIZONS_API}?${params.toString()}`;
 }
 
@@ -94,90 +97,40 @@ export async function fetchFromJPLHorizons(target, date, location = { lat: 0, ln
 }
 
 /**
- * Parse JPL Horizons API response
- * @param {Object} jplData - Raw JPL response
- * @param {string} target - Target body name
- * @returns {Object} Parsed planetary data
+ * Parse JPL Horizons API response.
+ * JPL (format=json) returns the ephemeris as a TEXT block inside the
+ * `result` string delimited by $$SOE ... $$EOE — NOT structured JSON with
+ * RA/DEC/AZ keys. The previous parser read `jplData.data.ephemeris.data[0]`
+ * which never exists, so it ALWAYS returned null → always fell back (audit
+ * finding 1.4). This parser extracts the SOE line and reads the apparent
+ * ecliptic longitude / latitude columns (QUANTITIES=31).
  */
 function parseJPLResponse(jplData, target) {
   try {
-    // Extract ephemeris data from JPL response structure
-    const ephemeris = jplData.data?.ephemeris?.data?.[0];
-    
-    if (!ephemeris) {
-      return null;
-    }
-    
-    // JPL Horizons returns data in specific column order
-    // Parse based on quantity codes requested
-    const parsed = {
-      target: target,
+    const result = typeof jplData === 'string' ? jplData : (jplData.result || '');
+    if (!result) return null;
+    const soe = result.indexOf('$$SOE');
+    const eoe = result.indexOf('$$EOE');
+    if (soe < 0 || eoe <= soe) return null;
+    const lines = result.slice(soe + 5, eoe).trim().split('\n');
+    if (!lines.length) return null;
+    // SOE line: "<date> <time> [flag] <ecl-lon> <ecl-lat> ..." — take the
+    // first two pure-numeric tokens (ecliptic longitude, then latitude).
+    const tokens = lines[0].trim().split(/\s+/);
+    const nums = tokens.filter((t) => /^-?\d+(\.\d+)?$/.test(t));
+    if (nums.length < 1) return null;
+    return {
+      target,
       timestamp: new Date().toISOString(),
       source: 'NASA JPL Horizons',
-      accuracy: 'arcsecond'
+      accuracy: 'arcsecond',
+      eclipticLongitude: parseFloat(nums[0]),
+      eclipticLatitude: nums.length > 1 ? parseFloat(nums[1]) : 0,
     };
-    
-    // Extract available data fields
-    if (ephemeris.RA) {
-      parsed.rightAscension = parseFloat(ephemeris.RA);
-    }
-    
-    if (ephemeris.DEC) {
-      parsed.declination = parseFloat(ephemeris.DEC);
-    }
-    
-    if (ephemeris.AZ) {
-      parsed.azimuth = parseFloat(ephemeris.AZ);
-    }
-    
-    if (ephemeris.EL) {
-      parsed.elevation = parseFloat(ephemeris.EL);
-    }
-    
-    if (ephemeris.r) {
-      parsed.distanceAU = parseFloat(ephemeris.r); // Distance in AU
-    }
-    
-    if (ephemeris.delta) {
-      parsed.distanceEarth = parseFloat(ephemeris.delta); // Distance from Earth in AU
-    }
-    
-    // Calculate ecliptic longitude (approximate from RA/DEC)
-    if (parsed.rightAscension !== undefined && parsed.declination !== undefined) {
-      parsed.eclipticLongitude = raDecToEcliptic(parsed.rightAscension, parsed.declination);
-    }
-    
-    return parsed;
-    
   } catch (error) {
     console.error('Failed to parse JPL response:', error);
     return null;
   }
-}
-
-/**
- * Convert Right Ascension/Declination to Ecliptic Longitude
- * @param {number} ra - Right Ascension (degrees)
- * @param {number} dec - Declination (degrees)
- * @returns {number} Ecliptic longitude (degrees)
- */
-function raDecToEcliptic(ra, dec) {
-  // Obliquity of the ecliptic (J2000)
-  const epsilon = 23.439291 * Math.PI / 180;
-  
-  const raRad = ra * Math.PI / 180;
-  const decRad = dec * Math.PI / 180;
-  
-  // Convert to ecliptic coordinates
-  const lon = Math.atan2(
-    Math.sin(raRad) * Math.cos(epsilon) + Math.tan(decRad) * Math.sin(epsilon),
-    Math.cos(raRad)
-  );
-  
-  let eclipticLon = lon * 180 / Math.PI;
-  if (eclipticLon < 0) eclipticLon += 360;
-  
-  return eclipticLon;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -185,45 +138,76 @@ function raDecToEcliptic(ra, dec) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Get moon position with JPL Horizons data (fallback to local calculation)
+ * Get moon position with JPL Horizons data.
+ *
+ * PRECISION PATH (Phase 2.2): the browser cannot fetch JPL Horizons directly
+ * (CORS), so the PRIMARY path invokes the backend function
+ * `getLiveMoonPosition` (server-side Deno fetch). The direct browser fetch
+ * is the SECONDARY path (usually CORS-blocked but kept for correctness).
+ * The local simplified formula is the TERTIARY fallback. The `source` field
+ * always reflects which path produced the data — never silently downgraded.
  * @param {Date} date - Date to calculate for
  * @param {Object} location - Observer location {lat, lng}
  * @returns {Promise<Object>} Moon position data
  */
 export async function getEnhancedMoonPosition(date, location = { lat: 0, lng: 0 }) {
-  // Try JPL Horizons first
+  const { findLunarMansion, getZodiacSign } = await import('./astroClockMoonPosition.js');
+
+  // PRIMARY — backend function (server-side JPL fetch, no CORS).
+  try {
+    const resp = await base44.functions.invoke('getLiveMoonPosition', {
+      lat: location.lat,
+      lng: location.lng,
+      date: date.toISOString(),
+    });
+    // The SDK returns an axios envelope; the function body is at resp.data.
+    const body = resp && resp.data && resp.data.success !== undefined ? resp.data : resp;
+    if (body && body.success && body.data && body.data.eclipticLongitude !== undefined) {
+      const longitude = body.data.eclipticLongitude;
+      return {
+        longitude: longitude.toFixed(4), // arcsecond precision
+        latitude: (body.data.eclipticLatitude || 0).toFixed(4),
+        distance: 'N/A',
+        phase: calculateMoonPhase(date),
+        mansion: findLunarMansion(longitude),
+        zodiacSign: getZodiacSign(longitude),
+        nakshatra: findLunarMansion(longitude)?.name_en || 'Unknown',
+        calculatedFor: date.toISOString(),
+        source: body.source || 'NASA JPL Horizons',
+        accuracy: body.accuracy || 'arcsecond',
+        rawJPL: body.data,
+      };
+    }
+  } catch (e) {
+    console.warn('Backend JPL path failed, trying direct fetch:', e.message);
+  }
+
+  // SECONDARY — direct browser fetch (usually CORS-blocked, kept for completeness).
   const jplData = await fetchFromJPLHorizons('moon', date, location);
-  
   if (jplData && jplData.eclipticLongitude !== undefined) {
-    // Use JPL data for high precision
     const longitude = jplData.eclipticLongitude;
-    
-    // Import local helper functions
-    const { findLunarMansion, getZodiacSign } = await import('./astroClockMoonPosition.js');
-    
     return {
-      longitude: longitude.toFixed(4), // Arcsecond precision
-      latitude: (jplData.declination || 0).toFixed(4),
-      distance: (jplData.distanceEarth || 0).toFixed(4),
+      longitude: longitude.toFixed(4),
+      latitude: (jplData.eclipticLatitude || 0).toFixed(4),
+      distance: 'N/A',
       phase: calculateMoonPhase(date),
       mansion: findLunarMansion(longitude),
       zodiacSign: getZodiacSign(longitude),
       nakshatra: findLunarMansion(longitude)?.name_en || 'Unknown',
       calculatedFor: date.toISOString(),
-      source: 'NASA JPL Horizons',
+      source: 'NASA JPL Horizons (direct)',
       accuracy: 'arcsecond',
-      rawJPL: jplData
+      rawJPL: jplData,
     };
   }
-  
-  // Fallback to local calculation
+
+  // TERTIARY — local simplified formula (transparent source).
   const { calculateMoonPosition } = await import('./astroClockMoonPosition.js');
   const localData = calculateMoonPosition(date);
-  
   return {
     ...localData,
     source: 'Local Calculation (Simplified)',
-    accuracy: 'approximate'
+    accuracy: 'approximate',
   };
 }
 
@@ -241,18 +225,20 @@ const PLANETS = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn']
  */
 export async function getAllPlanetaryPositions(date, location = { lat: 0, lng: 0 }) {
   const positions = {};
-  
-  // Fetch all planets in parallel
+
+  // Fetch all planets in parallel. Direct browser fetch is usually
+  // CORS-blocked, so planets that fail are transparently marked — never
+  // silently labelled as JPL/arcsecond (audit finding 1.4).
   const promises = PLANETS.map(async (planet) => {
     const data = await fetchFromJPLHorizons(planet, date, location);
     positions[planet] = data || {
-      source: 'Not available',
-      accuracy: 'N/A'
+      source: 'Not available (browser CORS / JPL unreachable)',
+      accuracy: 'N/A',
     };
   });
-  
+
   await Promise.all(promises);
-  
+
   return positions;
 }
 

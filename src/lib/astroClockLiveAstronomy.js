@@ -79,11 +79,16 @@ export async function getLivePlanetaryPositions(date = new Date(), location = { 
       }
     }
     
+    // Reflect the ACTUAL source — never silently label fallback data as
+    // JPL/arcsecond (audit finding 1.4 / Phase 2.2 "never silently downgrade").
+    const planetValues = Object.values(enhanced);
+    const allJPL = planetValues.length > 0 && planetValues.every(p => p && p.source === 'NASA JPL Horizons');
+    const anyJPL = planetValues.some(p => p && p.source === 'NASA JPL Horizons');
     return {
       planets: enhanced,
       timestamp: new Date().toISOString(),
-      source: 'NASA JPL Horizons',
-      accuracy: 'arcsecond'
+      source: allJPL ? 'NASA JPL Horizons' : anyJPL ? 'Mixed (partial JPL)' : 'Not available (COS / JPL unreachable)',
+      accuracy: allJPL ? 'arcsecond' : 'N/A',
     };
     
   } catch (error) {
@@ -185,18 +190,20 @@ export async function getLiveAstronomicalData(date = new Date(), location = { la
     const mansion = getLiveLunarMansion(moonLongitude);
     const zodiacSign = getZodiacSign(moonLongitude);
     
+    // Source/accuracy/isLive reflect the ACTUAL moon data path (JPL or local
+    // fallback), not a hardcoded JPL label (Phase 2.2 — never silently downgrade).
     return {
       timestamp: new Date().toISOString(),
       location: location,
       moon: {
         ...moon,
         mansion: mansion,
-        zodiacSign: zodiacSign
+        zodiacSign: zodiacSign,
       },
       planets: planets.planets,
-      source: 'NASA JPL Horizons',
-      accuracy: 'arcsecond',
-      isLive: true
+      source: moon.source || 'Unknown',
+      accuracy: moon.accuracy || 'N/A',
+      isLive: moon.source === 'NASA JPL Horizons',
     };
     
   } catch (error) {
@@ -289,18 +296,17 @@ function getPlanetaryNature(planet) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const LIVE_ASTRONOMY_ENGINE_STATUS = {
-  version: '2.0.0',
+  version: '2.1.0',
   initialized: true,
-  source: 'NASA JPL Horizons API',
-  accuracy: 'arcsecond',
+  source: 'NASA JPL Horizons API (via backend) or Local Calculation fallback',
+  accuracy: 'arcsecond when JPL available; approximate on fallback',
   features: [
-    'Real-time moon position from NASA',
+    'Real-time moon position from NASA JPL Horizons (server-side)',
     'Live planetary ephemeris',
     'Precise lunar mansion calculation',
     'Zodiac sign from actual longitude',
     'Planetary influence analysis',
-    'Automatic fallback to local calculation',
-    'Arcsecond precision'
+    'Transparent fallback to local calculation (source always disclosed)',
   ],
-  note: 'Live astronomy engine ready — NASA JPL Horizons integration active'
+  note: 'Phase 2.2: JPL precision path repaired — backend fetch (no CORS), real $$SOE parser. Source/accuracy reflect the actual path; never silently downgraded.',
 };

@@ -17,14 +17,14 @@ Deno.serve(async (req) => {
     }
     
     // Get request parameters
-    const { lat, lng, timezone } = await req.json();
+    const { lat, lng, timezone, date: dateStr } = await req.json();
     
     const location = {
       lat: lat || 0,
       lng: lng || 0
     };
     
-    const date = new Date();
+    const date = dateStr ? new Date(dateStr) : new Date();
     
     // Fetch from NASA JPL Horizons API
     const jplData = await fetchFromJPLHorizons('moon', date, location);
@@ -72,18 +72,16 @@ Deno.serve(async (req) => {
 /**
  * Fetch from NASA JPL Horizons API
  */
-async function fetchFromJPLHorizons(target, date, location) {
+async function fetchFromJPLHorizons(target, date, _location) {
   const JPL_HORIZONS_API = 'https://ssd.jpl.nasa.gov/api/horizons.api';
-  
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const hour = String(date.getUTCHours()).padStart(2, '0');
-  const minute = String(date.getUTCMinutes()).padStart(2, '0');
-  
-  const startTime = `${year}-${month}-${day} ${hour}:${minute}`;
-  const endTime = `${year}-${month}-${day} ${String(date.getUTCHours() + 1).padStart(2, '0')}:${minute}`;
-  
+  const pad = (n) => String(n).padStart(2, '0');
+  // JPL Horizons START_TIME requires the ISO 'T' date separator (a space
+  // between date and time produces "Too many constants"). Validated against
+  // the live API 2026-07-29.
+  const isoT = (d) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+  const startTime = isoT(date);
+  const stopTime = isoT(new Date(date.getTime() + 60000));
+
   const bodyIds = {
     'sun': '0',
     'moon': '301',
@@ -93,107 +91,74 @@ async function fetchFromJPLHorizons(target, date, location) {
     'jupiter': '599',
     'saturn': '699'
   };
-  
+
   const targetId = bodyIds[target.toLowerCase()] || target;
-  
+
+  // Geocentric apparent ecliptic longitude/latitude (QUANTITIES=31), Earth
+  // center (CENTER=399) — the manuscript engine uses geocentric tropical
+  // ecliptic longitude. No observer coords needed.
   const params = new URLSearchParams({
     format: 'json',
-    COMMAND: `'${targetId}'`,
-    OBJ_DATA: 'YES',
+    COMMAND: String(targetId),
     MAKE_EPHEM: 'YES',
     EPHEM_TYPE: 'OBSERVER',
-    CENTER: `'coord@399'`,
-    START_TIME: `'${startTime}'`,
-    STOP_TIME: `'${endTime}'`,
-    STEP_SIZE: `'1m'`,
-    QUANTITIES: `'1,2,3,4,5,6,9,19,20,23,24'`
+    CENTER: '399',
+    START_TIME: startTime,
+    STOP_TIME: stopTime,
+    STEP_SIZE: '1m',
+    QUANTITIES: '31'
   });
-  
+
   const url = `${JPL_HORIZONS_API}?${params.toString()}`;
-  
-  const response = await fetch(url);
-  
+
+  const response = await fetch(url, { signal: AbortSignal.timeout(20000) });
+
   if (!response.ok) {
     throw new Error(`JPL API error: ${response.status}`);
   }
-  
+
   const data = await response.json();
-  
+
   return parseJPLResponse(data, target);
 }
 
 /**
  * Parse JPL Horizons response
  */
+// JPL Horizons (format=json) returns the ephemeris as a TEXT block inside
+// the `result` string, delimited by $$SOE ... $$EOE — NOT structured JSON
+// with RA/DEC/AZ keys. The previous parser read `jplData.data.ephemeris.data[0]`
+// which never exists, so it ALWAYS returned null → always fell back (audit
+// finding 1.4). This parser extracts the SOE line and reads the apparent
+// ecliptic longitude / latitude columns (QUANTITIES=31).
 function parseJPLResponse(jplData, target) {
   try {
-    const ephemeris = jplData.data?.ephemeris?.data?.[0];
-    
-    if (!ephemeris) {
-      return null;
-    }
-    
-    const parsed = {
-      target: target,
+    const result = typeof jplData === 'string' ? jplData : (jplData.result || '');
+    if (!result) return null;
+    const soe = result.indexOf('$$SOE');
+    const eoe = result.indexOf('$$EOE');
+    if (soe < 0 || eoe <= soe) return null;
+    const lines = result.slice(soe + 5, eoe).trim().split('\n');
+    if (!lines.length) return null;
+    // SOE line: "<date> <time> [flag] <ecl-lon> <ecl-lat> ..." — take the
+    // first two pure-numeric tokens (ecliptic longitude, then latitude).
+    const tokens = lines[0].trim().split(/\s+/);
+    const nums = tokens.filter((t) => /^-?\d+(\.\d+)?$/.test(t));
+    if (nums.length < 1) return null;
+    const eclipticLongitude = parseFloat(nums[0]);
+    const eclipticLatitude = nums.length > 1 ? parseFloat(nums[1]) : 0;
+    return {
+      target,
       timestamp: new Date().toISOString(),
       source: 'NASA JPL Horizons',
-      accuracy: 'arcsecond'
+      accuracy: 'arcsecond',
+      eclipticLongitude,
+      eclipticLatitude
     };
-    
-    if (ephemeris.RA) {
-      parsed.rightAscension = parseFloat(ephemeris.RA);
-    }
-    
-    if (ephemeris.DEC) {
-      parsed.declination = parseFloat(ephemeris.DEC);
-    }
-    
-    if (ephemeris.AZ) {
-      parsed.azimuth = parseFloat(ephemeris.AZ);
-    }
-    
-    if (ephemeris.EL) {
-      parsed.elevation = parseFloat(ephemeris.EL);
-    }
-    
-    if (ephemeris.r) {
-      parsed.distanceAU = parseFloat(ephemeris.r);
-    }
-    
-    if (ephemeris.delta) {
-      parsed.distanceEarth = parseFloat(ephemeris.delta);
-    }
-    
-    // Calculate ecliptic longitude
-    if (parsed.rightAscension !== undefined && parsed.declination !== undefined) {
-      parsed.eclipticLongitude = raDecToEcliptic(parsed.rightAscension, parsed.declination);
-    }
-    
-    return parsed;
-    
   } catch (error) {
     console.error('Failed to parse JPL response:', error);
     return null;
   }
-}
-
-/**
- * Convert RA/DEC to Ecliptic Longitude
- */
-function raDecToEcliptic(ra, dec) {
-  const epsilon = 23.439291 * Math.PI / 180;
-  const raRad = ra * Math.PI / 180;
-  const decRad = dec * Math.PI / 180;
-  
-  const lon = Math.atan2(
-    Math.sin(raRad) * Math.cos(epsilon) + Math.tan(decRad) * Math.sin(epsilon),
-    Math.cos(raRad)
-  );
-  
-  let eclipticLon = lon * 180 / Math.PI;
-  if (eclipticLon < 0) eclipticLon += 360;
-  
-  return eclipticLon;
 }
 
 /**

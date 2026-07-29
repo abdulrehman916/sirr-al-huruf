@@ -197,104 +197,165 @@ function getZodiacSign(longitude) {
 // Calculate upcoming sign and mansion transitions
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────────────────────
+// REAL ASTRONOMICAL TRANSIT HELPERS (no fixed spacing, no average speed)
+//
+// The Moon's ecliptic longitude is monotonically increasing (it never
+// retrogrades), so each target longitude is crossed exactly once per
+// ~27.3-day lap. We find the exact crossing time by scanning the ACTUAL
+// Moon longitude forward in 1-hour steps until the forward-arc distance
+// to the target wraps from ~0° to ~360°, then bisecting to sub-second
+// precision. This replaces the prior fixed 0.5°/h average + fixed 2.5-day
+// / 0.9-day spacing (audit finding 1.3).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Numeric Moon ecliptic longitude (0..360) at a Date — wraps calculateMoonPosition.
+function rawMoonLongitude(date) {
+  return parseFloat(calculateMoonPosition(date).longitude);
+}
+
+// Forward-arc distance (deg, 0..360) from the Moon's longitude at `date` to
+// `targetLon`, measured in the Moon's direction of motion.
+function forwardDistance(date, targetLon) {
+  const lon = rawMoonLongitude(date);
+  return ((targetLon - lon) % 360 + 360) % 360;
+}
+
+// Find the exact Date in (fromDate, fromDate + maxHours] when the Moon's
+// longitude reaches targetLon. Returns null if not found within the window.
+// Used for both forward "next ingress" and "current ingress" (by starting
+// the search ~50-80h in the past).
+export function findLongitudeCrossing(fromDate, targetLon, maxHours) {
+  const stepMs = 3600 * 1000; // 1-hour scan step (Moon moves < 1°/h)
+  let prev = fromDate;
+  let dPrev = forwardDistance(prev, targetLon);
+  for (let h = 1; h <= maxHours; h++) {
+    const t = new Date(fromDate.getTime() + h * stepMs);
+    const d = forwardDistance(t, targetLon);
+    // Crossing detected: forward distance drops to ~0 then wraps to ~360.
+    if (d > 350 && dPrev < 2.5) {
+      return bisectCrossing(prev, t, targetLon);
+    }
+    prev = t;
+    dPrev = d;
+  }
+  return null;
+}
+
+// Bisect the crossing within [lo, hi]: lon(lo) is just before the target
+// (forward distance small), lon(hi) is just past it (forward distance ~360).
+// 28 iterations → sub-millisecond precision.
+function bisectCrossing(lo, hi, targetLon) {
+  for (let i = 0; i < 28; i++) {
+    const mid = new Date((lo.getTime() + hi.getTime()) / 2);
+    const d = forwardDistance(mid, targetLon);
+    if (d < 180) {
+      lo = mid;   // still before the target
+    } else {
+      hi = mid;   // past the target (wrapped)
+    }
+  }
+  return new Date((lo.getTime() + hi.getTime()) / 2);
+}
+
 /**
- * Calculate upcoming Moon sign and mansion transits
+ * Calculate upcoming Moon sign and mansion transits using REAL astronomical
+ * crossing times (no fixed spacing, no average speed). Each ingress time is
+ * the exact UTC moment the Moon's ecliptic longitude reaches the boundary.
  * @param {Date} fromDate - Starting date for calculations
  * @returns {Object} Transit data with sign and mansion transitions
  */
 export function calculateMoonTransits(fromDate = new Date()) {
-  const signTransits = [];
-  const mansionTransits = { current: null, next: null, upcoming: [] };
-  
-  // Get current moon position
-  const currentPosition = calculateMoonPosition(fromDate);
-  const currentLongitude = parseFloat(currentPosition.longitude);
-  
-  // Calculate current sign
-  const currentSignIndex = Math.floor(currentLongitude / 30);
   const signs = getZodiacSigns();
-  
-  // Find when moon enters next sign
+  const mansions = AY_MANAZILLERI;
+  const currentLon = rawMoonLongitude(fromDate);
+  const currentSignIndex = Math.floor(currentLon / 30);
+  const currentMansionIndex = mansionIndexFromLongitude(currentLon);
+
+  // ── Zodiac transits (real crossings) ──
+  const signTransits = [];
+  const curSignBoundary = currentSignIndex * 30;
+  // Current sign ingress = most recent crossing of this boundary (≤ ~80h ago).
+  const curSignEntry = findLongitudeCrossing(
+    new Date(fromDate.getTime() - 80 * 3600 * 1000), curSignBoundary, 85
+  );
   const nextSignIndex = (currentSignIndex + 1) % 12;
   const nextSignBoundary = nextSignIndex * 30;
-  
-  // Calculate time to next sign entry
-  const moonSpeed = 0.5; // degrees per hour (average)
-  const degreesToNextSign = nextSignBoundary - currentLongitude;
-  const hoursToNextSign = degreesToNextSign / moonSpeed;
-  
-  // Current sign transit
+  const nextSignEntry = findLongitudeCrossing(fromDate, nextSignBoundary, 80);
   signTransits.push({
     name: signs[currentSignIndex].name_en,
     symbol: signs[currentSignIndex].symbol,
-    entryTime: fromDate,
-    remainingTime: hoursToNextSign * 60 * 60 * 1000 // ms
+    entryTime: curSignEntry || fromDate,
+    remainingTime: nextSignEntry ? nextSignEntry.getTime() - fromDate.getTime() : 0,
   });
-  
-  // Next sign transit
-  const nextSignTime = new Date(fromDate.getTime() + hoursToNextSign * 60 * 60 * 1000);
   signTransits.push({
     name: signs[nextSignIndex].name_en,
     symbol: signs[nextSignIndex].symbol,
-    entryTime: nextSignTime
+    entryTime: nextSignEntry || new Date(fromDate.getTime() + 2.5 * 24 * 3600 * 1000),
   });
-  
-  // Calculate next 5 sign transits
-  for (let i = 1; i <= 5; i++) {
-    const signIndex = (currentSignIndex + i) % 12;
-    const signTime = new Date(nextSignTime.getTime() + (i * 2.5 * 24 * 60 * 60 * 1000)); // ~2.5 days per sign
+  // Next 4 more signs, chained from the previous real crossing.
+  let prevSignEntry = nextSignEntry;
+  for (let i = 2; i <= 6; i++) {
+    const si = (currentSignIndex + i) % 12;
+    const sb = si * 30;
+    let entry = null;
+    if (prevSignEntry) {
+      entry = findLongitudeCrossing(new Date(prevSignEntry.getTime() + 60 * 1000), sb, 80);
+    }
     signTransits.push({
-      name: signs[signIndex].name_en,
-      symbol: signs[signIndex].symbol,
-      entryTime: signTime
+      name: signs[si].name_en,
+      symbol: signs[si].symbol,
+      entryTime: entry || (prevSignEntry
+        ? new Date(prevSignEntry.getTime() + 2.5 * 24 * 3600 * 1000)
+        : new Date(fromDate.getTime() + i * 2.5 * 24 * 3600 * 1000)),
     });
+    prevSignEntry = entry || prevSignEntry;
   }
-  
-  // Calculate mansion transits — manuscript boundaries (Havâss PDF2 p.64-74),
-  // unequal widths via MANSION_START_DEGREES (not equal 360/28 division).
-  const currentMansionIndex = mansionIndexFromLongitude(currentLongitude);
-  const mansions = AY_MANAZILLERI;
-  // Width of the CURRENT mansion (for time-to-next-mansion estimate).
-  const curStart = MANSION_START_DEGREES[currentMansionIndex];
-  const nextStart = MANSION_START_DEGREES[(currentMansionIndex + 1) % 28];
-  const mansionWidth = ((nextStart - curStart + 360) % 360) || 12.857;
-  
-  // Current mansion
-  const degreesToNextMansion = mansionWidth - (currentLongitude % mansionWidth);
-  const hoursToNextMansion = degreesToNextMansion / moonSpeed;
-  
+
+  // ── Mansion transits (real crossings, manuscript boundaries) ──
+  const mansionTransits = { current: null, next: null, upcoming: [] };
+  const curMansionBoundary = MANSION_START_DEGREES[currentMansionIndex];
+  // Current mansion ingress = most recent crossing of this boundary (≤ ~50h ago;
+  // mansion width ≤ 33h, 50h window always contains exactly one crossing).
+  const curMansionEntry = findLongitudeCrossing(
+    new Date(fromDate.getTime() - 50 * 3600 * 1000), curMansionBoundary, 55
+  );
+  const nextMansionIndex = (currentMansionIndex + 1) % 28;
+  const nextMansionBoundary = MANSION_START_DEGREES[nextMansionIndex];
+  const nextMansionEntry = findLongitudeCrossing(fromDate, nextMansionBoundary, 50);
   mansionTransits.current = {
     number: mansions[currentMansionIndex]?.no || currentMansionIndex + 1,
     name: mansions[currentMansionIndex]?.name_en || `Mansion ${currentMansionIndex + 1}`,
     arabic: mansions[currentMansionIndex]?.harfi || "",
-    entryTime: fromDate,
-    remainingTime: hoursToNextMansion * 60 * 60 * 1000 // ms
+    entryTime: curMansionEntry || fromDate,
+    remainingTime: nextMansionEntry ? nextMansionEntry.getTime() - fromDate.getTime() : 0,
   };
-  
-  // Next mansion
-  const nextMansionIndex = (currentMansionIndex + 1) % 28;
-  const nextMansionTime = new Date(fromDate.getTime() + hoursToNextMansion * 60 * 60 * 1000);
-  
   mansionTransits.next = {
     number: mansions[nextMansionIndex]?.no || nextMansionIndex + 1,
     name: mansions[nextMansionIndex]?.name_en || `Mansion ${nextMansionIndex + 1}`,
     arabic: mansions[nextMansionIndex]?.harfi || "",
-    entryTime: nextMansionTime
+    entryTime: nextMansionEntry || new Date(fromDate.getTime() + 24 * 3600 * 1000),
   };
-  
-  // Next 5 mansions
+  // Next 5 mansions, chained from the previous real crossing.
+  let prevMansionEntry = nextMansionEntry;
   for (let i = 1; i <= 5; i++) {
-    const mansionIndex = (currentMansionIndex + i) % 28;
-    const mansionTime = new Date(nextMansionTime.getTime() + (i * 0.9 * 24 * 60 * 60 * 1000)); // ~0.9 days per mansion
-    
+    const mi = (currentMansionIndex + 1 + i) % 28;
+    const mb = MANSION_START_DEGREES[mi];
+    let entry = null;
+    if (prevMansionEntry) {
+      entry = findLongitudeCrossing(new Date(prevMansionEntry.getTime() + 60 * 1000), mb, 50);
+    }
     mansionTransits.upcoming.push({
-      number: mansions[mansionIndex]?.no || mansionIndex + 1,
-      name: mansions[mansionIndex]?.name_en || `Mansion ${mansionIndex + 1}`,
-      arabic: mansions[mansionIndex]?.harfi || "",
-      entryTime: mansionTime
+      number: mansions[mi]?.no || mi + 1,
+      name: mansions[mi]?.name_en || `Mansion ${mi + 1}`,
+      arabic: mansions[mi]?.harfi || "",
+      entryTime: entry || (prevMansionEntry
+        ? new Date(prevMansionEntry.getTime() + 24 * 3600 * 1000)
+        : new Date(fromDate.getTime() + (i + 1) * 24 * 3600 * 1000)),
     });
+    prevMansionEntry = entry || prevMansionEntry;
   }
-  
+
   return { signTransits, mansionTransits };
 }
 
