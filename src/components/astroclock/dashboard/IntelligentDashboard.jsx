@@ -10,6 +10,7 @@
 // LANGUAGE RULE: one language per item; Arabic shows Arabic where the
 //   manuscript provides it, otherwise hides untranslated lists.
 // ═══════════════════════════════════════════════════════════════
+import { useState, useEffect } from "react";
 import { useAstroData, DAY_AR, PLANET_AR } from "./useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import { computeAstroDecision } from "@/lib/astroClockDecisionEngine";
@@ -17,8 +18,37 @@ import { MiniCard } from "./DashboardSection";
 import { planetArabicMLDisplay } from "@/lib/astroClockLabelMap";
 import {
   Sparkles, CheckCircle2, Ban, Crosshair, Layers, Clock, BookOpen,
-  Sun, Moon, Compass, ScrollText, CalendarDays, Star, Activity,
+  Sun, Moon, Compass, ScrollText, CalendarDays, Star, Activity, Radio,
 } from "lucide-react";
+
+// Live countdown to the next planetary-hour transition.
+// Parses the engine's "hourEnd" label (e.g. "6:51 AM") into today's epoch
+// and ticks every second. Falls back to the static remainingTime string.
+function parseHourEndToEpoch(hourEndStr, baseDate) {
+  if (!hourEndStr || typeof hourEndStr !== "string") return null;
+  const m = hourEndStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  const ap = (m[3] || "").toUpperCase();
+  if (ap === "PM" && h < 12) h += 12;
+  if (ap === "AM" && h === 12) h = 0;
+  const d = new Date(baseDate);
+  d.setHours(h, min, 0, 0);
+  return d.getTime();
+}
+function useLiveCountdown(targetEpoch) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  if (!targetEpoch) return null;
+  const diff = Math.max(0, targetEpoch - now);
+  const mm = Math.floor(diff / 60000);
+  const ss = Math.floor((diff % 60000) / 1000);
+  return `${mm}:${String(ss).padStart(2, "0")}`;
+}
 
 const FRIEND_LABEL = {
   friend:  { en: "Compatible", ml: "അനുയോജ്യം", ar: "متوافق", color: "#4ADE80", sym: "✓" },
@@ -100,6 +130,129 @@ function Row({ label, value, color }) {
   );
 }
 
+// ── Current Decision Summary ── compact, always-visible top block.
+// Answers "What should I do right now?" in one glance. The detailed
+// sections below explain WHY (manuscript evidence).
+function DecisionSummary({ dec, d, language, pl, txt }) {
+  const targetEpoch = parseHourEndToEpoch(dec.nextChange.hourEnd, d.localNow || d.now);
+  const countdown = useLiveCountdown(targetEpoch);
+  const G = { text: "#F5D060" };
+  const statusLabel = pl(dec.status.ml, dec.status.en, dec.status.ar);
+  const best = dec.bestOperations || [];
+  const avoid = dec.avoidOperations || [];
+  const special = dec.specialOperations || [];
+  const nextPlanet = language === "ar" ? (PLANET_AR[dec.nextChange.nextPlanet] || dec.nextChange.nextPlanet)
+    : language === "ml" ? (planetArabicMLDisplay(dec.nextChange.nextPlanet) || dec.nextChange.nextPlanet)
+    : dec.nextChange.nextPlanet;
+
+  return (
+    <div className="rounded-xl p-3" style={{
+      background: "linear-gradient(145deg, rgba(212,175,55,0.08), rgba(8,16,38,0.6))",
+      border: "1px solid rgba(212,175,55,0.35)",
+      boxShadow: "0 0 24px rgba(212,175,55,0.10), inset 0 1px 0 rgba(212,175,55,0.10)",
+    }}>
+      {/* Live indicator + title */}
+      <div className="flex items-center gap-1.5 mb-2.5">
+        <Radio className="w-3.5 h-3.5" style={{ color: "#4ADE80" }} />
+        <span className="font-inter text-[10px] uppercase tracking-wider font-bold" style={{ color: "#4ADE80" }}>
+          {txt("തത്സമയ തീരുമാന സംഗ്രഹം", "Live Decision Summary", "ملخص القرار الحي")}
+        </span>
+        <span className="ml-auto flex items-center gap-1 font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#4ADE80", boxShadow: "0 0 6px #4ADE80" }} />
+          LIVE
+        </span>
+      </div>
+
+      {/* Overall status row */}
+      <div className="flex items-center gap-2 mb-2.5 pb-2.5" style={{ borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
+        <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
+          {txt("സമഗ്ര നില", "Overall Status", "الحالة الإجمالية")}:
+        </span>
+        <span className="font-inter text-sm font-bold" style={{ color: dec.status.color }}>
+          {statusLabel}
+        </span>
+      </div>
+
+      {/* Best / Avoid / Special — compact inline */}
+      <div className="space-y-2">
+        <div className="flex items-start gap-2">
+          <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#4ADE80" }} />
+          <div className="flex-1 min-w-0">
+            <span className="font-inter text-[9px] uppercase tracking-wider font-bold block mb-0.5" style={{ color: "#4ADE80" }}>
+              {txt("ഇപ്പോൾ ചെയ്യാൻ മികച്ചത്", "Best Right Now", "الأفضل الآن")}
+            </span>
+            {best.length === 0
+              ? <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>—</span>
+              : <div className="flex flex-wrap gap-1">
+                  {best.slice(0, 6).map((it, i) => (
+                    <span key={i} className="font-inter text-[10px] px-1.5 py-0.5 rounded" style={{
+                      background: "rgba(74,222,128,0.10)", color: "#4ADE80cc", border: "1px solid rgba(74,222,128,0.25)",
+                    }} dir={language === "ar" ? "rtl" : "auto"}>
+                      {language === "ar" ? it.ar : (language === "ml" ? (it.ml || it.en) : it.en)}
+                    </span>
+                  ))}
+                  {best.length > 6 && <span className="font-inter text-[9px] self-center" style={{ color: "rgba(74,222,128,0.50)" }}>+{best.length - 6}</span>}
+                </div>}
+          </div>
+        </div>
+
+        <div className="flex items-start gap-2">
+          <Ban className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#F87171" }} />
+          <div className="flex-1 min-w-0">
+            <span className="font-inter text-[9px] uppercase tracking-wider font-bold block mb-0.5" style={{ color: "#F87171" }}>
+              {txt("ഇപ്പോൾ ഒഴിവാക്കുക", "Avoid Right Now", "تجنب الآن")}
+            </span>
+            {avoid.length === 0
+              ? <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>—</span>
+              : <div className="flex flex-wrap gap-1">
+                  {avoid.slice(0, 6).map((it, i) => (
+                    <span key={i} className="font-inter text-[10px] px-1.5 py-0.5 rounded" style={{
+                      background: "rgba(248,113,113,0.10)", color: "#F87171cc", border: "1px solid rgba(248,113,113,0.25)",
+                    }} dir={language === "ar" ? "rtl" : "auto"}>
+                      {language === "ar" ? it.ar : (language === "ml" ? (it.ml || it.en) : it.en)}
+                    </span>
+                  ))}
+                  {avoid.length > 6 && <span className="font-inter text-[9px] self-center" style={{ color: "rgba(248,113,113,0.50)" }}>+{avoid.length - 6}</span>}
+                </div>}
+          </div>
+        </div>
+
+        {special.length > 0 && (
+          <div className="flex items-start gap-2">
+            <Crosshair className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#C084FC" }} />
+            <div className="flex-1 min-w-0">
+              <span className="font-inter text-[9px] uppercase tracking-wider font-bold block mb-0.5" style={{ color: "#C084FC" }}>
+                {txt("വിശേഷ പ്രവൃത്തികൾ", "Special Operations", "أعمال خاصة")}
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {special.slice(0, 6).map((it, i) => (
+                  <span key={i} className="font-inter text-[10px] px-1.5 py-0.5 rounded" style={{
+                    background: "rgba(192,132,252,0.10)", color: "#C084FCcc", border: "1px solid rgba(192,132,252,0.25)",
+                  }} dir={language === "ar" ? "rtl" : "auto"}>
+                    {language === "ar" ? it.ar : (language === "ml" ? (it.ml || it.en) : it.en)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Next live change countdown */}
+      <div className="flex items-center gap-2 mt-2.5 pt-2.5" style={{ borderTop: "1px solid rgba(212,175,55,0.15)" }}>
+        <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#818CF8" }} />
+        <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>
+          {txt("അടുത്ത ഗ്രഹ മണിക്കൂർ", "Next planetary hour", "الساعة الكوكبية التالية")}:
+        </span>
+        <span className="font-inter text-[10px] font-bold" style={{ color: "#818CF8" }}>{nextPlanet}</span>
+        <span className="ml-auto font-inter text-xs font-bold tabular-nums" style={{ color: countdown ? "#4ADE80" : "rgba(255,255,255,0.50)" }}>
+          {countdown != null ? `⏱ ${countdown}` : dec.nextChange.remainingTime}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function IntelligentDashboard() {
   const d = useAstroData();
   const { txt, language } = useAstroClockLanguage();
@@ -132,6 +285,9 @@ export default function IntelligentDashboard() {
         <MiniCard icon={d.planetInfo?.[d.currentHour.planet]?.symbol || "☉"}
           label={txt("كوكب", "Kawkab", "كوكب")} value={planetName} color={G.text} />
       </div>
+
+      {/* ══ 0 · CURRENT DECISION SUMMARY (always visible · answers "what now?") ══ */}
+      <DecisionSummary dec={dec} d={d} language={language} pl={pl} txt={txt} />
 
       {/* ══ 1 · Overall Current Status ══ */}
       <div className="rounded-xl p-3 flex items-center gap-3" style={{
