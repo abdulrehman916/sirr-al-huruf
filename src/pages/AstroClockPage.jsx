@@ -18,7 +18,7 @@ import AstroClockErrorBoundary from "@/components/astroclock/AstroClockErrorBoun
 const AstroScreenshotUploader = lazy(() => import("@/components/astroclock/AstroScreenshotUploader"));
 
 // Lazy-load all sections — only renders when expanded
-const TodayDashboard = lazy(() => import("@/components/astroclock/dashboard/TodayDashboard"));
+const IntelligentDashboard = lazy(() => import("@/components/astroclock/dashboard/IntelligentDashboard"));
 const ManuscriptDashboard = lazy(() => import("@/components/astroclock/manuscript/ManuscriptDashboard"));
 const DailyMantras = lazy(() => import("@/components/astroclock/dashboard/DailyMantras"));
 const SmartSearch = lazy(() => import("@/components/astroclock/dashboard/SmartSearch"));
@@ -202,13 +202,13 @@ function AstroClockContent() {
         </AstroClockErrorBoundary>
 
         {/* ── 8 Sections — each unique, no duplication ── */}
-        {/* ── Section 1 — Today's Dashboard (PRIMARY · always open · immediately visible) ── */}
+        {/* ── Section 1 — Intelligent Today's Dashboard (PRIMARY · always open · live decision engine) ── */}
         <AstroClockErrorBoundary label="Today Dashboard">
-          <DashboardSection icon="📅" title={txt("ഇന്നത്തെ ഡാഷ്ബോർഡ്", "Today's Dashboard", "Bugün Paneli")}
-            subtitle={txt("ദിവസം, സഅാത്, കവ്കബ്, പ്രവൃത്തികൾ, മുന്നറിയിപ്പുകൾ", "Day, Saat, Kawkab, Activities, Warnings", "Gün, Saat, Kavkeb, Eylemler, Uyarılar")}
+          <DashboardSection icon="🧭" title={txt("ഇന്നത്തെ തിരുമാനം", "Today's Dashboard", "لوحة اليوم")}
+            subtitle={txt("തത്സമയ ഗ്രന്ഥ വിധായക യന്ത്രം — എല്ലാ പാളികളുടെയും സംയോജനം", "Live manuscript decision engine — synthesis of all layers", "محرّك القرار الحي — تركيب جميع الطبقات")}
             alwaysOpen badge="●">
             <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
-              <TodayDashboard />
+              <IntelligentDashboard />
             </Suspense>
           </DashboardSection>
         </AstroClockErrorBoundary>
