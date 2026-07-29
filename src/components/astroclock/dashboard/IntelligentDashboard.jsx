@@ -39,16 +39,24 @@ function parseRemainingToSeconds(str) {
   if (m) s += parseInt(m[1], 10) * 60;
   return s;
 }
-function useRemainingCountdown(remainingStr) {
+// Live countdown to the next planetary-hour boundary — ONLY runs in Live Mode
+// (no custom date selected). In Custom Date Mode `active=false`: no interval is
+// scheduled, no decrement happens, and the hook returns null. The caller then
+// renders static Hour Start/End/Duration info instead. The countdown represents
+// remaining time in the REAL current planetary hour, so it is meaningless for a
+// historical/future selected date (manuscript logic).
+function useRemainingCountdown(remainingStr, active) {
   const [anchor, setAnchor] = useState(() => ({ total: parseRemainingToSeconds(remainingStr), at: Date.now() }));
   useEffect(() => {
-    setAnchor({ total: parseRemainingToSeconds(remainingStr), at: Date.now() });
-  }, [remainingStr]);
+    if (active) setAnchor({ total: parseRemainingToSeconds(remainingStr), at: Date.now() });
+  }, [remainingStr, active]);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
+    if (!active) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [active]);
+  if (!active) return null;
   const elapsed = Math.floor((now - anchor.at) / 1000);
   const remaining = Math.max(0, anchor.total - elapsed);
   const mm = Math.floor(remaining / 60);
@@ -139,8 +147,8 @@ function Row({ label, value, color }) {
 // ── Current Decision Summary ── compact, always-visible decision card.
 // Answers "What should I do right now?" in one glance. The detailed
 // sections below act as supporting manuscript evidence (the WHY).
-function DecisionSummary({ dec, d, language, pl, txt }) {
-  const countdown = useRemainingCountdown(dec.nextChange.remainingTime);
+function DecisionSummary({ dec, d, language, pl, txt, isLiveMode }) {
+  const countdown = useRemainingCountdown(dec.nextChange.remainingTime, isLiveMode);
   const statusLabel = pl(dec.status.ml, dec.status.en, dec.status.ar);
   const best = dec.bestOperations || [];
   const avoid = dec.avoidOperations || [];
@@ -224,18 +232,31 @@ function DecisionSummary({ dec, d, language, pl, txt }) {
           </div>
         )}
 
-        {/* Next live change — footer band */}
-        <div className="flex items-center gap-2 pt-2.5 -mx-3.5 px-3.5 pb-0.5" style={{ borderTop: "1px solid rgba(212,175,55,0.15)" }}>
-          <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#818CF8" }} />
-          <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>
-            {txt("അടുത്ത മാറ്റം", "Next Change", "التغيير التالي")}
-          </span>
-          <span className="font-inter text-[10px] font-bold" style={{ color: "#818CF8" }}>{nextPlanet}</span>
-          <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.35)" }}>· {dec.nextChange.hourEnd}</span>
-          <span className="ml-auto font-inter text-sm font-bold tabular-nums flex items-center gap-1" style={{ color: "#4ADE80" }}>
-            <span style={{ color: "rgba(255,255,255,0.35)" }}>⏱</span> {countdown}
-          </span>
-        </div>
+        {/* Footer band — Live Mode: next-change countdown · Custom Date Mode: static hour info (frozen) */}
+        {isLiveMode ? (
+          <div className="flex items-center gap-2 pt-2.5 -mx-3.5 px-3.5 pb-0.5" style={{ borderTop: "1px solid rgba(212,175,55,0.15)" }}>
+            <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#818CF8" }} />
+            <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>
+              {txt("അടുത്ത മാറ്റം", "Next Change", "التغيير التالي")}
+            </span>
+            <span className="font-inter text-[10px] font-bold" style={{ color: "#818CF8" }}>{nextPlanet}</span>
+            <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.35)" }}>· {dec.nextChange.hourEnd}</span>
+            <span className="ml-auto font-inter text-sm font-bold tabular-nums flex items-center gap-1" style={{ color: "#4ADE80" }}>
+              <span style={{ color: "rgba(255,255,255,0.35)" }}>⏱</span> {countdown}
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 pt-2.5 -mx-3.5 px-3.5 pb-0.5 flex-wrap" style={{ borderTop: "1px solid rgba(212,175,55,0.15)" }}>
+            <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#818CF8" }} />
+            <span className="font-inter text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>
+              {txt("ഘടിക വിവരം", "Hour Info", "معلومات الساعة")}
+            </span>
+            <span className="font-inter text-[10px] font-bold" style={{ color: "#818CF8" }}>
+              {d.currentHour.hourStart} – {d.currentHour.hourEnd}
+            </span>
+            <span className="font-inter text-[9px]" style={{ color: "rgba(255,255,255,0.35)" }}>· {d.currentHour.duration}</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -243,7 +264,12 @@ function DecisionSummary({ dec, d, language, pl, txt }) {
 
 export default function IntelligentDashboard() {
   const d = useAstroData();
-  const { txt, language } = useAstroClockLanguage();
+  const { txt, language, customDate } = useAstroClockLanguage();
+  // Live Mode = no custom date selected (real current moment). A selected
+  // historical/future date is Custom Date Mode: the countdown is disabled and
+  // static hour info is shown instead (countdown = remaining time in the REAL
+  // current planetary hour, meaningless for an arbitrary selected date).
+  const isLiveMode = !customDate;
   if (!d.currentHour) return null;
 
   const dec = computeAstroDecision(d);
@@ -275,7 +301,7 @@ export default function IntelligentDashboard() {
       </div>
 
       {/* ══ 0 · CURRENT DECISION SUMMARY (always visible · answers "what now?") ══ */}
-      <DecisionSummary dec={dec} d={d} language={language} pl={pl} txt={txt} />
+      <DecisionSummary dec={dec} d={d} language={language} pl={pl} txt={txt} isLiveMode={isLiveMode} />
 
       {/* ── Decision / Evidence separator ── */}
       <div className="flex items-center gap-2 py-1">
