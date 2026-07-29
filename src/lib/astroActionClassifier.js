@@ -9,6 +9,7 @@
 // ISOLATED — does NOT modify PURPOSE_MAP, timing engine, OCR,
 // ingestion, schema, routing, or any existing module.
 // ═══════════════════════════════════════════════════════════════
+import { NEW_CONCEPT_CATEGORIES, resolveConcept } from "./semanticConceptResolver";
 
 // ── Canonical Action Categories (extensible) ──
 export const ACTION_CATEGORIES = {
@@ -144,6 +145,10 @@ export const ACTION_CATEGORIES = {
     preferredDays: ["tue"],
     avoidPlanets: ["venus"],
   },
+
+  // ── New concept categories (semantic concept resolver) ──
+  // separation, enemy, binding, magic — manuscript-aligned (Kashf pp.12-27, Havâss p.49-51)
+  ...NEW_CONCEPT_CATEGORIES,
 };
 
 /**
@@ -178,7 +183,20 @@ export function classifyAction(query) {
     }
   }
 
-  if (!bestMatch || bestScore < 30) return null;
+  if (!bestMatch || bestScore < 30) {
+    // Fallback: semantic concept resolver (multilingual concept words → canonical).
+    // Lets users search by meaning ("banish", "expel", "imprison", "destroy"…) without
+    // an exact synonym match and without an LLM call (zero integration credits).
+    const concept = resolveConcept(q);
+    if (concept && ACTION_CATEGORIES[concept.category]) {
+      return {
+        category: concept.category,
+        confidence: concept.confidence,
+        label: ACTION_CATEGORIES[concept.category].label,
+      };
+    }
+    return null;
+  }
 
   return {
     category: bestMatch,

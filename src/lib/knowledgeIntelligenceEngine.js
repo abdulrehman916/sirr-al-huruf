@@ -21,6 +21,7 @@
 //   OCR, translation, Nine Mizan, Abjad, Bast, authentication, or navigation.
 // ═══════════════════════════════════════════════════════════════
 import { base44 } from "@/api/base44Client";
+import { classifyAction, ACTION_CATEGORIES } from "./astroActionClassifier";
 
 // ── Response cache (avoids duplicate LLM calls for same input+weekday) ──
 const responseCache = new Map();
@@ -270,13 +271,36 @@ export async function runKnowledgeIntelligenceSearch(userInput, weekday, weekday
   const prompt = buildPrompt(userInput, formattedRecords, weekdayName, weekday);
 
   // 4. Call LLM (automatic model — fast, multilingual, cost-efficient)
-  const llmResponse = await base44.integrations.Core.InvokeLLM({
-    prompt,
-    response_json_schema: RESPONSE_SCHEMA,
-  });
-
-  // 5. Merge LLM response with original records
-  const processed = processResponse(llmResponse, ackRecords, ekRecords);
+  //    FALLBACK: if the LLM call fails (e.g. integration credits exhausted),
+  //    resolve the concept deterministically via classifyAction (which now
+  //    includes the multilingual semantic concept resolver) and build the
+  //    result from ACTION_CATEGORIES — zero credits, zero external calls.
+  let processed;
+  try {
+    const llmResponse = await base44.integrations.Core.InvokeLLM({
+      prompt,
+      response_json_schema: RESPONSE_SCHEMA,
+    });
+    processed = processResponse(llmResponse, ackRecords, ekRecords);
+  } catch (llmErr) {
+    const classified = classifyAction(userInput);
+    if (classified && ACTION_CATEGORIES[classified.category]) {
+      const cat = ACTION_CATEGORIES[classified.category];
+      processed = {
+        canonicalId: classified.category,
+        canonicalAction: cat.label,
+        relatedConcepts: [],
+        preferredPlanets: cat.preferredPlanets || [],
+        avoidPlanets: cat.avoidPlanets || [],
+        preferredDays: cat.preferredDays || [],
+        relevantRecords: [],
+        reasoningSummary: "Concept resolved deterministically (semantic concept resolver; LLM unavailable).",
+        confidence: classified.confidence,
+      };
+    } else {
+      throw llmErr;
+    }
+  }
 
   // 6. Cache and return
   responseCache.set(cacheKey, processed);
