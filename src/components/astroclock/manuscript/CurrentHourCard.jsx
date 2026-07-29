@@ -24,7 +24,7 @@ export default function CurrentHourCard() {
   const unsuitable = hr?.unsuitableActions?.en || [];
 
   return (
-    <DashboardSection icon="⏰" title={txt("നിലവിലെ ഗ്രഹ മണിക്കൂർ", "Current Planetary Hour", "الساعة الكوكبية الحالية")} subtitle={txt("തത്സമയ ഘടിക പാളി", "Live hour layer", "طبقة الساعة الحية")} defaultOpen>
+    <DashboardSection icon="⏰" title={txt("നിലവിലെ ഗ്രഹ മണിക്കൂർ", "Current Planetary Hour", "الساعة الكوكبية الحالية")}       subtitle={txt("തത്സമയ ഘടിക പാളി", "Live hour layer", "طبقة الساعة الحية")}>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <MiniCard icon="#️⃣" label={txt("ഘടിക #", "Hour #", "الساعة")} value={`#${ch.hourNumber}`} color="#F5D060" />
         <MiniCard icon={ch.isDay ? "☀" : "🌙"} label={txt("പകൽ/രാത്രി", "Day/Night", "نهار/ليل")} value={ch.isDay ? txt("പകൽ", "Day", "نهار") : txt("രാത്രി", "Night", "ليل")} color={ch.isDay ? "#FBBF24" : "#818CF8"} />

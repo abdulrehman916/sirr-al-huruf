@@ -202,21 +202,22 @@ function AstroClockContent() {
         </AstroClockErrorBoundary>
 
         {/* ── 8 Sections — each unique, no duplication ── */}
-        <AstroClockErrorBoundary label="Manuscript Dashboard">
-          <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
-            <ManuscriptDashboard />
-          </Suspense>
-        </AstroClockErrorBoundary>
-
-        {/* ── Preserved: legacy Today Dashboard (kept collapsed; not removed) ── */}
+        {/* ── Section 1 — Today's Dashboard (PRIMARY · always open · immediately visible) ── */}
         <AstroClockErrorBoundary label="Today Dashboard">
-          <DashboardSection icon="📅" title={txt("ഇന്നത്തെ ഡാഷ്ബോർഡ് (പഴയത്)", "Today's Dashboard (legacy)", "Bugün Paneli (eski)")}
+          <DashboardSection icon="📅" title={txt("ഇന്നത്തെ ഡാഷ്ബോർഡ്", "Today's Dashboard", "Bugün Paneli")}
             subtitle={txt("ദിവസം, സഅാത്, കവ്കബ്, പ്രവൃത്തികൾ, മുന്നറിയിപ്പുകൾ", "Day, Saat, Kawkab, Activities, Warnings", "Gün, Saat, Kavkeb, Eylemler, Uyarılar")}
-            badge="●">
+            alwaysOpen badge="●">
             <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
               <TodayDashboard />
             </Suspense>
           </DashboardSection>
+        </AstroClockErrorBoundary>
+
+        {/* ── Section 1b — Manuscript-compliant Dashboard (secondary · cards collapsed by default) ── */}
+        <AstroClockErrorBoundary label="Manuscript Dashboard">
+          <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
+            <ManuscriptDashboard />
+          </Suspense>
         </AstroClockErrorBoundary>
 
         {/* ── Section 2 — Daily Mantras & Spiritual Recitations ── */}

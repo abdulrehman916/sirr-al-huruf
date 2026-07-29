@@ -14,8 +14,9 @@ const G = {
   bg: "rgba(212,175,55,0.08)",
 };
 
-export default function DashboardSection({ icon, title, subtitle, defaultOpen = false, badge = null, children }) {
+export default function DashboardSection({ icon, title, subtitle, defaultOpen = false, alwaysOpen = false, badge = null, children }) {
   const [open, setOpen] = useState(defaultOpen);
+  const isOpen = alwaysOpen || open;
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{
@@ -24,7 +25,7 @@ export default function DashboardSection({ icon, title, subtitle, defaultOpen = 
       boxShadow: "0 2px 20px rgba(0,0,0,0.40), inset 0 1px 0 rgba(212,175,55,0.06)",
     }}>
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => { if (!alwaysOpen) setOpen(!open); }}
         className="w-full flex items-center gap-3 p-4 text-left transition-colors hover:bg-white/[0.02]"
       >
         <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{
@@ -41,12 +42,14 @@ export default function DashboardSection({ icon, title, subtitle, defaultOpen = 
             background: "rgba(212,175,55,0.15)", color: G.dim, border: `1px solid ${G.border}`,
           }}>{badge}</span>
         )}
-        <ChevronDown className="w-5 h-5 flex-shrink-0 transition-transform duration-200" style={{
-          color: G.dim, transform: open ? "rotate(180deg)" : "none",
-        }} />
+        {!alwaysOpen && (
+          <ChevronDown className="w-5 h-5 flex-shrink-0 transition-transform duration-200" style={{
+            color: G.dim, transform: open ? "rotate(180deg)" : "none",
+          }} />
+        )}
       </button>
       <AnimatePresence>
-        {open && (
+        {isOpen && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
