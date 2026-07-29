@@ -265,11 +265,16 @@ function DecisionSummary({ dec, d, language, pl, txt, isLiveMode }) {
 export default function IntelligentDashboard() {
   const d = useAstroData();
   const { txt, language, customDate } = useAstroClockLanguage();
-  // Live Mode = no custom date selected (real current moment). A selected
-  // historical/future date is Custom Date Mode: the countdown is disabled and
-  // static hour info is shown instead (countdown = remaining time in the REAL
-  // current planetary hour, meaningless for an arbitrary selected date).
-  const isLiveMode = !customDate;
+  // Live Mode requires ALL of: (1) no custom/historical/future date selected
+  // (real "now"), AND (2) the location is the user's current live location —
+  // i.e. GPS-confirmed or the unconfigured default, NOT a manually-selected
+  // preset/coordinates/timezone. The countdown is a LIVE indicator only: it
+  // never appears for any simulated or manually-selected date, time, location,
+  // or timezone. `source` distinguishes "gps"/"default" (live) from "manual"
+  // (selected); device tz is not compared since the engine already derives the
+  // hour boundary from the location's tz.
+  const isLiveLocation = d.location?.source !== "manual";
+  const isLiveMode = !customDate && isLiveLocation;
   if (!d.currentHour) return null;
 
   const dec = computeAstroDecision(d);
