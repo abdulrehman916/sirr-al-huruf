@@ -4,6 +4,7 @@ import { ScrollText } from "lucide-react";
 import { useTranslation } from "@/i18n/useTranslation";
 import MysticalBackground from "../components/MysticalBackground";
 import HeroSection from "../components/HeroSection";
+import WebsiteHomeShell from "../components/WebsiteHomeShell";
 import CardsSection from "../components/CardsSection";
 import PageLayout from "../components/PageLayout";
 import PullToRefresh from "../components/PullToRefresh";
@@ -19,11 +20,6 @@ export default function Home() {
   return (
     <PageLayout>
       <PullToRefresh onRefresh={handleRefresh}>
-        {/* ═══ HOME PAGE CONTENT — SCROLL HANDLED BY PageLayout ═══
-            Removed local scroll wrapper to prevent nested scroll containers
-        ═══════════════════════════════════════════════════════════════ */}
-        
-        {/* Absolute background layer — prevents viewport shift */}
         <div style={{
           position: "absolute",
           inset: 0,
@@ -32,23 +28,40 @@ export default function Home() {
         }}>
           <MysticalBackground mouse={mouse} />
         </div>
-        
-        {/* Content layer — scrolls with PageLayout container */}
+
         <div className="relative z-10" style={{
           minHeight: "100%",
           width: "100%",
         }}>
-          {/* Hero section — edge-to-edge, no padding */}
           <div style={{ width: "100%", margin: 0, padding: 0 }}>
             <HeroSection mouse={mouse} />
           </div>
-          
-          {/* Cards section — CardsSection handles its own responsive padding */}
+
+          <WebsiteHomeShell />
+
           <div style={{ width: "100%", margin: 0, padding: 0 }}>
             <CardsSection />
           </div>
+
+          <footer className="px-4 pb-28 pt-8 sm:px-6 sm:pb-20">
+            <div
+              className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 border-t pt-6 text-center sm:flex-row sm:text-left"
+              style={{ borderColor: "rgba(212,175,55,0.12)" }}
+            >
+              <div>
+                <p className="font-amiri text-xl" style={{ color: "rgba(245,236,212,0.82)" }}>سرّ الحروف</p>
+                <p className="mt-1 font-inter text-[10px] uppercase tracking-[0.18em]" style={{ color: "rgba(148,163,184,0.48)" }}>
+                  Sirr Al-Huruf Knowledge Website
+                </p>
+              </div>
+              <p className="font-inter text-[11px]" style={{ color: "rgba(148,163,184,0.42)" }}>
+                Calculation systems remain independent and method-specific.
+              </p>
+            </div>
+          </footer>
         </div>
       </PullToRefresh>
+
       <motion.button
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -65,7 +78,6 @@ export default function Home() {
           {t("btn_rules", "Rules")}
         </span>
       </motion.button>
-
     </PageLayout>
   );
 }
