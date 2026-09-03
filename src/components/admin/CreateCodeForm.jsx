@@ -3,7 +3,7 @@
  * Extracted from AccessCodesTab for clarity.
  * Includes customer contact fields (email, phone, whatsapp).
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { KeyRound, X, CheckCircle, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
@@ -35,15 +35,50 @@ export default function CreateCodeForm({ onCreated, onCancel }) {
   const [showSummary, setShowSummary] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pageSearch, setPageSearch] = useState("");
+  const [managedPages, setManagedPages] = useState([]);
 
-  const pageList = useMemo(() => getContentPages().map(p => ({
+  const registeredPages = useMemo(() => getContentPages().map(p => ({
     path: p.path, name: p.name, icon: p.icon || '📖',
     category: p.category || 'General', adminOnly: p.adminOnly || false,
   })), []);
 
+  useEffect(() => {
+    let cancelled = false;
+    async function loadManagedPages() {
+      try {
+        const rows = await base44.entities.ManagedPage.filter({ status: "PUBLISHED" }, "-updated_date", 500);
+        if (cancelled) return;
+        setManagedPages((Array.isArray(rows) ? rows : []).map(page => ({
+          path: `/content/${page.slug}`,
+          name: page.title_ml || page.title_en || page.slug,
+          icon: '📄',
+          category: page.category || 'Published Content',
+          adminOnly: false,
+          managed: true,
+        })));
+      } catch {
+        if (!cancelled) setManagedPages([]);
+      }
+    }
+    loadManagedPages();
+    return () => { cancelled = true; };
+  }, []);
+
+  const pageList = useMemo(() => {
+    const byPath = new Map();
+    registeredPages.forEach(page => byPath.set(page.path, page));
+    managedPages.forEach(page => byPath.set(page.path, page));
+    return Array.from(byPath.values());
+  }, [registeredPages, managedPages]);
+
   const filteredPages = useMemo(() => {
     if (!pageSearch) return pageList;
-    return pageList.filter(p => p.name.toLowerCase().includes(pageSearch.toLowerCase()));
+    const q = pageSearch.toLowerCase();
+    return pageList.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.path.toLowerCase().includes(q) ||
+      (p.category || '').toLowerCase().includes(q)
+    );
   }, [pageList, pageSearch]);
 
   const togglePage = (path) => {
@@ -268,6 +303,10 @@ export default function CreateCodeForm({ onCreated, onCancel }) {
       {/* Pages */}
       <div>
         <label className="text-xs text-white/45 mb-2 block">Pages Unlocked * ({selectedPages.length} selected)</label>
+        <input value={pageSearch} onChange={e => setPageSearch(e.target.value)}
+          placeholder="Search pages, including published Content Studio pages…"
+          className="mb-2 w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
+          style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}` }} />
         <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
           {filteredPages.map(page => (
             <CreateCodePageItem key={page.path} page={page}
