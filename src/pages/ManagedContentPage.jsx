@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { LockKeyhole, LogIn, ShieldCheck } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
+import RedeemCodeModal from "@/components/RedeemCodeModal";
 import { useAuth } from "@/lib/AuthContext";
 
 function isStillActive(record) {
@@ -14,7 +15,7 @@ function isStillActive(record) {
   return Number.isFinite(expiry) ? expiry > Date.now() : true;
 }
 
-function AccessCard({ mode, page, isAuthenticated }) {
+function AccessCard({ mode, page, isAuthenticated, onRedeem }) {
   const isPaid = mode === "PAID" || mode === "PREMIUM";
   return (
     <div className="mx-auto max-w-xl rounded-2xl border border-yellow-500/20 bg-white/[0.025] p-6 text-center">
@@ -22,14 +23,12 @@ function AccessCard({ mode, page, isAuthenticated }) {
         {isAuthenticated ? <LockKeyhole className="h-5 w-5" /> : <LogIn className="h-5 w-5" />}
       </div>
       <h2 className="mt-4 text-lg font-bold text-white">
-        {!isAuthenticated ? "ലോഗിൻ ആവശ്യമാണ്" : mode === "SELECTED_CUSTOMERS" ? "ഈ പേജിന് പ്രത്യേക അനുമതി ആവശ്യമാണ്" : "ഈ ഉള്ളടക്കം ലോക്കുചെയ്തിരിക്കുന്നു"}
+        {!isAuthenticated ? "ലോഗിൻ ആവശ്യമാണ്" : "റീഡീം കോഡ് ആവശ്യമാണ്"}
       </h2>
       <p className="mt-2 text-sm leading-6 text-white/55">
         {!isAuthenticated
           ? "ഈ ഉള്ളടക്കം കാണാൻ ആദ്യം നിങ്ങളുടെ അക്കൗണ്ടിൽ ലോഗിൻ ചെയ്യുക."
-          : mode === "SELECTED_CUSTOMERS"
-            ? "Owner അനുവദിച്ച ഉപഭോക്താക്കൾക്കാണ് ഈ പേജ് ലഭ്യമാകുന്നത്."
-            : "Active subscription അല്ലെങ്കിൽ page permission ലഭിച്ചാൽ ഈ പേജ് തുറക്കും."}
+          : "WhatsApp വഴി payment സ്ഥിരീകരിച്ചതിന് ശേഷം Owner നൽകിയ Reading / Redeem Code ഇവിടെ നൽകുക. Code-ൽ അനുവദിച്ച page-ുകൾക്കും കാലാവധിക്കും അനുസരിച്ചാണ് access ലഭിക്കുക."}
       </p>
       {isPaid && Number(page?.price_amount || 0) > 0 && (
         <div className="mt-4 rounded-xl border border-yellow-500/20 bg-yellow-500/[0.06] px-4 py-3 font-semibold text-yellow-100">
@@ -42,10 +41,11 @@ function AccessCard({ mode, page, isAuthenticated }) {
             Login
           </Link>
         ) : (
-          <Link to="/premium/request" className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-2 text-sm font-semibold text-yellow-100">
-            Request Access
-          </Link>
+          <button onClick={onRedeem} className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-2 text-sm font-semibold text-yellow-100">
+            Redeem Code
+          </button>
         )}
+        <Link to="/support/whatsapp" className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white/60">WhatsApp Support</Link>
         <Link to="/" className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white/60">Home</Link>
       </div>
     </div>
@@ -59,6 +59,7 @@ export default function ManagedContentPage() {
   const [loading, setLoading] = useState(true);
   const [allowed, setAllowed] = useState(false);
   const [accessResolved, setAccessResolved] = useState(false);
+  const [showRedeem, setShowRedeem] = useState(false);
 
   const pagePath = useMemo(() => `/content/${slug || ""}`, [slug]);
 
@@ -136,7 +137,7 @@ export default function ManagedContentPage() {
         )}
 
         {!loading && page && accessResolved && !allowed && (
-          <AccessCard mode={page.access_mode} page={page} isAuthenticated={isAuthenticated} />
+          <AccessCard mode={page.access_mode} page={page} isAuthenticated={isAuthenticated} onRedeem={() => setShowRedeem(true)} />
         )}
 
         {!loading && page && accessResolved && allowed && (
@@ -168,6 +169,7 @@ export default function ManagedContentPage() {
           </article>
         )}
       </div>
+      {showRedeem && <RedeemCodeModal onClose={() => setShowRedeem(false)} />}
     </PageLayout>
   );
 }
