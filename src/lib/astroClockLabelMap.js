@@ -1,7 +1,8 @@
 /**
- * ASTRO CLOCK LABEL MAP — Turkish-to-Arabic display mapping
+ * ASTRO CLOCK LABEL MAP — source-label to Arabic/Malayalam display mapping
  * Display-only utility. Does NOT modify any engine, calculation, or data file.
- * Maps Turkish mansion/zodiac labels from Havâss data to Arabic for UI display.
+ * Legacy Turkish strings may still exist in manuscript-derived source data;
+ * this utility converts them to user-facing Arabic/English/Malayalam labels.
  */
 
 export function natureToArabic(genelHukum) {
@@ -53,7 +54,7 @@ const ZODIAC_EN_TO_ML = {
 };
 
 const ELEMENT_EN_TO_ML = {
-  "Fire": "അഗ്നി", "Earth": "ഭൂമി", "Air": "വായു", "Water": "വെള്ളം",
+  "Fire": "അഗ്നി", "Earth": "ഭൂമി", "Air": "വായു", "Water": "ജലം",
 };
 
 export function zodiacToML(zodiacSign) {
