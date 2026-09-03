@@ -21,6 +21,21 @@ const P = {
   bgHi: "rgba(212,175,55,0.14)",
 };
 
+const MALAYALAM_RE = /[\u0D00-\u0D7F]/;
+const TURKISH_RE = /[çğıöşüÇĞİÖŞÜ]/;
+
+function getMalayalamMeaning(card) {
+  const candidates = [
+    card?.malayalam_meaning,
+    card?.meaning_ml,
+    card?.exact_meaning,
+  ];
+  return candidates.find((value) => {
+    const text = String(value || "").trim();
+    return text && MALAYALAM_RE.test(text) && !TURKISH_RE.test(text);
+  }) || "";
+}
+
 export default function SectionCNames() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +59,7 @@ export default function SectionCNames() {
       (c.arabic_normalized || "").toLowerCase().includes(q) ||
       (c.transliteration || "").toLowerCase().includes(q) ||
       (c.exact_meaning || "").toLowerCase().includes(q) ||
+      (c.malayalam_meaning || "").toLowerCase().includes(q) ||
       (c.name_id || "").toLowerCase().includes(q)
     );
   }, [cards, query]);
@@ -72,7 +88,6 @@ export default function SectionCNames() {
 
   return (
     <div className="space-y-4" id="section-c-container">
-      {/* Search */}
       <div className="flex items-center gap-2 rounded-2xl border px-3 py-2.5" style={{ background: P.bg, borderColor: P.border }}>
         <Search className="w-4 h-4 flex-shrink-0" style={{ color: P.dim }} />
         <input
@@ -92,7 +107,6 @@ export default function SectionCNames() {
         )}
       </div>
 
-      {/* Count */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="font-malayalam text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.30)" }}>
           {filtered.length} / {cards.length} നാമങ്ങൾ
@@ -106,7 +120,6 @@ export default function SectionCNames() {
         </button>
       </div>
 
-      {/* Cards */}
       <div className="space-y-2">
         <AnimatePresence mode="popLayout">
           {filtered.length === 0 ? (
@@ -117,6 +130,7 @@ export default function SectionCNames() {
           ) : (
             filtered.map((card, i) => {
               const isOpen = openId === card.id;
+              const malayalamMeaning = getMalayalamMeaning(card);
               return (
                 <motion.div
                   key={card.id}
@@ -143,7 +157,7 @@ export default function SectionCNames() {
                           #{String(card.order_index || card.original_static_id).padStart(2, "0")}
                         </span>
                         <span className="font-amiri text-[1.65rem] font-bold" style={{ color: P.text, textShadow: isOpen ? "0 0 20px rgba(212,175,55,0.35)" : "0 0 12px rgba(212,175,55,0.20)" }} dir="rtl">
-                          {card.arabic_name}
+                          {card.canonical_arabic_name || card.arabic_name}
                         </span>
                         {card.total_abjad_value > 0 && (
                           <span className="font-inter text-[7px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border whitespace-nowrap" style={{ color: P.dim, borderColor: P.border, background: "rgba(245,208,96,0.08)" }}>
@@ -153,6 +167,11 @@ export default function SectionCNames() {
                       </div>
                       {card.transliteration && (
                         <p className="font-inter text-sm font-semibold truncate" style={{ color: "rgba(255,255,255,0.88)" }}>{card.transliteration}</p>
+                      )}
+                      {malayalamMeaning && (
+                        <p className="font-malayalam text-[12px] leading-relaxed line-clamp-2" style={{ color: "rgba(255,255,255,0.62)" }}>
+                          {malayalamMeaning}
+                        </p>
                       )}
                     </div>
                     <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }} className="flex-shrink-0" style={{ color: isOpen ? P.text : P.dim }}>
@@ -171,7 +190,7 @@ export default function SectionCNames() {
                         style={{ overflow: "hidden" }}
                       >
                         <div className="px-4 pb-4 pt-1 space-y-3" style={{ borderTop: "1px solid " + P.faint }}>
-                          <HolyNameVerifiedKnowledge arabicName={card.arabic_name} nameId={card.name_id} />
+                          <HolyNameVerifiedKnowledge arabicName={card.canonical_arabic_name || card.arabic_name} nameId={card.name_id} />
                           <HolyNameEsotericResearchProfile nameId={card.name_id} />
                         </div>
                       </motion.div>
