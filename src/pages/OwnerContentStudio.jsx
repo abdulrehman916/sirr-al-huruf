@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { Eye, FilePlus2, Save, Send, Trash2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import ManagedPageAccessPanel from "@/components/admin/ManagedPageAccessPanel";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -177,7 +176,7 @@ export default function OwnerContentStudio() {
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-yellow-500/20 bg-white/[0.025] p-3">
             <div>
               <p className="text-xs font-semibold text-white/80">{selectedId ? "Edit managed page" : "Create managed page"}</p>
-              <p className="text-[10px] text-white/35">Calculation modules are not editable from this studio.</p>
+              <p className="text-[10px] text-white/35">Calculation modules are not editable from this studio. Paid access is granted through Reading / Redeem Codes.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button onClick={() => setPreview((v) => !v)} className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs text-white/70">
@@ -209,7 +208,7 @@ export default function OwnerContentStudio() {
               <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                 <label><span className={labelClass}>Category</span><input className={inputClass} value={draft.category} onChange={(e) => change("category", e.target.value)} /></label>
                 <label><span className={labelClass}>Access</span><select className={inputClass} value={draft.access_mode} onChange={(e) => change("access_mode", e.target.value)}>
-                  <option value="PUBLIC">Public</option><option value="LOGIN">Login required</option><option value="PREMIUM">Premium</option><option value="PAID">One-time paid</option><option value="SELECTED_CUSTOMERS">Selected customers</option>
+                  <option value="PUBLIC">Public</option><option value="LOGIN">Login required</option><option value="PREMIUM">Premium / Redeem Code</option><option value="PAID">Paid / Redeem Code</option><option value="SELECTED_CUSTOMERS">Selected customers / Redeem Code</option>
                 </select></label>
                 <label><span className={labelClass}>Status</span><select className={inputClass} value={draft.status} onChange={(e) => change("status", e.target.value)}><option value="DRAFT">Draft</option><option value="PUBLISHED">Published</option><option value="ARCHIVED">Archived</option></select></label>
               </div>
@@ -246,11 +245,6 @@ export default function OwnerContentStudio() {
               </div>
             )}
           </div>
-
-          <ManagedPageAccessPanel
-            page={selected ? { ...selected, ...draft } : null}
-            ownerUser={user}
-          />
         </section>
       </div>
     </AdminLayout>
