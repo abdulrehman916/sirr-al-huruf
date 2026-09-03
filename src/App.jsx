@@ -20,15 +20,12 @@ import GoogleSignInPrompt from './components/GoogleSignInPrompt';
 import PreviewStateRestore from './components/PreviewStateRestore';
 import { persistGet, isDevMode } from '@/lib/devModePersistence';
 
-// ── Lazy import map — Core pages only ──────
 const PAGE_IMPORTS = {
-  // Core
   Home:                     () => import('./pages/Home'),
   Onboarding:               () => import('./pages/Onboarding'),
   Login:                    () => import('./pages/Login'),
   ForgotPassword:           () => import('./pages/ForgotPassword'),
-  ResetPassword:             () => import('./pages/ResetPassword'),
-  // Content
+  ResetPassword:            () => import('./pages/ResetPassword'),
   AbjadKabirPage:           () => import('./pages/AbjadKabirPage'),
   AnasirPage:               () => import('./pages/AnasirPage'),
   HadimPage:                () => import('./pages/HadimPage'),
@@ -48,23 +45,20 @@ const PAGE_IMPORTS = {
   AstroClockPage:           () => import('./pages/AstroClockPage'),
   AstroClockSearch:         () => import('./components/astroclock/AstroClockSearch'),
   SirrPage:                 () => import('./pages/SirrPage'),
-  // Support
   CustomerService:          () => import('./pages/CustomerService'),
   SupportHub:               () => import('./pages/SupportHub'),
   SupportChat:              () => import('./pages/SupportChat'),
   SupportVoice:             () => import('./pages/SupportVoice'),
   SupportTicket:            () => import('./pages/SupportTicket'),
   WhatsAppSupport:          () => import('./pages/WhatsAppSupport'),
-  // Subscriptions
   SubscriptionExpired:      () => import('./pages/SubscriptionExpired'),
   SubscriptionPending:      () => import('./pages/SubscriptionPending'),
   PremiumAccessRequest:     () => import('./pages/PremiumAccessRequest'),
   MySubscription:           () => import('./pages/MySubscription'),
   MyRequests:               () => import('./pages/MyRequests'),
   RedeemCodeApproval:       () => import('./pages/RedeemCodeApproval'),
-
-  // Admin - Core 5 + Required
   AdminDashboard:           () => import('./pages/AdminDashboard'),
+  OwnerContentStudio:       () => import('./pages/OwnerContentStudio'),
   ApprovedUsersPage:        () => import('./pages/ApprovedUsersPage'),
   AdminSupport:             () => import('./pages/AdminSupport'),
   PagePermissions:          () => import('./pages/PagePermissions'),
@@ -74,9 +68,9 @@ const PAGE_IMPORTS = {
   AdminAccessRequests:      () => import('./pages/AdminAccessRequests'),
   AdminRedeemApprovals:     () => import('./pages/AdminRedeemApprovals'),
   AdminAccessLogs:          () => import('./pages/AdminAccessLogs'),
-  AdminSettings:           () => import('./pages/AdminSettings'),
-  AdminSystemSettings:     () => import('./pages/AdminSystemSettings'),
-  AdminAnalytics:          () => import('./pages/AdminAnalytics'),
+  AdminSettings:            () => import('./pages/AdminSettings'),
+  AdminSystemSettings:      () => import('./pages/AdminSystemSettings'),
+  AdminAnalytics:           () => import('./pages/AdminAnalytics'),
   AdminAdmins:              () => import('./pages/AdminAdmins'),
   UserDetailPage:           () => import('./pages/UserDetailPage'),
   AdminPDFContentEditor:    () => import('./pages/AdminPDFContentEditor'),
@@ -95,9 +89,8 @@ const PAGE_IMPORTS = {
   UnifiedKnowledgeSearch:   () => import('./pages/UnifiedKnowledgeSearch'),
   AstroClockLibraryStatus:  () => import('./pages/AstroClockLibraryStatus'),
   OwnerApprovalQueue:       () => import('./pages/OwnerApprovalQueue'),
-  };
+};
 
-// ── Route factory — one lazy() + one <Route> per manifest entry ──────
 function useRouteElements() {
   return useMemo(() => ROUTE_MANIFEST.map(entry => {
     const importFn = PAGE_IMPORTS[entry.chunk];
@@ -106,9 +99,8 @@ function useRouteElements() {
       return null;
     }
     const LazyPage = lazy(importFn);
-
-    const isPublic  = entry.flags?.includes('public');
-    const isNoAuth  = entry.flags?.includes('noauth');
+    const isPublic = entry.flags?.includes('public');
+    const isNoAuth = entry.flags?.includes('noauth');
 
     if (isNoAuth) {
       return <Route key={entry.path} path={entry.path} element={<LazyPage />} />;
@@ -130,7 +122,6 @@ function useRouteElements() {
   }).filter(Boolean), []);
 }
 
-// Minimal fallback — matches app background, no flash
 const PageFallback = () => (
   <div style={{ minHeight: "60vh", background: "transparent" }} />
 );
@@ -143,53 +134,47 @@ const AuthenticatedApp = () => {
     () => persistGet('sirr_google_prompt_dismissed') === 'true'
   );
 
-  // Hide the post-splash Google prompt once the user is signed in.
   useEffect(() => {
     if (isAuthenticated) setGooglePromptDismissed(true);
   }, [isAuthenticated]);
 
-  // Scroll to top on every route change
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [location.pathname]);
 
-  // No auth redirect — all pages are accessible without login.
-  // Premium pages are gated by ProtectedPage with reading codes.
-
   if (isLoadingPublicSettings) {
     return (
       <div className="fixed inset-0 flex items-center justify-center" style={{ background: "#020710" }}>
-        <div className="w-8 h-8 border-4 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-yellow-400/30 border-t-yellow-400 rounded-full"></div>
       </div>
     );
   }
 
   return (
     <>
-    {!isDevMode && !isAuthenticated && !googlePromptDismissed && (
-      <GoogleSignInPrompt onSkip={() => setGooglePromptDismissed(true)} />
-    )}
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.18, ease: "easeInOut" }}
-        style={{ willChange: "opacity" }}
-      >
-        <Suspense fallback={<PageFallback />}>
-          <Routes location={location}>
-            {routeElements}
-            <Route path="*" element={<PageNotFound />} />
-          </Routes>
-        </Suspense>
-      </motion.div>
-    </AnimatePresence>
+      {!isDevMode && !isAuthenticated && !googlePromptDismissed && (
+        <GoogleSignInPrompt onSkip={() => setGooglePromptDismissed(true)} />
+      )}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18, ease: "easeInOut" }}
+          style={{ willChange: "opacity" }}
+        >
+          <Suspense fallback={<PageFallback />}>
+            <Routes location={location}>
+              {routeElements}
+              <Route path="*" element={<PageNotFound />} />
+            </Routes>
+          </Suspense>
+        </motion.div>
+      </AnimatePresence>
     </>
   );
 };
-
 
 function App() {
   const [splashDone, setSplashDone] = useState(false);
