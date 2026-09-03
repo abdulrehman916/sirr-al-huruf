@@ -54,9 +54,9 @@ const ROUTE_MANIFEST = [
   { path: '/my-requests', component: 'MyRequests', chunk: 'MyRequests', flags: ['public'] },
   { path: '/redeem-approval', component: 'RedeemCodeApproval', chunk: 'RedeemCodeApproval', flags: ['public'] },
 
-  
   // Admin
   { path: '/admin/access-dashboard', component: 'AdminDashboard', chunk: 'AdminDashboard' },
+  { path: '/admin/content-studio', component: 'OwnerContentStudio', chunk: 'OwnerContentStudio' },
   { path: '/admin/approved-users', component: 'ApprovedUsersPage', chunk: 'ApprovedUsersPage' },
   { path: '/admin/page-permissions', component: 'PagePermissions', chunk: 'PagePermissions' },
   { path: '/admin/access-codes', component: 'AdminAccessCodes', chunk: 'AdminAccessCodes' },
@@ -78,15 +78,10 @@ const ROUTE_MANIFEST = [
   { path: '/admin/shop', component: 'AdminShopDashboard', chunk: 'AdminShopDashboard' },
   { path: '/admin/audit-log', component: 'AdminAuditLog', chunk: 'AdminAuditLog' },
   { path: '/admin/purpose-dictionary', component: 'AdminPurposeDictionary', chunk: 'AdminPurposeDictionary' },
-  // Master PDF Library — Owner-only (Knowledge Management). Gated by rbac + server-side.
   { path: '/admin/master-pdf-library', component: 'MasterPdfLibrary', chunk: 'MasterPdfLibrary' },
-  // Owner Review & Approval — Owner-only gate (Knowledge Management). Gated by rbac + server-side.
   { path: '/admin/pending-reviews', component: 'OwnerPendingReviews', chunk: 'OwnerPendingReviews' },
-  // Unified Knowledge Search — Owner-only permanent knowledge gateway (Knowledge Management).
   { path: '/admin/knowledge-search', component: 'UnifiedKnowledgeSearch', chunk: 'UnifiedKnowledgeSearch' },
-  // Astro Clock Library Status — Owner-only dashboard (Knowledge Management).
   { path: '/admin/astro-library-status', component: 'AstroClockLibraryStatus', chunk: 'AstroClockLibraryStatus' },
-  // Owner Approval Queue — READ-ONLY review of flagged Western-source Astro Clock records (Knowledge Management).
   { path: '/admin/astro-approval-queue', component: 'OwnerApprovalQueue', chunk: 'OwnerApprovalQueue' },
 
   // Rules & Conditions — public
@@ -94,7 +89,6 @@ const ROUTE_MANIFEST = [
 
   // Test & Debug
   { path: '/mizan-completion-test', component: 'MizanCompletionTest', chunk: 'MizanCompletionTest', flags: ['public'] },
-
 ];
 
 export default ROUTE_MANIFEST;
