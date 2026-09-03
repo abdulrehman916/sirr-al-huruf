@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { Eye, FilePlus2, Save, Send, Trash2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import ManagedPageAccessPanel from "@/components/admin/ManagedPageAccessPanel";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -111,11 +112,12 @@ export default function OwnerContentStudio() {
       else saved = await base44.entities.ManagedPage.create(payload);
 
       await loadPages();
-      setSelectedId(saved?.id || selectedId || null);
-      setDraft((prev) => ({ ...prev, ...payload }));
+      const resolvedId = saved?.id || selectedId || null;
+      setSelectedId(resolvedId);
+      setDraft((prev) => ({ ...prev, ...payload, ...(saved || {}) }));
       toast({
         title: nextStatus === "PUBLISHED" ? "Published" : "Draft saved",
-        description: nextStatus === "PUBLISHED" ? "The page is marked as published." : "Your changes are saved as a draft.",
+        description: nextStatus === "PUBLISHED" ? `Live URL: /content/${payload.slug}` : "Your changes are saved as a draft.",
       });
     } catch (error) {
       toast({ title: "Save failed", description: error?.message || "Could not save this page.", variant: "destructive" });
@@ -163,7 +165,7 @@ export default function OwnerContentStudio() {
               >
                 <p className="truncate text-xs font-semibold text-white/80">{item.title_ml || item.title_en || item.slug}</p>
                 <div className="mt-1 flex items-center justify-between gap-2 text-[9px] text-white/35">
-                  <span>/{item.slug}</span>
+                  <span>/content/{item.slug}</span>
                   <span className={item.status === "PUBLISHED" ? "text-emerald-400" : "text-amber-300"}>{item.status}</span>
                 </div>
               </button>
@@ -244,6 +246,11 @@ export default function OwnerContentStudio() {
               </div>
             )}
           </div>
+
+          <ManagedPageAccessPanel
+            page={selected ? { ...selected, ...draft } : null}
+            ownerUser={user}
+          />
         </section>
       </div>
     </AdminLayout>
