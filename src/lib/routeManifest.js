@@ -37,6 +37,11 @@ const ROUTE_MANIFEST = [
   { path: '/astro-clock', component: 'AstroClockPage', chunk: 'AstroClockPage' },
   { path: '/astro-clock/search', component: 'AstroClockSearch', chunk: 'AstroClockSearch' },
   { path: '/sirr', component: 'SirrPage', chunk: 'SirrPage', flags: ['public'] },
+
+  // Owner-managed published website content. The route itself is public so the
+  // ManagedContentPage renderer can enforce PUBLIC / LOGIN / PREMIUM / PAID /
+  // SELECTED_CUSTOMERS using the page record plus user entitlements.
+  { path: '/content/:slug', component: 'ManagedContentPage', chunk: 'ManagedContentPage', flags: ['public'] },
   
   // Support — all public
   { path: '/support', component: 'CustomerService', chunk: 'CustomerService', flags: ['public'] },
