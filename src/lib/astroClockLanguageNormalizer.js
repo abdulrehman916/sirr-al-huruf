@@ -98,8 +98,8 @@ const DICT = {
   'Bakır': { ml: 'ചെമ്പ്', ar: 'نحاس', en: 'Copper' },
   'Demir': { ml: 'ഇരുമ്പ്', ar: 'حديد', en: 'Iron' },
   'Kurşun': { ml: 'ലെഡ്', ar: 'رصاص', en: 'Lead' },
-  'Kalay': { ml: 'കലുപ്പ്', ar: 'قصدير', en: 'Tin' },
-  'Cıva': { ml: 'രസം', ar: 'زئبق', en: 'Quicksilver' },
+  'Kalay': { ml: 'വെളുത്തീയം', ar: 'قصدير', en: 'Tin' },
+  'Cıva': { ml: 'പാരം', ar: 'زئبق', en: 'Quicksilver' },
   'Pirinç': { ml: 'പിത്തള', ar: 'نحاس أصفر', en: 'Brass' },
 
   // ── STONES / GEMS ──
@@ -117,27 +117,27 @@ const DICT = {
   'Mavi': { ml: 'നീല', ar: 'أزرق', en: 'Blue' },
   'Yeşil': { ml: 'പച്ച', ar: 'أخضر', en: 'Green' },
   'Sarı': { ml: 'മഞ്ഞ', ar: 'أصفر', en: 'Yellow' },
-  'Beyaz': { ml: 'വെളുത്ത', ar: 'أبيض', en: 'White' },
-  'Siyah': { ml: 'കറുത്ത', ar: 'أسود', en: 'Black' },
-  'Mor': { ml: 'പർപ്പ്', ar: 'أرجواني', en: 'Purple' },
+  'Beyaz': { ml: 'വെളുപ്പ്', ar: 'أبيض', en: 'White' },
+  'Siyah': { ml: 'കറുപ്പ്', ar: 'أسود', en: 'Black' },
+  'Mor': { ml: 'പർപ്പിൾ', ar: 'أرجواني', en: 'Purple' },
   'Turuncu': { ml: 'ഓറഞ്ച്', ar: 'برتقالي', en: 'Orange' },
   'Gri': { ml: 'ചാരനിറം', ar: 'رمادي', en: 'Gray' },
-  'Altın Sarısı': { ml: 'സ്വർണ്ണ മഞ്ഞ', ar: 'ذهبي', en: 'Golden' },
-  'Gümüş Beyaz': { ml: 'വെള്ളി വെളുത്ത', ar: 'فضي', en: 'Silvery' },
+  'Altın Sarısı': { ml: 'സ്വർണ്ണനിറം', ar: 'ذهبي', en: 'Golden' },
+  'Gümüş Beyaz': { ml: 'വെള്ളിനിറം', ar: 'فضي', en: 'Silvery' },
 
   // ── INCENSE / PERFUMES ──
   'Öd': { ml: 'അഗിൽ', ar: 'العود', en: 'Oud (Aloeswood)' },
   'Kehribar': { ml: 'അംബർ', ar: 'عنبر', en: 'Amber' },
   'Misk': { ml: 'മിസ്ക്', ar: 'مسك', en: 'Musk' },
   'Lüban': { ml: 'ലുബാൻ', ar: 'لبان', en: 'Frankincense' },
-  'Günlük': { ml: 'കരിമ്പ്', ar: 'الكندر', en: 'Luban/Mastic' },
+  'Günlük': { ml: 'കുന്തിരിക്കം', ar: 'الكندر', en: 'Frankincense' },
   'Odu': { ml: 'അഗിൽ', ar: 'العود', en: 'Oud' },
   'Anber': { ml: 'അംബർ', ar: 'عنبر', en: 'Ambergris' },
   'Üd': { ml: 'അഗിൽ', ar: 'العود', en: 'Aloeswood' },
 
   // ── HERBS / PLANTS ──
   'Gül': { ml: 'റോസപ്പൂവ്', ar: 'ورد', en: 'Rose' },
-  'Sümbül': { ml: 'കണ്ടല്പൂവ്', ar: 'السنبل', en: 'Hyacinth' },
+  'Sümbül': { ml: 'ഹയാസിന്ത്', ar: 'السنبل', en: 'Hyacinth' },
   'Nergis': { ml: 'നെർഗിസ്', ar: 'النرجس', en: 'Narcissus' },
   'Yasemin': { ml: 'ജാസ്മിൻ', ar: 'الياسمين', en: 'Jasmine' },
   'Banafşa': { ml: 'വയലറ്റ്', ar: 'البنفسج', en: 'Violet' },
@@ -246,7 +246,7 @@ export function normalizeArray(texts) {
 // METADATA
 // ═══════════════════════════════════════════════════════════════
 export const NORMALIZER_METADATA = {
-  version: '2.0.0',
+  version: '2.0.1',
   scope: 'Astrology page ONLY',
   rule: 'Never display Turkish. Priority: Malayalam > Arabic > English.',
   displayLayerOnly: true,
