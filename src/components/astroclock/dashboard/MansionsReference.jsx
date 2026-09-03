@@ -38,13 +38,12 @@ export default function MansionsReference() {
 
   return (
     <div className="space-y-3">
-      {/* ── Filter Tags ── */}
       <div className="flex flex-wrap gap-1.5">
         {[
-          { key: "all", label: txt("എല്ലാം", "All 28", "Tümü") },
-          { key: "current", label: txt("നിലവിലെ", "Current", "Mevcut") },
-          { key: "favorable", label: txt("അനുകൂലം", "Favorable", "Elverişli") },
-          { key: "unfavorable", label: txt("പ്രതികൂലം", "Unfavorable", "Olumsuz") },
+          { key: "all", label: txt("എല്ലാം", "All 28") },
+          { key: "current", label: txt("നിലവിലെ", "Current") },
+          { key: "favorable", label: txt("അനുകൂലം", "Favorable") },
+          { key: "unfavorable", label: txt("പ്രതികൂലം", "Unfavorable") },
         ].map(f => (
           <button key={f.key} onClick={() => setFilter(f.key)}
             className="font-inter text-[10px] px-2 py-1 rounded-lg transition-opacity hover:opacity-80"
@@ -56,7 +55,6 @@ export default function MansionsReference() {
         ))}
       </div>
 
-      {/* ── Mansion Cards ── */}
       <div className="space-y-1.5 max-h-[600px] overflow-y-auto scrollbar-none">
         {filtered.map(m => {
           const isCurrent = m.no === currentNo;
@@ -80,25 +78,23 @@ export default function MansionsReference() {
                 <span className="font-inter text-[10px] font-bold tabular-nums w-6 text-center" style={{ color }}>#{m.no}</span>
                 <span className={`font-inter text-xs font-bold flex-1 truncate ${language === "ar" ? "font-amiri" : ""}`} style={{ color: "rgba(255,255,255,0.80)", ...(language === "ar" ? { direction: "rtl" } : {}) }}>{language === "ml" ? (MANSION_ML_NAMES[m.name] || m.name) : language === "ar" ? (m.name_arabic || m.name) : m.name}</span>
                 {language === "ar" && <span className="font-amiri text-sm" style={{ color: "rgba(212,175,55,0.50)" }}>{m.name_arabic}</span>}
-                {isCurrent && <span className="font-inter text-[7px] uppercase px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.15)", color: "#F5D060" }}>{txt("നിലവിലെ", "Now", "Şimdi")}</span>}
+                {isCurrent && <span className="font-inter text-[7px] uppercase px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.15)", color: "#F5D060" }}>{txt("നിലവിലെ", "Now")}</span>}
                 <ChevronDown className="w-3.5 h-3.5 transition-transform flex-shrink-0" style={{ color: "rgba(212,175,55,0.40)", transform: isOpen ? "rotate(180deg)" : "none" }} />
               </button>
               <AnimatePresence>
                 {isOpen && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
                     <div className="px-2.5 pb-2.5 space-y-1.5">
-                      {/* ── TOPIC: Identity & Boundaries (Havâss) ── */}
-                      <ManuscriptTopic title={txt("അതിരുകളും മൂലവും", "Identity & Boundaries", "Sınırlar & Kimlik")}>
+                      <ManuscriptTopic title={txt("തിരിച്ചറിയലും പരിധികളും", "Identity & Boundaries")}>
                         <div className="flex items-center gap-1 mb-0.5"><SourceBadge source={MANUSCRIPT_SOURCES.HAVASS} page="316-904" language={language} isOwner={isOwner} /></div>
                         <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                          <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അതിര്", "Boundary", "Sınır")}: </span><span className={zodiacFontClass} style={{ color: "rgba(255,255,255,0.65)" }}>{zodiacDisplay} {extractDegree(m.baslama_siniri)}°</span></div>
-                          <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("രാശി", "Zodiac", "Burç")}: </span><span className={zodiacFontClass} style={{ color: "rgba(255,255,255,0.65)" }}>{zodiacDisplay} ({m.zodiac_degree}°)</span></div>
-                          <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അക്ഷരം", "Letter", "Harf")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{m.harfi} <span className="font-amiri">{m.harf_arabic}</span></span></div>
+                          <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("പരിധി", "Boundary")}: </span><span className={zodiacFontClass} style={{ color: "rgba(255,255,255,0.65)" }}>{zodiacDisplay} {extractDegree(m.baslama_siniri)}°</span></div>
+                          <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("രാശി", "Zodiac")}: </span><span className={zodiacFontClass} style={{ color: "rgba(255,255,255,0.65)" }}>{zodiacDisplay} ({m.zodiac_degree}°)</span></div>
+                          <div><span className="font-bold" style={{ color: "rgba(255,255,255,0.40)" }}>{txt("അക്ഷരം", "Letter")}: </span><span style={{ color: "rgba(255,255,255,0.65)" }}>{m.harfi} <span className="font-amiri">{m.harf_arabic}</span></span></div>
                         </div>
                       </ManuscriptTopic>
 
-                      {/* ── TOPIC: Nature (Sa'd / Nahs) — each manuscript shown independently, not merged ── */}
-                      <ManuscriptTopic title={txt("സ്വഭാവം (Sa'd / Nahs)", "Nature (Sa'd / Nahs)", "Doğa (Sa'd / Nahs)")}>
+                      <ManuscriptTopic title={txt("സ്വഭാവം (Sa'd / Nahs)", "Nature (Sa'd / Nahs)")}>
                         {mansionConflict ? (
                           <DifferentOpinion language={language}>
                             <div className="flex items-center gap-1.5 mb-1"><ConflictBadge language={language} /></div>
@@ -129,17 +125,15 @@ export default function MansionsReference() {
                         )}
                       </ManuscriptTopic>
 
-                      {/* Kashf Omani tradition */}
                       {kashfMansion && (
                         <ManuscriptSourcePanel
                           sources={[{
                             id: "kashf",
-                            label: txt("കശ്ഫ് അൽ-ഹഖാഇഖ് (ഒമാൻ)", "Kashf al-Haqa'iq (Omani)", "Kashf al-Haqa'iq (Omani)"),
+                            label: txt("കശ്ഫ് അൽ-ഹഖാഇഖ് (ഒമാൻ)", "Kashf al-Haqa'iq (Omani)"),
                             items: [{
                               ar: kashfMansion.operation_ar,
                               en: `${kashfMansion.nature_en} — ${kashfMansion.operation_ar}`,
                               ml: kashfMansion.nature_ml,
-                              tr: kashfMansion.nature_tr,
                               type: kashfMansion.nature_en.includes("Auspi") ? "recommend" : "warning",
                               source: kashfMansion.source,
                             }]
@@ -147,13 +141,8 @@ export default function MansionsReference() {
                         />
                       )}
 
-                      {/* Magical period from manuscript (if available) */}
                       <MagicalPeriodPanel entityType="mansion" entityKey={m.name} />
-
-                      {/* Entity Knowledge from unified ingestion pipeline */}
                       <EntityKnowledgePanel entityType="mansion" entityKey={String(m.no)} />
-
-                      {/* Source visuals (nakshatra list / mansion tables) attached to lunar mansion records */}
                       <AstroClockCategoryVisuals categories={['lunar mansion']} entityAliases={[]} />
                     </div>
                   </motion.div>
@@ -164,10 +153,7 @@ export default function MansionsReference() {
         })}
       </div>
 
-      {/* ── HIDDEN: Source Book mansions actions — pending Arabic verification ── */}
       {false && <SourceBookPanel topicId="manazilActions" />}
-
-      {/* ── HIDDEN: Source Book mansions marriage — pending Arabic verification ── */}
       {false && <SourceBookPanel topicId="manazilMarriage" />}
     </div>
   );
