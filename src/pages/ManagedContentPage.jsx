@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import RedeemCodeModal from "@/components/RedeemCodeModal";
 import { useAuth } from "@/lib/AuthContext";
+import { checkLocalPermission, validateAndCleanPermissions } from "@/lib/sessionId";
 
 function isStillActive(record) {
   if (!record) return false;
@@ -91,12 +92,26 @@ export default function ManagedContentPage() {
           return;
         }
 
+        // Reading / Redeem Code is the primary paid-access system.
+        // First validate the locally restored permissions against the backend so
+        // disabled, deleted, removed or expired code grants cannot remain active.
+        await validateAndCleanPermissions();
+        if (cancelled) return;
+        const localPermission = checkLocalPermission(pagePath);
+        if (localPermission.granted) {
+          setAllowed(true);
+          setAccessResolved(true);
+          return;
+        }
+
         if (!isAuthenticated || !user?.id) {
           setAllowed(false);
           setAccessResolved(true);
           return;
         }
 
+        // Backward-compatible fallbacks for manually-created subscriptions and
+        // page permissions. Existing records continue to work unchanged.
         const [subscriptions, permissions] = await Promise.all([
           base44.entities.Subscription.filter({ user_id: user.id, page_path: pagePath }).catch(() => []),
           base44.entities.PagePermission.filter({ user_id: user.id, page_path: pagePath }).catch(() => []),
@@ -106,8 +121,8 @@ export default function ManagedContentPage() {
         const hasSubscription = Array.isArray(subscriptions) && subscriptions.some(isStillActive);
         const hasPermission = Array.isArray(permissions) && permissions.some(isStillActive);
 
-        if (found.access_mode === "SELECTED_CUSTOMERS") setAllowed(hasPermission);
-        else setAllowed(hasSubscription || hasPermission);
+        if (found.access_mode === "SELECTED_CUSTOMERS") setAllowed(hasPermission || localPermission.granted);
+        else setAllowed(hasSubscription || hasPermission || localPermission.granted);
         setAccessResolved(true);
       } catch {
         if (!cancelled) {
