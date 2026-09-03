@@ -82,7 +82,7 @@ export default function MansionsReference() {
                         {m.name_arabic || "—"}
                       </span>
                       <span className="font-malayalam text-[9px] block truncate" style={{ color: "rgba(255,255,255,0.38)" }}>
-                        മലയാള സമാനനാമം സ്ഥിരീകരിച്ചിട്ടില്ല
+                        ചാന്ദ്ര മൻസിൽ #{m.no}
                       </span>
                     </>
                   ) : language === "ar" ? (
