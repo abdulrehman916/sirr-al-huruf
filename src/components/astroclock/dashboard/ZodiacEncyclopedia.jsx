@@ -27,11 +27,11 @@ export default function ZodiacEncyclopedia() {
   });
 
   const elementLabel = (value) => {
-    if (value === "all") return txt("എല്ലാ 12 രാശികളും", "All 12", "الكل 12");
-    if (value === "Fire") return txt("അഗ്നി", "Fire", "النار");
-    if (value === "Earth") return txt("ഭൂമി", "Earth", "التراب");
-    if (value === "Air") return txt("വായു", "Air", "الهواء");
-    if (value === "Water") return txt("ജലം", "Water", "الماء");
+    if (value === "all") return txt("എല്ലാ 12 രാശികളും", "All 12");
+    if (value === "Fire") return txt("അഗ്നി", "Fire");
+    if (value === "Earth") return txt("ഭൂമി", "Earth");
+    if (value === "Air") return txt("വായു", "Air");
+    if (value === "Water") return txt("ജലം", "Water");
     return value;
   };
 
