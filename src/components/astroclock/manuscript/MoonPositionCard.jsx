@@ -6,7 +6,6 @@ import { useAstroData } from "../dashboard/useAstroData";
 import { useAstroClockLanguage } from "@/lib/astroClockLanguageContext";
 import DashboardSection, { MiniCard } from "../dashboard/DashboardSection";
 import { getKashfMansionByNo, getKashfZodiacTiming } from "@/lib/astroClockManuscriptMerger";
-import { MANSION_ML_NAMES } from "@/lib/astroClockMansionsML";
 import { zodiacEnToML } from "@/lib/astroClockLabelMap";
 import { SourceTag, ArabicLine, ZODIAC_EN_MAP } from "./shared";
 
@@ -22,7 +21,9 @@ export default function MoonPositionCard() {
   const isScorpio = (zodiacEn || "").toLowerCase() === "scorpio";
   const isWaxing = d.moonPosition?.isWaxing;
   const phasePct = d.moonPosition ? parseFloat(d.moonPosition.phase) : 0;
-  const mansionDisplay = language === "ar" ? `#${m.no || "?"} ${m.name_arabic || ""}` : language === "ml" ? `#${m.no || "?"} ${MANSION_ML_NAMES[m.name] || ""}` : `#${m.no || "?"} ${m.name || ""}`;
+  const mansionDisplay = language === "ar" || language === "ml"
+    ? `#${m.no || "?"} ${m.name_arabic || ""}`
+    : `#${m.no || "?"} ${m.name || ""}`;
   const zodiacDisplay = language === "ar" ? (zodiac?.name_ar || zodiacEn) : language === "ml" ? zodiacEnToML(zodiacEn) : zodiacEn;
 
   return (
