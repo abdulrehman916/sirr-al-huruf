@@ -45,6 +45,7 @@ const PAGE_IMPORTS = {
   AstroClockPage:           () => import('./pages/AstroClockPage'),
   AstroClockSearch:         () => import('./components/astroclock/AstroClockSearch'),
   SirrPage:                 () => import('./pages/SirrPage'),
+  ManagedContentPage:       () => import('./pages/ManagedContentPage'),
   CustomerService:          () => import('./pages/CustomerService'),
   SupportHub:               () => import('./pages/SupportHub'),
   SupportChat:              () => import('./pages/SupportChat'),
