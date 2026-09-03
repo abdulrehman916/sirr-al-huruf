@@ -95,63 +95,57 @@ export default function AdminDashboard() {
   return (
     <AdminLayout>
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-
-        {/* Title */}
         <div>
           <h1 className="font-inter text-xl font-bold text-white">Dashboard</h1>
           <p className="font-inter text-xs text-white/40 mt-0.5">System overview — updates automatically</p>
         </div>
 
-        {/* Users Section */}
         <SectionLabel>Users</SectionLabel>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <StatCard label="Total Users"   value={stats?.total_users}   color="#F5D060" icon={Users} />
-          <StatCard label="Active"        value={stats?.active_users}  color="#22c55e" icon={UserCheck} />
-          <StatCard label="Expired"       value={stats?.expired_users} color="#f59e0b" icon={Clock} />
-          <StatCard label="Blocked"       value={stats?.blocked_users} color="#ef4444" icon={Shield} />
+          <StatCard label="Total Users" value={stats?.total_users} color="#F5D060" icon={Users} />
+          <StatCard label="Active" value={stats?.active_users} color="#22c55e" icon={UserCheck} />
+          <StatCard label="Expired" value={stats?.expired_users} color="#f59e0b" icon={Clock} />
+          <StatCard label="Blocked" value={stats?.blocked_users} color="#ef4444" icon={Shield} />
         </div>
 
-        {/* Reading Codes Section */}
         <SectionLabel>Reading Codes</SectionLabel>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2">
-          <StatCard label="Total Codes"   value={stats?.total_codes}    color="#F5D060" icon={KeyRound} />
-          <StatCard label="Active"        value={stats?.active_codes}   color="#22c55e" icon={CheckCircle2} />
-          <StatCard label="Expired"       value={stats?.expired_codes}  color="#f59e0b" icon={Clock} />
-          <StatCard label="Disabled"      value={stats?.disabled_codes} color="#6b7280" icon={XCircle} />
-          <StatCard label="Lifetime"      value={stats?.lifetime_codes} color="#3b82f6" icon={KeyRound} />
+          <StatCard label="Total Codes" value={stats?.total_codes} color="#F5D060" icon={KeyRound} />
+          <StatCard label="Active" value={stats?.active_codes} color="#22c55e" icon={CheckCircle2} />
+          <StatCard label="Expired" value={stats?.expired_codes} color="#f59e0b" icon={Clock} />
+          <StatCard label="Disabled" value={stats?.disabled_codes} color="#6b7280" icon={XCircle} />
+          <StatCard label="Lifetime" value={stats?.lifetime_codes} color="#3b82f6" icon={KeyRound} />
         </div>
 
-        {/* Activity Section */}
         <SectionLabel>Activity</SectionLabel>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2">
-          <StatCard label="Renewals Today"    value={stats?.renewals_today}    color="#a855f7" icon={RefreshCw} />
-          <StatCard label="Expiring Today"    value={stats?.expiring_today}    color="#f59e0b" icon={AlertCircle} />
+          <StatCard label="Renewals Today" value={stats?.renewals_today} color="#a855f7" icon={RefreshCw} />
+          <StatCard label="Expiring Today" value={stats?.expiring_today} color="#f59e0b" icon={AlertCircle} />
           <StatCard label="Expiring Tomorrow" value={stats?.expiring_tomorrow} color="#f59e0b" icon={Calendar} />
-          <StatCard label="Expiring 7 Days"   value={stats?.expiring_7days}    color="#f59e0b" icon={Clock} />
-          <StatCard label="Permissions"       value={stats?.active_permissions} color="#8b5cf6" icon={Globe} />
+          <StatCard label="Expiring 7 Days" value={stats?.expiring_7days} color="#f59e0b" icon={Clock} />
+          <StatCard label="Permissions" value={stats?.active_permissions} color="#8b5cf6" icon={Globe} />
         </div>
 
-        {/* Support & Recent Section */}
         <SectionLabel>Support & Recent</SectionLabel>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2">
-          <StatCard label="Pending Support"  value={stats?.pending_support}  color="#f97316" icon={MessageSquare} />
-          <StatCard label="Pending Requests" value={pendingRequests}         color="#f97316" icon={TrendingUp} sub="Access requests" />
-          <StatCard label="Recent Redeems"   value={stats?.recent_redeems}   color="#3b82f6" icon={KeyRound} sub="Last 7 days" />
-          <StatCard label="Recent Renewals"  value={stats?.recent_renewals}  color="#a855f7" icon={RefreshCw} sub="Last 7 days" />
+          <StatCard label="Pending Support" value={stats?.pending_support} color="#f97316" icon={MessageSquare} />
+          <StatCard label="Pending Requests" value={pendingRequests} color="#f97316" icon={TrendingUp} sub="Access requests" />
+          <StatCard label="Recent Redeems" value={stats?.recent_redeems} color="#3b82f6" icon={KeyRound} sub="Last 7 days" />
+          <StatCard label="Recent Renewals" value={stats?.recent_renewals} color="#a855f7" icon={RefreshCw} sub="Last 7 days" />
         </div>
 
-        {/* Quick Links */}
         <SectionLabel>Quick Actions</SectionLabel>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {[
-            { to: "/admin/approved-users",   icon: "👥", label: "Manage Users" },
-            { to: "/admin/access-codes",      icon: "🔑", label: "Reading Codes" },
-            { to: "/admin/google-linked",     icon: "🔗", label: "Google Linked" },
-            { to: "/admin/page-permissions",  icon: "🌐", label: "Page Access" },
-            { to: "/admin/support",           icon: "💬", label: "Support Messages" },
-            { to: "/admin/access-logs",       icon: "📋", label: "Access Logs" },
-            { to: "/admin/feature-pricing",   icon: "💰", label: "Feature Pricing" },
-            { to: "/admin/settings",          icon: "⚙️", label: "Settings" },
+            { to: "/admin/content-studio", icon: "✍️", label: "Content Studio" },
+            { to: "/admin/approved-users", icon: "👥", label: "Manage Users" },
+            { to: "/admin/access-codes", icon: "🔑", label: "Reading Codes" },
+            { to: "/admin/google-linked", icon: "🔗", label: "Google Linked" },
+            { to: "/admin/page-permissions", icon: "🌐", label: "Page Access" },
+            { to: "/admin/support", icon: "💬", label: "Support Messages" },
+            { to: "/admin/access-logs", icon: "📋", label: "Access Logs" },
+            { to: "/admin/feature-pricing", icon: "💰", label: "Feature Pricing" },
+            { to: "/admin/settings", icon: "⚙️", label: "Settings" },
           ].map(link => (
             <Link
               key={link.to}
@@ -164,7 +158,6 @@ export default function AdminDashboard() {
             </Link>
           ))}
         </div>
-
       </motion.div>
     </AdminLayout>
   );
