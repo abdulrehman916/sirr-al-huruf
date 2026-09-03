@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { X, KeyRound, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { getSessionId, mergeGrantedPermissions } from "@/lib/sessionId";
+import { addRedeemedCode, getSessionId, mergeGrantedPermissions } from "@/lib/sessionId";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -30,13 +30,27 @@ export default function RedeemCodeModal({ onClose }) {
     setLoading(true);
     try {
       const sessionId = getSessionId();
-      const res = await base44.functions.invoke("redeemCodeGuest", {
+
+      // Preserve the original guest/session flow, but when the customer is
+      // signed in use the linked redemption endpoint so the code becomes
+      // permanently attached to that Google/email account. One code can then
+      // be restored only by the same linked account.
+      let signedInUser = null;
+      try {
+        signedInUser = await base44.auth.me();
+      } catch {
+        signedInUser = null;
+      }
+
+      const functionName = signedInUser?.id ? "redeemCodeLinked" : "redeemCodeGuest";
+      const res = await base44.functions.invoke(functionName, {
         code: trimmed,
         session_id: sessionId,
       });
       const data = res.data;
       if (data?.success && data?.permissions) {
         mergeGrantedPermissions(data.permissions);
+        addRedeemedCode(trimmed);
       }
       setResult(data);
     } catch (e) {
@@ -65,7 +79,6 @@ export default function RedeemCodeModal({ onClose }) {
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center"
@@ -86,13 +99,15 @@ export default function RedeemCodeModal({ onClose }) {
           </button>
         </div>
 
-        {/* Success state */}
         {result?.success ? (
           <div className="space-y-4">
             <div className="rounded-xl border p-4 text-center space-y-3"
               style={{ background: "rgba(34,197,94,0.07)", borderColor: "rgba(34,197,94,0.35)" }}>
               <CheckCircle className="w-10 h-10 mx-auto text-green-400" />
               <p className="font-inter font-bold text-green-400 text-sm">{result.message}</p>
+              {result.linked && (
+                <p className="text-[11px] text-white/45">ഈ code നിങ്ങളുടെ login account-ലേക്ക് link ചെയ്തിരിക്കുന്നു.</p>
+              )}
               <div className="space-y-1">
                 {(result.pages_granted || []).map(pg => (
                   <p key={pg.path} className="text-xs text-white/60 flex items-center justify-center gap-1">
