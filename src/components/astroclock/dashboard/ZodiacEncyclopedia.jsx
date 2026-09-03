@@ -26,6 +26,15 @@ export default function ZodiacEncyclopedia() {
     return zodiacSigns[key]?.element === filter;
   });
 
+  const elementLabel = (value) => {
+    if (value === "all") return txt("എല്ലാ 12 രാശികളും", "All 12", "الكل 12");
+    if (value === "Fire") return txt("അഗ്നി", "Fire", "النار");
+    if (value === "Earth") return txt("ഭൂമി", "Earth", "التراب");
+    if (value === "Air") return txt("വായു", "Air", "الهواء");
+    if (value === "Water") return txt("ജലം", "Water", "الماء");
+    return value;
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-1.5">
@@ -36,7 +45,7 @@ export default function ZodiacEncyclopedia() {
               background: filter === f ? "rgba(212,175,55,0.15)" : "rgba(255,255,255,0.03)",
               border: `1px solid ${filter === f ? "rgba(212,175,55,0.40)" : "rgba(255,255,255,0.08)"}`,
               color: filter === f ? "#F5D060" : "rgba(255,255,255,0.50)",
-            }}>{f === "all" ? txt("എല്ലാം", "All 12", "Tümü") : f}</button>
+            }}>{elementLabel(f)}</button>
         ))}
       </div>
       <div className="space-y-1.5 max-h-[600px] overflow-y-auto scrollbar-none">
