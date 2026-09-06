@@ -242,7 +242,7 @@ function AstroClockContent() {
         {/* ── Preserved panels (kept collapsed; not removed) ── */}
         <AstroClockErrorBoundary label="Moon Center">
           <DashboardSection icon="🌙" title={txt("ചന്ദ്ര കേന്ദ്രം", "Moon Center", "Ay Merkezi")}
-            subtitle={txt("രാശി, ഘട്ടം, നക്ഷത്രം, ശക്തി, സ്വഭാവം", "Zodiac, Phase, Mansion, Strength, Nature", "Burç, Evre, Menzil, Güç, Doğa")}>
+            subtitle={txt("രാശി, ഘട്ടം, ചാന്ദ്ര മൻസിൽ, ശക്തി, സ്വഭാവം", "Zodiac, Phase, Mansion, Strength, Nature", "Burç, Evre, Menzil, Güç, Doğa")}>
             <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
               <MoonCenter />
             </Suspense>
@@ -286,8 +286,8 @@ function AstroClockContent() {
         )}
 
         <AstroClockErrorBoundary label="Mansions">
-          <DashboardSection icon="⭐" title={txt("28 ചാന്ദ്ര നക്ഷത്രങ്ങൾ", "28 Lunar Mansions", "28 Ay Menzili")}
-            subtitle={txt("മന്സിൽ / നക്ഷത്ര റഫറൻസ്", "Manzil / Nakshatra Reference", "Menzil / Nakşatra Referansı")}>
+          <DashboardSection icon="⭐" title={txt("28 അറബി ചാന്ദ്ര മൻസിലുകൾ", "28 Lunar Mansions", "28 Ay Menzili")}
+            subtitle={txt("യഥാർത്ഥ അറബി പേരുകളോടെയുള്ള മൻസിൽ റഫറൻസ്", "Manzil / Nakshatra Reference", "Menzil / Nakşatra Referansı")}>
             <Suspense fallback={<div className="py-8 text-center font-inter text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>...</div>}>
               <MansionsReference />
             </Suspense>
