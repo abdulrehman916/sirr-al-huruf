@@ -81,6 +81,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/user/:userId', component: 'UserDetailPage', chunk: 'UserDetailPage' },
   { path: '/admin/pdf-content-editor', component: 'AdminPDFContentEditor', chunk: 'AdminPDFContentEditor' },
   { path: '/admin/books-studio', component: 'OwnerBooksStudio', chunk: 'OwnerBooksStudio' },
+  { path: '/admin/resource-studio', component: 'OwnerResourceStudio', chunk: 'OwnerResourceStudio' },
   { path: '/admin/holy-names-translator', component: 'AdminHolyNamesTranslator', chunk: 'AdminHolyNamesTranslator' },
   { path: '/admin/feature-pricing', component: 'AdminFeaturePricing', chunk: 'AdminFeaturePricing' },
   { path: '/admin/products', component: 'AdminProducts', chunk: 'AdminProducts' },
