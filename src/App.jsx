@@ -79,6 +79,7 @@ const PAGE_IMPORTS = {
   UserDetailPage:           () => import('./pages/UserDetailPage'),
   AdminPDFContentEditor:    () => import('./pages/AdminPDFContentEditor'),
   OwnerBooksStudio:         () => import('./pages/OwnerBooksStudio'),
+  OwnerResourceStudio:      () => import('./pages/OwnerResourceStudio'),
   AdminHolyNamesTranslator: () => import('./pages/AdminHolyNamesTranslator'),
   AdminFeaturePricing:      () => import('./pages/AdminFeaturePricing'),
   MizanCompletionTest:      () => import('./pages/MizanCompletionTest'),
