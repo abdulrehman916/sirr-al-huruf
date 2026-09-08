@@ -100,7 +100,14 @@ const auth = {
     return unwrap(await client().auth.signInWithPassword({ email, password }));
   },
   async register({ email, password, ...metadata }) {
-    return unwrap(await client().auth.signUp({ email, password, options: { data: metadata } }));
+    return unwrap(await client().auth.signUp({
+      email,
+      password,
+      options: {
+        data: metadata,
+        emailRedirectTo: `${window.location.origin}/login`,
+      },
+    }));
   },
   async verifyOtp({ email, token, otpCode, type = 'signup' }) {
     return unwrap(await client().auth.verifyOtp({ email, token: token || otpCode, type }));

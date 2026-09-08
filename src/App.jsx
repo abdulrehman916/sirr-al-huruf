@@ -153,7 +153,7 @@ const AuthenticatedApp = () => {
 
   return (
     <>
-      {!isDevMode && !isAuthenticated && !googlePromptDismissed && (
+      {import.meta.env.VITE_GOOGLE_AUTH_ENABLED === 'true' && !isDevMode && !isAuthenticated && !googlePromptDismissed && (
         <GoogleSignInPrompt onSkip={() => setGooglePromptDismissed(true)} />
       )}
       <AnimatePresence mode="wait">
