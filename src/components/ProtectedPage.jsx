@@ -6,7 +6,6 @@ import { Lock, MessageCircle, KeyRound, Loader2, CheckCircle, AlertCircle, Shiel
 import { getPageConfig, isPublicPage } from "@/lib/pageRegistry";
 import { getCached, setCached, visibilityKey } from "@/lib/permissionCache";
 import { checkLocalPermission, getSessionId, mergeGrantedPermissions, validateAndCleanPermissions, addRedeemedCode } from "@/lib/sessionId";
-import { ADMIN_CONFIG } from "@/lib/adminConfig";
 import { setAdminFlag } from "@/lib/featurePermission";
 import { useAuth } from "@/lib/AuthContext";
 import { ROLES, isAdminRole, canAccessAdminRoute, getAdminHomePath } from "@/lib/rbac";
@@ -16,6 +15,7 @@ import WhatsAppAccessRequest from "@/components/WhatsAppAccessRequest";
 import RequestAccessModal from "@/components/RequestAccessModal";
 import { useTranslation } from "@/i18n/useTranslation";
 import { isDevMode, persistSet, persistRemove } from "@/lib/devModePersistence";
+import { formatResourcePrice, resolveUnifiedPageAccess } from "@/lib/unifiedAccess";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -41,6 +41,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
   const [accessStatus, setAccessStatus] = useState("checking");
   const [pageName, setPageName] = useState("");
   const [plockInfo, setPlockInfo] = useState({ reason: "", custom_message: "" });
+  const [unifiedResource, setUnifiedResource] = useState(null);
 
   // Post-signin redirect: when a Guest signs in via Google from a locked
   // page, send Owner → Owner Dashboard, Admin → Admin Dashboard. Guests
@@ -132,7 +133,32 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
       return;
     }
 
-    // 2. DB visibility config — AUTHORITATIVE lock check (cached 2 min).
+    // 2. Independent Supabase resource access is authoritative whenever the
+    // owner has registered this route in `resources`. Unregistered legacy
+    // routes continue through the existing compatibility flow below.
+    try {
+      if (routePath === "/") {
+        setUnifiedResource(null);
+        setAccessStatus("granted");
+        return;
+      }
+      const unified = await resolveUnifiedPageAccess(routePath, { isAuthenticated });
+      if (unified.managed) {
+        setUnifiedResource(unified.resource);
+        if (unified.title) setPageName(unified.title);
+        setAccessStatus(unified.allowed ? "granted" : "locked");
+        return;
+      }
+      setUnifiedResource(null);
+    } catch {
+      // Fail closed: a database/network error must never make a paid route
+      // public through the legacy fallback.
+      setUnifiedResource(null);
+      setAccessStatus("locked");
+      return;
+    }
+
+    // 3. Legacy DB visibility config — compatibility fallback.
     //    The admin's PageVisibilityConfig.requires_permission is the source of
     //    truth for whether a page is locked. This MUST be checked before the
     //    static public flags below — otherwise a statically-public page (e.g.
@@ -306,13 +332,14 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
     <PremiumLockedScreen
       pageName={pageName}
       routePath={routePath}
+      resource={unifiedResource}
       onUnlocked={() => setAccessStatus("granted")}
     />
   );
 }
 
 // ── Premium locked screen ──────────────────────────────────────────────────────
-function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
+function PremiumLockedScreen({ pageName, routePath, resource, onUnlocked }) {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -418,6 +445,20 @@ function PremiumLockedScreen({ pageName, routePath, onUnlocked }) {
           </div>
           <h1 className="font-inter text-lg font-bold mb-2" style={{ color: G.text }}>{pageName}</h1>
           <p className="font-inter text-sm text-white/60 mb-6">{t("premium_no_access", "You don't have access to this premium content.")}</p>
+
+          {resource?.access_mode === "PAID" && (
+            <div className="mb-4 rounded-xl border px-4 py-3" style={{ background: G.bg, borderColor: G.border }}>
+              <p className="text-[10px] uppercase tracking-wider text-white/40">Price</p>
+              <p className="mt-1 text-lg font-bold" style={{ color: G.text }}>{formatResourcePrice(resource)}</p>
+              <p className="mt-1 text-[11px] text-white/40">
+                {resource.lifetime_access
+                  ? "Lifetime access"
+                  : resource.validity_days
+                    ? `${resource.validity_days} days access`
+                    : "Owner-managed validity"}
+              </p>
+            </div>
+          )}
 
           <button onClick={() => setShowCodeEntry(v => !v)}
             className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3"
