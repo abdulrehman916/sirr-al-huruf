@@ -1,7 +1,7 @@
 import { memo, useMemo, useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ChevronLeft, Menu, X, User, Shield, Home as HomeIcon } from "lucide-react";
+import { ChevronLeft, Menu, X, User, Shield } from "lucide-react";
 import { useNavigation } from "../context/NavigationContext";
 import { useTranslation } from "@/i18n/useTranslation";
 import AtmosphericBackground from "./AtmosphericBackground";
@@ -25,6 +25,7 @@ const TAB_KEYS = [
   { id: "sirr", arabicTitle: "السر", englishSubtitle: "SIRR", path: "/sirr" },
   { id: "astro-clock", arabicTitle: "الساعة", englishSubtitle: "ASTRO", path: "/astro-clock" },
   { id: "shop", arabicTitle: "المتجر", englishSubtitle: "SHOP", path: "/shop" },
+  { id: "books", arabicTitle: "الكتب", englishSubtitle: "BOOKS", path: "/books" },
   { id: "admin-shop", arabicTitle: "إدارة المتجر", englishSubtitle: "SHOP ADMIN", path: "/admin/shop" },
   { id: "support", arabicTitle: "الدعم", englishSubtitle: "SUPPORT", path: "/support" },
 ];

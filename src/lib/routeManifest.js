@@ -43,6 +43,8 @@ const ROUTE_MANIFEST = [
   // ManagedContentPage renderer can enforce PUBLIC / LOGIN / PREMIUM / PAID /
   // SELECTED_CUSTOMERS using the page record plus user entitlements.
   { path: '/content/:slug', component: 'ManagedContentPage', chunk: 'ManagedContentPage', flags: ['public'] },
+  { path: '/books', component: 'BooksLibrary', chunk: 'BooksLibrary', flags: ['public'] },
+  { path: '/books/:slug', component: 'BookDetailPage', chunk: 'BookDetailPage', flags: ['public'] },
   
   // Support — all public
   { path: '/support', component: 'CustomerService', chunk: 'CustomerService', flags: ['public'] },
@@ -78,6 +80,7 @@ const ROUTE_MANIFEST = [
   { path: '/admin/admins', component: 'AdminAdmins', chunk: 'AdminAdmins' },
   { path: '/admin/user/:userId', component: 'UserDetailPage', chunk: 'UserDetailPage' },
   { path: '/admin/pdf-content-editor', component: 'AdminPDFContentEditor', chunk: 'AdminPDFContentEditor' },
+  { path: '/admin/books-studio', component: 'OwnerBooksStudio', chunk: 'OwnerBooksStudio' },
   { path: '/admin/holy-names-translator', component: 'AdminHolyNamesTranslator', chunk: 'AdminHolyNamesTranslator' },
   { path: '/admin/feature-pricing', component: 'AdminFeaturePricing', chunk: 'AdminFeaturePricing' },
   { path: '/admin/products', component: 'AdminProducts', chunk: 'AdminProducts' },

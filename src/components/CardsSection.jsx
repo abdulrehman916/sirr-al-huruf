@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useNavigation } from "../context/NavigationContext";
 import { useTranslation } from "@/i18n/useTranslation";
@@ -144,6 +143,7 @@ const NAV_CARDS = [
   { path: "/astro-clock",      arabic: "الساعة الفلكية", label: "ASTRO CLOCK",      subtitle: "Celestial Time Engine",     iconKey: "astroClock", accent: [99, 179, 237] },
   { path: "/sirr",             arabic: "السر",           label: "SIRR",             subtitle: "Manuscript Knowledge",      iconKey: "sirr",   accent: [212, 175, 55] },
   { path: "/shop",             arabic: "المتجر",         label: "SHOP",             subtitle: "Premium Products & Books",  iconKey: "shop",   accent: [212, 175, 55] },
+  { path: "/books",            arabic: "الكتب",          label: "BOOKS",            subtitle: "Books & Study Previews",     iconKey: "shop",   accent: [212, 175, 55] },
 ];
 
 const CARD_SUB_KEYS = {
