@@ -96,15 +96,25 @@ const auth = {
   async loginWithProvider(provider = 'google') {
     return unwrap(await client().auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}/auth/callback` } }));
   },
+  async login({ email, password }) {
+    return unwrap(await client().auth.signInWithPassword({ email, password }));
+  },
   async register({ email, password, ...metadata }) {
     return unwrap(await client().auth.signUp({ email, password, options: { data: metadata } }));
   },
-  async verifyOtp({ email, token, type = 'signup' }) { return unwrap(await client().auth.verifyOtp({ email, token, type })); },
-  async resendOtp({ email, type = 'signup' }) { return unwrap(await client().auth.resend({ email, type })); },
+  async verifyOtp({ email, token, otpCode, type = 'signup' }) {
+    return unwrap(await client().auth.verifyOtp({ email, token: token || otpCode, type }));
+  },
+  async resendOtp(input, type = 'signup') {
+    const email = typeof input === 'string' ? input : input?.email;
+    return unwrap(await client().auth.resend({ email, type: input?.type || type }));
+  },
   async resetPasswordRequest(email) {
     return unwrap(await client().auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` }));
   },
-  async resetPassword({ password }) { return unwrap(await client().auth.updateUser({ password })); },
+  async resetPassword({ password, newPassword }) {
+    return unwrap(await client().auth.updateUser({ password: password || newPassword }));
+  },
   async updateMe(attributes) { return unwrap(await client().auth.updateUser({ data: attributes })).user; },
   async setToken(accessToken, refreshToken = '') {
     return unwrap(await client().auth.setSession({ access_token: accessToken, refresh_token: refreshToken }));

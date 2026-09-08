@@ -1,7 +1,10 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, ShieldCheck, Mail, Lock } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { persistSet, persistRemove } from "@/lib/devModePersistence";
 
@@ -16,8 +19,25 @@ const GoogleMark = ({ className = "w-5 h-5 mr-2" }) => (
 );
 
 export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const googleEnabled = import.meta.env.VITE_GOOGLE_AUTH_ENABLED === "true";
+
+  const handleEmail = async (event) => {
+    event.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      await base44.auth.login({ email: email.trim(), password });
+      try { persistSet("sirr_admin_session", "true"); } catch { /* ignore */ }
+      window.location.assign("/");
+    } catch (err) {
+      setError(err?.message || "Email or password is incorrect");
+      setLoading(false);
+    }
+  };
 
   const handleGoogle = async () => {
     setError("");
@@ -45,8 +65,9 @@ export default function Login() {
   return (
     <AuthLayout
       icon={ShieldCheck}
-      title="Owner / Admin Login"
-      subtitle="Sign in with your authorized Google account"
+      title="Sign in"
+      subtitle="Use your Sirr al-Huruf account"
+      footer={<span>New here? <Link to="/register" className="text-primary font-medium hover:underline">Create an account</Link></span>}
     >
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
@@ -54,29 +75,37 @@ export default function Login() {
         </div>
       )}
 
-      <Button
-        type="button"
-        onClick={handleGoogle}
-        className="w-full h-12 font-medium"
-        disabled={loading}
-      >
-        {loading ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Redirecting to Google...
-          </>
-        ) : (
-          <>
-            <GoogleMark />
-            Sign in with Google
-          </>
-        )}
-      </Button>
+      <form onSubmit={handleEmail} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="login-email">Email</Label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input id="login-email" type="email" autoComplete="email" value={email}
+              onChange={(e) => setEmail(e.target.value)} className="pl-10 h-12" required />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="login-password">Password</Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input id="login-password" type="password" autoComplete="current-password" value={password}
+              onChange={(e) => setPassword(e.target.value)} className="pl-10 h-12" required />
+          </div>
+        </div>
+        <div className="text-right">
+          <Link to="/forgot-password" className="text-sm text-primary hover:underline">Forgot password?</Link>
+        </div>
+        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+          {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Signing in...</> : "Sign in"}
+        </Button>
+      </form>
 
-      <p className="text-xs text-muted-foreground text-center mt-4 leading-relaxed">
-        Only the registered Owner email and approved Admin emails are granted access.
-        All other Google accounts remain guests with public features only.
-      </p>
+      {googleEnabled && <>
+        <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-3 text-muted-foreground">or</span></div></div>
+        <Button type="button" onClick={handleGoogle} variant="outline" className="w-full h-12 font-medium" disabled={loading}>
+          <GoogleMark />Sign in with Google
+        </Button>
+      </>}
     </AuthLayout>
   );
 }
