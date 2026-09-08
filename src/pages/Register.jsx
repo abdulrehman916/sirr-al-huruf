@@ -152,7 +152,6 @@ export default function Register() {
           )}
         </Button>
         <div className="mt-4">
-          <Captcha onVerify={(token) => { setCaptchaToken(token); setCaptchaVerified(true); }} onError={() => {}} />
         </div>
       </form>
     </AuthLayout>
