@@ -3,13 +3,13 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, BookOpen, Lock, Download, Loader2 } from "lucide-react";
 import PageLayout from "@/components/PageLayout";
 import { base44 } from "@/api/base44Client";
-import { useAuth } from "@/lib/AuthContext";
 
 export default function BookDetailPage() {
   const { slug } = useParams();
-  const { isAuthenticated } = useAuth();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
 
   useEffect(() => {
     base44.entities.BookPublication.filter({ slug, status: "PUBLISHED" }, null, 1)
@@ -20,6 +20,19 @@ export default function BookDetailPage() {
   if (!book) return <PageLayout><div className="mx-auto max-w-xl px-4 py-24 text-center text-white/60">പുസ്തകം ലഭ്യമല്ല.<div className="mt-5"><Link to="/books" className="text-yellow-300">പുസ്തകശാലയിലേക്ക് മടങ്ങുക</Link></div></div></PageLayout>;
 
   const free = book.access_mode === "FREE";
+  async function downloadFreeBook() {
+    if (!book.pdf_path || !free) return;
+    setDownloading(true);
+    setDownloadError("");
+    try {
+      const result = await base44.integrations.Core.CreateSignedDownload({ path: book.pdf_path });
+      window.location.assign(result.signed_url);
+    } catch (error) {
+      setDownloadError(error?.message || "Download തയ്യാറാക്കാൻ കഴിഞ്ഞില്ല.");
+    } finally {
+      setDownloading(false);
+    }
+  }
   return (
     <PageLayout>
       <main className="mx-auto w-full max-w-5xl px-4 py-8">
@@ -37,8 +50,9 @@ export default function BookDetailPage() {
             <div className="mt-7 rounded-2xl border border-yellow-500/20 bg-yellow-500/[0.055] p-5">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div><p className="text-xs uppercase tracking-wider text-white/35">Access</p><p className="mt-1 text-xl font-bold text-yellow-100">{free ? "FREE" : `${book.price_currency || "AED"} ${Number(book.price_amount || 0).toFixed(2)}`}</p></div>
-                {free && isAuthenticated ? <button disabled className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/20 px-5 py-3 text-sm font-bold text-emerald-200"><Download className="h-4 w-4" /> Secure download ഉടൻ ലഭ്യമാകും</button> : free ? <Link to="/login" className="inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-5 py-3 text-sm font-bold text-black">Email ഉപയോഗിച്ച് Login</Link> : <button disabled className="inline-flex items-center gap-2 rounded-xl border border-yellow-400/25 px-5 py-3 text-sm font-bold text-yellow-200"><Lock className="h-4 w-4" /> Payment ഉടൻ</button>}
+                {free ? <button onClick={downloadFreeBook} disabled={!book.pdf_path || downloading} className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/20 px-5 py-3 text-sm font-bold text-emerald-200 disabled:cursor-not-allowed disabled:opacity-45">{downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} {book.pdf_path ? (downloading ? "Preparing…" : "Free secure download") : "PDF ഉടൻ ലഭ്യമാകും"}</button> : <button disabled className="inline-flex items-center gap-2 rounded-xl border border-yellow-400/25 px-5 py-3 text-sm font-bold text-yellow-200"><Lock className="h-4 w-4" /> Payment ഉടൻ</button>}
               </div>
+              {downloadError && <p className="mt-3 text-sm text-red-300">{downloadError}</p>}
             </div>
           </article>
         </div>

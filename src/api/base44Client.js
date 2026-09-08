@@ -138,6 +138,11 @@ const integrations = { Core: {
     unwrap(await client().storage.from(bucket).upload(objectPath, file, { upsert: false }));
     return { file_url: objectPath, bucket };
   },
+  async CreateSignedDownload({ path, bucket = 'private-documents', expiresIn = 120 } = {}) {
+    if (!path) throw new Error('A file path is required.');
+    const data = unwrap(await client().storage.from(bucket).createSignedUrl(path, expiresIn, { download: true }));
+    return { signed_url: data.signedUrl, expires_in: expiresIn };
+  },
   async InvokeLLM(payload) { return unwrap(await client().functions.invoke('invoke-llm', { body: payload })); },
 } };
 

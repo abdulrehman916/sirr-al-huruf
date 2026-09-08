@@ -99,7 +99,7 @@ export default function AccountModal({ user, onClose }) {
 
           {/* Actions */}
           <div className="space-y-2">
-            {user?.role === 'admin' && (
+            {(role === 'owner' || role === 'admin') && (
               <button
                 onClick={() => { onClose(); navigate('/admin/access-dashboard'); }}
                 className="w-full py-3 px-4 rounded-xl font-inter text-sm font-semibold"
@@ -110,6 +110,14 @@ export default function AccountModal({ user, onClose }) {
                   }}>
                   {role === 'owner' ? t("account_owner_dashboard", "Owner Dashboard") : t("account_admin_dashboard", "Admin Dashboard")}
                   </button>
+            )}
+            {role === 'owner' && (
+              <button
+                onClick={() => { onClose(); navigate('/admin/books-studio'); }}
+                className="w-full rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 font-inter text-sm font-semibold text-yellow-200"
+              >
+                Books Studio
+              </button>
             )}
             
             <button
