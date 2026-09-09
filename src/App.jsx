@@ -27,6 +27,7 @@ const PAGE_IMPORTS = {
   Register:                 () => import('./pages/Register'),
   ForgotPassword:           () => import('./pages/ForgotPassword'),
   ResetPassword:            () => import('./pages/ResetPassword'),
+  AuthCallback:             () => import('./pages/AuthCallback'),
   AbjadKabirPage:           () => import('./pages/AbjadKabirPage'),
   AnasirPage:               () => import('./pages/AnasirPage'),
   HadimPage:                () => import('./pages/HadimPage'),

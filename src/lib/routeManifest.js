@@ -12,6 +12,7 @@ const ROUTE_MANIFEST = [
   { path: '/register', component: 'Register', chunk: 'Register', flags: ['noauth'] },
   { path: '/forgot-password', component: 'ForgotPassword', chunk: 'ForgotPassword', flags: ['noauth'] },
   { path: '/reset-password', component: 'ResetPassword', chunk: 'ResetPassword', flags: ['noauth'] },
+  { path: '/auth/callback', component: 'AuthCallback', chunk: 'AuthCallback', flags: ['noauth'] },
 
   // Free Content Pages
   { path: '/abjad', component: 'AbjadKabirPage', chunk: 'AbjadKabirPage', flags: ['public'] },

@@ -412,14 +412,20 @@ function PremiumLockedScreen({ pageName, routePath, resource, onUnlocked }) {
             </div>
             <h1 className="font-inter text-lg font-bold mb-2" style={{ color: G.text }}>{pageName}</h1>
             <p className="font-inter text-sm text-white/60 mb-6">
-              {t("premium_account_required", "This page requires an account. Please sign in with Google to continue.")}
+              {t("premium_account_required", "This page requires an account. Continue securely using your email.")}
             </p>
-            <button onClick={handleGoogle} disabled={googleLoading}
-              className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3 disabled:opacity-50"
+            <button onClick={() => navigate(`/login?redirect=${encodeURIComponent(routePath)}`)}
+              className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3"
               style={{ background: "#ffffff", color: "#0d1b2a" }}>
+              <KeyRound className="w-4 h-4" />
+              {t("email_continue", "Continue with Email")}
+            </button>
+            {import.meta.env.VITE_GOOGLE_AUTH_ENABLED === "true" && <button onClick={handleGoogle} disabled={googleLoading}
+              className="w-full py-3 rounded-xl font-inter font-semibold text-xs flex items-center justify-center gap-2 mb-3 disabled:opacity-50"
+              style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.65)" }}>
               {googleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <GoogleMark className="w-4 h-4" />}
               {googleLoading ? t("google_redirecting", "Redirecting…") : t("google_continue", "Continue with Google")}
-            </button>
+            </button>}
             <button onClick={() => navigate("/")}
               className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
               style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}>

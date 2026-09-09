@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, ShieldCheck, Mail, Lock } from "lucide-react";
+import { Loader2, ShieldCheck, Mail, Lock, ArrowLeft, KeyRound } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { persistSet, persistRemove } from "@/lib/devModePersistence";
 
@@ -28,6 +28,9 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mode, setMode] = useState("otp");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
   const googleEnabled = import.meta.env.VITE_GOOGLE_AUTH_ENABLED === "true";
 
   const handleEmail = async (event) => {
@@ -67,6 +70,28 @@ export default function Login() {
     }
   };
 
+  const handleOtp = async (event) => {
+    event.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const cleanEmail = email.trim().toLowerCase();
+      if (!otpSent) {
+        const callback = `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(returnTo)}`;
+        await base44.auth.requestLoginOtp({ email: cleanEmail, redirectTo: callback });
+        setOtpSent(true);
+      } else {
+        await base44.auth.verifyLoginOtp({ email: cleanEmail, token: otp.trim() });
+        try { persistSet("sirr_admin_session", "true"); } catch { /* ignore */ }
+        window.location.assign(returnTo);
+      }
+    } catch (err) {
+      setError(err?.message || "Verification failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthLayout
       icon={ShieldCheck}
@@ -80,7 +105,12 @@ export default function Login() {
         </div>
       )}
 
-      <form onSubmit={handleEmail} className="space-y-4">
+      <div className="mb-5 grid grid-cols-2 gap-2 rounded-xl bg-muted/50 p-1">
+        <button type="button" onClick={() => { setMode("otp"); setError(""); }} className={`rounded-lg px-3 py-2 text-sm font-medium ${mode === "otp" ? "bg-background shadow-sm" : "text-muted-foreground"}`}>Customer login</button>
+        <button type="button" onClick={() => { setMode("owner"); setError(""); setOtpSent(false); }} className={`rounded-lg px-3 py-2 text-sm font-medium ${mode === "owner" ? "bg-background shadow-sm" : "text-muted-foreground"}`}>Owner login</button>
+      </div>
+
+      {mode === "otp" ? <form onSubmit={handleOtp} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="login-email">Email</Label>
           <div className="relative">
@@ -89,21 +119,25 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)} className="pl-10 h-12" required />
           </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="login-password">Password</Label>
+        {otpSent && <div className="space-y-2">
+          <Label htmlFor="login-otp">Email verification code</Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input id="login-password" type="password" autoComplete="current-password" value={password}
-              onChange={(e) => setPassword(e.target.value)} className="pl-10 h-12" required />
+            <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input id="login-otp" inputMode="numeric" autoComplete="one-time-code" value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 8))} className="pl-10 h-12 tracking-[0.25em]" required />
           </div>
-        </div>
-        <div className="text-right">
-          <Link to="/forgot-password" className="text-sm text-primary hover:underline">Forgot password?</Link>
-        </div>
+          <p className="text-xs text-muted-foreground">Email-ലേക്ക് വന്ന code നൽകുക. Magic Link ലഭിച്ചെങ്കിൽ അതിൽ touch ചെയ്യാം.</p>
+        </div>}
         <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
-          {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Signing in...</> : "Sign in"}
+          {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Please wait...</> : otpSent ? "Verify and continue" : "Send email code"}
         </Button>
-      </form>
+        {otpSent && <button type="button" onClick={() => { setOtpSent(false); setOtp(""); setError(""); }} className="flex w-full items-center justify-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" />Change email</button>}
+      </form> : <form onSubmit={handleEmail} className="space-y-4">
+        <div className="space-y-2"><Label htmlFor="owner-email">Owner email</Label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/><Input id="owner-email" type="email" autoComplete="username" value={email} onChange={(e)=>setEmail(e.target.value)} className="pl-10 h-12" required/></div></div>
+        <div className="space-y-2"><Label htmlFor="owner-password">Password</Label><div className="relative"><Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/><Input id="owner-password" type="password" autoComplete="current-password" value={password} onChange={(e)=>setPassword(e.target.value)} className="pl-10 h-12" required/></div></div>
+        <div className="text-right"><Link to="/forgot-password" className="text-sm text-primary hover:underline">Forgot password?</Link></div>
+        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>{loading?<><Loader2 className="w-4 h-4 mr-2 animate-spin"/>Signing in...</>:"Owner sign in"}</Button>
+      </form>}
 
       {googleEnabled && <>
         <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-3 text-muted-foreground">or</span></div></div>
