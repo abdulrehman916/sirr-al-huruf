@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Eye, FilePlus2, Save, Send, Trash2 } from "lucide-react";
+import { Check, Copy, ExternalLink, Eye, FilePlus2, Save, Send, Trash2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -13,6 +13,7 @@ const EMPTY = {
   title_ar: "",
   excerpt_ml: "",
   excerpt_en: "",
+  excerpt_ar: "",
   body_ml: "",
   body_en: "",
   body_ar: "",
@@ -48,6 +49,7 @@ export default function OwnerContentStudio() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   const selected = useMemo(() => items.find((x) => x.id === selectedId) || null, [items, selectedId]);
 
@@ -85,6 +87,14 @@ export default function OwnerContentStudio() {
       if (field === "title_en" && !prev.slug) next.slug = slugify(value);
       return next;
     });
+  }
+
+  async function copyLiveLink() {
+    if (!draft.slug.trim()) return;
+    const url = `${window.location.origin}/content/${slugify(draft.slug)}`;
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
   }
 
   async function persist(nextStatus = draft.status) {
@@ -179,6 +189,16 @@ export default function OwnerContentStudio() {
               <p className="text-[10px] text-white/35">Calculation modules are not editable from this studio. Paid access is granted through Reading / Redeem Codes.</p>
             </div>
             <div className="flex flex-wrap gap-2">
+              {draft.slug.trim() && (
+                <>
+                  <button onClick={copyLiveLink} className="flex items-center gap-1.5 rounded-lg border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-200">
+                    {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} {copied ? "Link copied" : "Copy link"}
+                  </button>
+                  <a href={`/content/${slugify(draft.slug)}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs text-white/70">
+                    <ExternalLink className="h-3.5 w-3.5" /> Open page
+                  </a>
+                </>
+              )}
               <button onClick={() => setPreview((v) => !v)} className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs text-white/70">
                 <Eye className="h-3.5 w-3.5" /> Preview
               </button>
@@ -221,6 +241,8 @@ export default function OwnerContentStudio() {
               )}
 
               <label><span className={labelClass}>Malayalam introduction</span><textarea rows={3} className={inputClass} value={draft.excerpt_ml} onChange={(e) => change("excerpt_ml", e.target.value)} /></label>
+              <label><span className={labelClass}>Arabic introduction</span><textarea dir="rtl" rows={3} className={`${inputClass} font-amiri text-base`} value={draft.excerpt_ar} onChange={(e) => change("excerpt_ar", e.target.value)} /></label>
+              <label><span className={labelClass}>English introduction</span><textarea rows={3} className={inputClass} value={draft.excerpt_en} onChange={(e) => change("excerpt_en", e.target.value)} /></label>
               <label><span className={labelClass}>Malayalam content</span><textarea rows={10} className={inputClass} value={draft.body_ml} onChange={(e) => change("body_ml", e.target.value)} /></label>
               <label><span className={labelClass}>Arabic content</span><textarea dir="rtl" rows={8} className={`${inputClass} font-amiri text-base`} value={draft.body_ar} onChange={(e) => change("body_ar", e.target.value)} /></label>
               <label><span className={labelClass}>English content</span><textarea rows={7} className={inputClass} value={draft.body_en} onChange={(e) => change("body_en", e.target.value)} /></label>
@@ -236,6 +258,8 @@ export default function OwnerContentStudio() {
                 <h2 className="mt-2 text-2xl font-bold text-white">{draft.title_ml || "പേജ് തലക്കെട്ട്"}</h2>
                 {draft.title_en && <p className="mt-1 text-xs uppercase tracking-[0.16em] text-white/35">{draft.title_en}</p>}
                 {draft.excerpt_ml && <p className="mt-5 leading-7 text-white/65">{draft.excerpt_ml}</p>}
+                {draft.excerpt_ar && <p dir="rtl" className="mt-5 font-amiri text-lg leading-8 text-white/70">{draft.excerpt_ar}</p>}
+                {draft.excerpt_en && <p className="mt-5 text-sm leading-7 text-white/55">{draft.excerpt_en}</p>}
                 {draft.body_ar && <div dir="rtl" className="mt-6 whitespace-pre-wrap font-amiri text-xl leading-9 text-white/85">{draft.body_ar}</div>}
                 {draft.body_ml && <div className="mt-6 whitespace-pre-wrap leading-8 text-white/75">{draft.body_ml}</div>}
                 {draft.body_en && <div className="mt-6 whitespace-pre-wrap text-sm leading-7 text-white/55">{draft.body_en}</div>}

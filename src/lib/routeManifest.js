@@ -42,6 +42,7 @@ const ROUTE_MANIFEST = [
   // Owner-managed published website content. The route itself is public so the
   // ManagedContentPage renderer can enforce PUBLIC / LOGIN / PREMIUM / PAID /
   // SELECTED_CUSTOMERS using the page record plus user entitlements.
+  { path: '/resources', component: 'ResourcesLibrary', chunk: 'ResourcesLibrary', flags: ['public'] },
   { path: '/content/:slug', component: 'ManagedContentPage', chunk: 'ManagedContentPage', flags: ['public'] },
   { path: '/books', component: 'BooksLibrary', chunk: 'BooksLibrary', flags: ['public'] },
   { path: '/books/:slug', component: 'BookDetailPage', chunk: 'BookDetailPage', flags: ['public'] },

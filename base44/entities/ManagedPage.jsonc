@@ -9,6 +9,7 @@
     "title_ar": { "type": "string" },
     "excerpt_ml": { "type": "string" },
     "excerpt_en": { "type": "string" },
+    "excerpt_ar": { "type": "string" },
     "body_ml": { "type": "string" },
     "body_en": { "type": "string" },
     "body_ar": { "type": "string" },

@@ -126,6 +126,17 @@ const CARD_ICONS = {
       <line x1="9" y1="16" x2="23" y2="16" stroke={color} strokeWidth="0.5" strokeOpacity="0.4"/>
     </svg>
   ),
+  resources: (color) => (
+    <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+      <path d="M8 5 H22 Q25 5 25 8 V24 Q25 27 22 27 H8 Z" stroke={color} strokeWidth="1" strokeOpacity="0.75" fill={color} fillOpacity="0.08"/>
+      <line x1="12" y1="11" x2="22" y2="11" stroke={color} strokeWidth="0.9" strokeOpacity="0.7"/>
+      <line x1="12" y1="16" x2="22" y2="16" stroke={color} strokeWidth="0.9" strokeOpacity="0.55"/>
+      <line x1="12" y1="21" x2="19" y2="21" stroke={color} strokeWidth="0.9" strokeOpacity="0.45"/>
+      <circle cx="9" cy="11" r="1" fill={color}/>
+      <circle cx="9" cy="16" r="1" fill={color}/>
+      <circle cx="9" cy="21" r="1" fill={color}/>
+    </svg>
+  ),
 };
 
 const NAV_CARDS = [
@@ -144,6 +155,7 @@ const NAV_CARDS = [
   { path: "/sirr",             arabic: "السر",           label: "SIRR",             subtitle: "Manuscript Knowledge",      iconKey: "sirr",   accent: [212, 175, 55] },
   { path: "/shop",             arabic: "المتجر",         label: "SHOP",             subtitle: "Premium Products & Books",  iconKey: "shop",   accent: [212, 175, 55] },
   { path: "/books",            arabic: "الكتب",          label: "BOOKS",            subtitle: "Books & Study Previews",     iconKey: "shop",   accent: [212, 175, 55] },
+  { path: "/resources",        arabic: "المحتوى",        label: "RESOURCES",        subtitle: "Articles, Guides & Downloads", iconKey: "resources", accent: [45, 212, 191] },
 ];
 
 const CARD_SUB_KEYS = {
@@ -161,6 +173,7 @@ const CARD_SUB_KEYS = {
   "/astro-clock": "card_sub_astro",
   "/sirr": "card_sub_sirr",
   "/shop": "card_sub_shop",
+  "/resources": "card_sub_resources",
 };
 
 function IconOrb({ iconKey, accent }) {

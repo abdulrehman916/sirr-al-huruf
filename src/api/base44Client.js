@@ -99,13 +99,13 @@ const auth = {
   async login({ email, password }) {
     return unwrap(await client().auth.signInWithPassword({ email, password }));
   },
-  async register({ email, password, ...metadata }) {
+  async register({ email, password, emailRedirectTo, ...metadata }) {
     return unwrap(await client().auth.signUp({
       email,
       password,
       options: {
         data: metadata,
-        emailRedirectTo: `${window.location.origin}/login`,
+        emailRedirectTo: emailRedirectTo || `${window.location.origin}/login`,
       },
     }));
   },

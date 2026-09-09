@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,11 @@ import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 
 export default function Register() {
+  const [searchParams] = useSearchParams();
+  const requestedRedirect = searchParams.get("redirect") || "/";
+  const returnTo = requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//")
+    ? requestedRedirect
+    : "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -25,9 +30,13 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      const result = await base44.auth.register({ email: email.trim(), password });
+      const result = await base44.auth.register({
+        email: email.trim(),
+        password,
+        emailRedirectTo: `${window.location.origin}${returnTo}`,
+      });
       if (result?.session) {
-        window.location.assign("/");
+        window.location.assign(returnTo);
         return;
       }
       setConfirmationSent(true);
@@ -48,7 +57,7 @@ export default function Register() {
         <p className="text-sm text-foreground text-center leading-relaxed">
           Open the email and tap the confirmation link. Then return here and sign in.
         </p>
-        <Button asChild className="w-full h-12 mt-6"><Link to="/login">Go to sign in</Link></Button>
+        <Button asChild className="w-full h-12 mt-6"><Link to={`/login?redirect=${encodeURIComponent(returnTo)}`}>Go to sign in</Link></Button>
       </AuthLayout>
     );
   }
@@ -61,7 +70,7 @@ export default function Register() {
       footer={
         <>
           Already have an account?{" "}
-          <Link to="/login" className="text-primary font-medium hover:underline">
+          <Link to={`/login?redirect=${encodeURIComponent(returnTo)}`} className="text-primary font-medium hover:underline">
             Log in
           </Link>
         </>

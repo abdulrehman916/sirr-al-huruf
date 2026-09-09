@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,11 @@ const GoogleMark = ({ className = "w-5 h-5 mr-2" }) => (
 );
 
 export default function Login() {
+  const [searchParams] = useSearchParams();
+  const requestedRedirect = searchParams.get("redirect") || "/";
+  const returnTo = requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//")
+    ? requestedRedirect
+    : "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,7 +37,7 @@ export default function Login() {
     try {
       await base44.auth.login({ email: email.trim(), password });
       try { persistSet("sirr_admin_session", "true"); } catch { /* ignore */ }
-      window.location.assign("/");
+      window.location.assign(returnTo);
     } catch (err) {
       setError(err?.message || "Email or password is incorrect");
       setLoading(false);
@@ -67,7 +72,7 @@ export default function Login() {
       icon={ShieldCheck}
       title="Sign in"
       subtitle="Use your Sirr al-Huruf account"
-      footer={<span>New here? <Link to="/register" className="text-primary font-medium hover:underline">Create an account</Link></span>}
+      footer={<span>New here? <Link to={`/register?redirect=${encodeURIComponent(returnTo)}`} className="text-primary font-medium hover:underline">Create an account</Link></span>}
     >
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">

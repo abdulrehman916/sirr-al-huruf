@@ -6,6 +6,15 @@ import PageLayout from "@/components/PageLayout";
 import RedeemCodeModal from "@/components/RedeemCodeModal";
 import { useAuth } from "@/lib/AuthContext";
 import { checkLocalPermission, validateAndCleanPermissions } from "@/lib/sessionId";
+import { useI18n } from "@/i18n/I18nContext";
+
+const localized = (page, field, language) => (
+  page?.[`${field}_${language}`]
+  || page?.[`${field}_en`]
+  || page?.[`${field}_ml`]
+  || page?.[`${field}_ar`]
+  || ""
+);
 
 function isStillActive(record) {
   if (!record) return false;
@@ -38,7 +47,7 @@ function AccessCard({ mode, page, isAuthenticated, onRedeem }) {
       )}
       <div className="mt-5 flex flex-wrap justify-center gap-2">
         {!isAuthenticated ? (
-          <Link to="/login" className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-2 text-sm font-semibold text-yellow-100">
+          <Link to={`/login?redirect=${encodeURIComponent(`/content/${page.slug}`)}`} className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-2 text-sm font-semibold text-yellow-100">
             Login
           </Link>
         ) : (
@@ -56,6 +65,7 @@ function AccessCard({ mode, page, isAuthenticated, onRedeem }) {
 export default function ManagedContentPage() {
   const { slug } = useParams();
   const { user, role, isAuthenticated } = useAuth();
+  const { language } = useI18n();
   const [page, setPage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [allowed, setAllowed] = useState(false);
@@ -63,6 +73,9 @@ export default function ManagedContentPage() {
   const [showRedeem, setShowRedeem] = useState(false);
 
   const pagePath = useMemo(() => `/content/${slug || ""}`, [slug]);
+  const title = localized(page, "title", language);
+  const excerpt = localized(page, "excerpt", language);
+  const body = localized(page, "body", language);
 
   useEffect(() => {
     let cancelled = false;
@@ -172,14 +185,9 @@ export default function ManagedContentPage() {
                 )}
               </div>
 
-              {page.title_ar && <h1 dir="rtl" className="font-amiri text-3xl leading-relaxed text-yellow-100 sm:text-4xl">{page.title_ar}</h1>}
-              <h1 className="mt-2 text-3xl font-bold leading-tight text-white sm:text-4xl">{page.title_ml}</h1>
-              {page.title_en && <p className="mt-2 text-xs uppercase tracking-[0.18em] text-white/35">{page.title_en}</p>}
-
-              {page.excerpt_ml && <p className="mt-7 text-base leading-8 text-white/65">{page.excerpt_ml}</p>}
-              {page.body_ar && <section dir="rtl" className="mt-8 whitespace-pre-wrap font-amiri text-xl leading-10 text-white/90 sm:text-2xl">{page.body_ar}</section>}
-              {page.body_ml && <section className="mt-8 whitespace-pre-wrap text-base leading-8 text-white/78 sm:text-lg sm:leading-9">{page.body_ml}</section>}
-              {page.body_en && <section className="mt-8 whitespace-pre-wrap border-t border-white/8 pt-6 text-sm leading-7 text-white/50">{page.body_en}</section>}
+              <h1 dir={language === "ar" ? "rtl" : "ltr"} className={`${language === "ar" ? "font-amiri leading-relaxed" : "font-bold leading-tight"} mt-2 text-3xl text-white sm:text-4xl`}>{title}</h1>
+              {excerpt && <p dir={language === "ar" ? "rtl" : "ltr"} className={`${language === "ar" ? "font-amiri text-lg" : "text-base"} mt-7 leading-8 text-white/65`}>{excerpt}</p>}
+              {body && <section dir={language === "ar" ? "rtl" : "ltr"} className={`${language === "ar" ? "font-amiri text-xl leading-10 sm:text-2xl" : "text-base leading-8 sm:text-lg sm:leading-9"} mt-8 whitespace-pre-wrap text-white/85`}>{body}</section>}
             </div>
           </article>
         )}
