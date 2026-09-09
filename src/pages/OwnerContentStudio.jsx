@@ -41,7 +41,7 @@ function slugify(value) {
 }
 
 export default function OwnerContentStudio() {
-  const { role, user } = useAuth();
+  const { role, user, authResolved, adminProfileLoading } = useAuth();
   const { toast } = useToast();
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -69,14 +69,17 @@ export default function OwnerContentStudio() {
     }
   }, [selected]);
 
-  if (role !== "owner") return <Navigate to="/" replace />;
+  if (!authResolved || adminProfileLoading) {
+    return <AdminLayout title="Content Studio"><div className="flex min-h-[60vh] items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-yellow-400/25 border-t-yellow-400" /></div></AdminLayout>;
+  }
+  if (role !== "owner") return <Navigate to="/login?redirect=%2Fadmin%2Fcontent-studio" replace />;
 
   async function loadPages() {
     setLoading(true);
     try {
       const rows = await base44.entities.ManagedPage.list("-updated_date", 200);
       setItems(Array.isArray(rows) ? rows : []);
-    } catch (error) {
+    } catch {
       toast({ title: "Content Studio", description: "ManagedPage data could not be loaded yet.", variant: "destructive" });
     } finally {
       setLoading(false);

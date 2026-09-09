@@ -154,79 +154,40 @@ const fromManagedPage = (page) => ({
   },
 });
 
-const isMissingResourcesSchema = (error) => (
-  error?.code === '42P01'
-  || error?.code === 'PGRST205'
-  || /(resources|resource_assets|entitlements).*(not found|does not exist|schema cache)/i.test(error?.message || '')
-);
-
 const managedPageApi = {
   async list(sort = '-updated_date', limit = 100, skip = 0) {
-    try {
-      const ascending = !String(sort || '').startsWith('-');
-      const field = String(sort || 'updated_date').replace(/^-/, '');
-      const column = field === 'created_date' ? 'created_at' : field === 'published_at' ? 'updated_at' : 'updated_at';
-      const rows = unwrap(await client().from('resources').select('*').eq('resource_type', 'PAGE')
-        .order(column, { ascending }).range(skip || 0, (skip || 0) + (limit || 100) - 1));
-      return rows.map(toManagedPage);
-    } catch (error) {
-      if (isMissingResourcesSchema(error)) return entityApi('ManagedPage').list(sort, limit, skip);
-      throw error;
-    }
+    const ascending = !String(sort || '').startsWith('-');
+    const field = String(sort || 'updated_date').replace(/^-/, '');
+    const column = field === 'created_date' ? 'created_at' : field === 'published_at' ? 'updated_at' : 'updated_at';
+    const rows = unwrap(await client().from('resources').select('*').eq('resource_type', 'PAGE')
+      .order(column, { ascending }).range(skip || 0, (skip || 0) + (limit || 100) - 1));
+    return rows.map(toManagedPage);
   },
   async filter(filters = {}, sort = '-updated_date', limit = 100, skip = 0) {
-    try {
-      let query = client().from('resources').select('*').eq('resource_type', 'PAGE');
-      if (filters.slug) query = query.eq('slug', filters.slug);
-      if (filters.status) query = query.eq('status', filters.status);
-      if (filters.access_mode) query = query.eq('access_mode', ACCESS_TO_DB[filters.access_mode] || filters.access_mode);
-      const ascending = !String(sort || '').startsWith('-');
-      const field = String(sort || 'updated_date').replace(/^-/, '');
-      const column = field === 'created_date' ? 'created_at' : field === 'published_at' ? 'updated_at' : 'updated_at';
-      const rows = unwrap(await query.order(column, { ascending }).range(skip || 0, (skip || 0) + (limit || 100) - 1));
-      return rows.map(toManagedPage);
-    } catch (error) {
-      if (isMissingResourcesSchema(error)) return entityApi('ManagedPage').filter(filters, sort, limit, skip);
-      throw error;
-    }
+    let query = client().from('resources').select('*').eq('resource_type', 'PAGE');
+    if (filters.slug) query = query.eq('slug', filters.slug);
+    if (filters.status) query = query.eq('status', filters.status);
+    if (filters.access_mode) query = query.eq('access_mode', ACCESS_TO_DB[filters.access_mode] || filters.access_mode);
+    const ascending = !String(sort || '').startsWith('-');
+    const field = String(sort || 'updated_date').replace(/^-/, '');
+    const column = field === 'created_date' ? 'created_at' : field === 'published_at' ? 'updated_at' : 'updated_at';
+    const rows = unwrap(await query.order(column, { ascending }).range(skip || 0, (skip || 0) + (limit || 100) - 1));
+    return rows.map(toManagedPage);
   },
   async get(id) {
-    try {
-      return toManagedPage(unwrap(await client().from('resources').select('*').eq('id', id).maybeSingle()));
-    } catch (error) {
-      if (isMissingResourcesSchema(error)) return entityApi('ManagedPage').get(id);
-      throw error;
-    }
+    return toManagedPage(unwrap(await client().from('resources').select('*').eq('id', id).maybeSingle()));
   },
   async create(data) {
-    try {
-      return toManagedPage(unwrap(await client().from('resources').insert(fromManagedPage(data)).select().single()));
-    } catch (error) {
-      if (isMissingResourcesSchema(error)) return entityApi('ManagedPage').create(data);
-      throw error;
-    }
+    return toManagedPage(unwrap(await client().from('resources').insert(fromManagedPage(data)).select().single()));
   },
   async update(id, data) {
-    try {
-      const current = await this.get(id);
-      if (current && !('title' in current)) {
-        return toManagedPage(unwrap(await client().from('resources').update(fromManagedPage({ ...current, ...data }))
-          .eq('id', id).select().single()));
-      }
-      return entityApi('ManagedPage').update(id, data);
-    } catch (error) {
-      if (isMissingResourcesSchema(error)) return entityApi('ManagedPage').update(id, data);
-      throw error;
-    }
+    const current = await this.get(id);
+    return toManagedPage(unwrap(await client().from('resources').update(fromManagedPage({ ...current, ...data }))
+      .eq('id', id).select().single()));
   },
   async delete(id) {
-    try {
-      unwrap(await client().from('resources').delete().eq('id', id));
-      return { success: true };
-    } catch (error) {
-      if (isMissingResourcesSchema(error)) return entityApi('ManagedPage').delete(id);
-      throw error;
-    }
+    unwrap(await client().from('resources').delete().eq('id', id));
+    return { success: true };
   },
 };
 
@@ -354,33 +315,14 @@ export const platform = {
   async listMyEntitlements() {
     const user = await auth.me();
     if (!user) return [];
-    try {
-      return unwrap(await client().from('entitlements')
-        .select('id, starts_at, expires_at, revoked_at, source, resource:resources(*)')
-        .eq('user_id', user.id).is('revoked_at', null).order('created_at', { ascending: false }));
-    } catch (error) {
-      if (isMissingResourcesSchema(error)) return [];
-      throw error;
-    }
+    return unwrap(await client().from('entitlements')
+      .select('id, starts_at, expires_at, revoked_at, source, resource:resources(*)')
+      .eq('user_id', user.id).is('revoked_at', null).order('created_at', { ascending: false }));
   },
   async listFreeResources(limit = 100) {
-    try {
-      return unwrap(await client().from('resources').select('*')
-        .eq('status', 'PUBLISHED').eq('access_mode', 'FREE')
-        .order('sort_order', { ascending: true }).limit(limit));
-    } catch (error) {
-      if (!isMissingResourcesSchema(error)) throw error;
-      const pages = await entityApi('ManagedPage').filter({ status: 'PUBLISHED', access_mode: 'PUBLIC' }, '-updated_date', limit);
-      return pages.map((page) => ({
-        id: page.id,
-        slug: page.slug,
-        resource_type: 'PAGE',
-        title: { ml: page.title_ml || '', en: page.title_en || '', ar: page.title_ar || '' },
-        summary: { ml: page.excerpt_ml || '', en: page.excerpt_en || '', ar: page.excerpt_ar || '' },
-        access_mode: 'FREE',
-        status: 'PUBLISHED',
-      }));
-    }
+    return unwrap(await client().from('resources').select('*')
+      .eq('status', 'PUBLISHED').eq('access_mode', 'FREE')
+      .order('sort_order', { ascending: true }).limit(limit));
   },
   isConfigured: configured,
 };

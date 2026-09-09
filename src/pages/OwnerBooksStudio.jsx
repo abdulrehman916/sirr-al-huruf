@@ -12,14 +12,15 @@ const label = "mb-1 block text-[10px] font-semibold uppercase tracking-wider tex
 const slugify = (v) => String(v || "").trim().toLowerCase().replace(/[^a-z0-9\u0600-\u06ff\u0d00-\u0d7f]+/g,"-").replace(/^-+|-+$/g,"");
 
 export default function OwnerBooksStudio() {
-  const { role } = useAuth();
+  const { role, authResolved, adminProfileLoading } = useAuth();
   const { toast } = useToast();
   const [items,setItems]=useState([]), [selectedId,setSelectedId]=useState(null), [draft,setDraft]=useState(EMPTY), [saving,setSaving]=useState(false), [uploading,setUploading]=useState(false);
   const selected=useMemo(()=>items.find(x=>x.id===selectedId),[items,selectedId]);
   const load=async()=>setItems(await base44.entities.BookPublication.list("-updated_date",500).catch(()=>[]));
   useEffect(()=>{ if(role==="owner") load(); },[role]);
   useEffect(()=>{ if(selected) setDraft({...EMPTY,...selected}); },[selected]);
-  if(role!=="owner") return <Navigate to="/" replace />;
+  if(!authResolved||adminProfileLoading) return <AdminLayout title="Books Studio"><div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-yellow-200"/></div></AdminLayout>;
+  if(role!=="owner") return <Navigate to="/login?redirect=%2Fadmin%2Fbooks-studio" replace />;
   const change=(key,value)=>setDraft(prev=>({...prev,[key]:value,...(key==="title_en"&&!prev.slug?{slug:slugify(value)}:{})}));
 
   async function save(status=draft.status){

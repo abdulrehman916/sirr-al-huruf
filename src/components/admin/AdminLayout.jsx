@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal, ShoppingBag, Store, ScrollText, Tags, LogOut, BookMarked, Library, ListChecks, Search } from "lucide-react";
+import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal, ShoppingBag, Store, ScrollText, Tags, LogOut, BookMarked, Library, ListChecks, Search, FilePlus2, BookOpen, LockKeyhole } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { filterAdminSections } from "@/lib/rbac";
 import { base44 } from "@/api/base44Client";
@@ -50,6 +50,9 @@ const SIDEBAR_SECTIONS = [
   {
     label: "Content",
     items: [
+      { path: "/admin/content-studio", label: "Content Studio", icon: FilePlus2 },
+      { path: "/admin/books-studio", label: "Books Studio", icon: BookOpen },
+      { path: "/admin/resource-studio", label: "Page Access & Pricing", icon: LockKeyhole },
       { path: "/admin/feature-pricing", label: "Feature Pricing", icon: Tags },
       { path: "/admin/purpose-dictionary", label: "Purpose Dictionary", icon: BookMarked },
     ]

@@ -8,7 +8,8 @@ import {
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/lib/AuthContext";
+import { isAdminRole } from "@/lib/rbac";
 
 const G = {
   border: "rgba(212,175,55,0.40)",
@@ -38,30 +39,16 @@ function SectionLabel({ children }) {
 }
 
 export default function AdminDashboard() {
-  const { toast } = useToast();
-  const [isAdmin, setIsAdmin] = useState(null);
+  const { role, adminProfileLoading, authResolved } = useAuth();
   const [stats, setStats] = useState(null);
   const [pendingRequests, setPendingRequests] = useState(0);
 
   useEffect(() => {
-    checkAdminAccess();
-  }, []);
-
-  const checkAdminAccess = async () => {
-    try {
-      const user = await base44.auth.me();
-      if (!user || user.role !== "admin") {
-        setIsAdmin(false);
-        toast({ title: "Access Denied", description: "Admins only", variant: "destructive" });
-        return;
-      }
-      setIsAdmin(true);
+    if (authResolved && !adminProfileLoading && isAdminRole(role)) {
       fetchStats();
       fetchPending();
-    } catch {
-      setIsAdmin(false);
     }
-  };
+  }, [authResolved, adminProfileLoading, role]);
 
   const fetchStats = async () => {
     try {
@@ -80,9 +67,9 @@ export default function AdminDashboard() {
     } catch {}
   };
 
-  if (isAdmin === false) return <Navigate to="/" replace />;
+  if (authResolved && !adminProfileLoading && !isAdminRole(role)) return <Navigate to="/login?redirect=%2Fadmin%2Faccess-dashboard" replace />;
 
-  if (isAdmin === null) {
+  if (!authResolved || adminProfileLoading) {
     return (
       <AdminLayout>
         <div className="min-h-[60vh] flex items-center justify-center">
