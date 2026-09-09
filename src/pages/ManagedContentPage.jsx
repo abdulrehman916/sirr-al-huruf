@@ -42,7 +42,10 @@ function AccessCard({ mode, page, isAuthenticated, onRedeem }) {
       </p>
       {isPaid && Number(page?.price_amount || 0) > 0 && (
         <div className="mt-4 rounded-xl border border-yellow-500/20 bg-yellow-500/[0.06] px-4 py-3 font-semibold text-yellow-100">
-          {page.price_currency || "AED"} {Number(page.price_amount).toFixed(2)}
+          <div>{page.price_currency || "AED"} {Number(page.price_amount).toFixed(2)}</div>
+          <div className="mt-1 text-xs font-normal text-yellow-100/60">
+            {page.lifetime_access ? "Lifetime access" : `${Math.max(1, Number(page.validity_days || 2))} day access after activation`}
+          </div>
         </div>
       )}
       <div className="mt-5 flex flex-wrap justify-center gap-2">
@@ -234,11 +237,19 @@ export default function ManagedContentPage() {
               {excerpt && <p dir={language === "ar" ? "rtl" : "ltr"} className={`${language === "ar" ? "font-amiri text-lg" : "text-base"} mt-7 leading-8 text-white/65`}>{excerpt}</p>}
               {body && <section dir={language === "ar" ? "rtl" : "ltr"} className={`${language === "ar" ? "font-amiri text-xl leading-10 sm:text-2xl" : "text-base leading-8 sm:text-lg sm:leading-9"} mt-8 whitespace-pre-wrap text-white/85`}>{body}</section>}
 
+              {page.allow_download !== false && (
+                <div className="mt-8 print:hidden">
+                  <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-2 text-sm font-semibold text-yellow-100">
+                    <Download className="h-4 w-4" /> Save this page as PDF
+                  </button>
+                </div>
+              )}
+
               {assets.length > 0 && (
                 <section className="mt-9 border-t border-white/10 pt-6">
                   <h2 className="text-sm font-semibold text-white/80">Files & downloads</h2>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    {assets.map((asset) => (
+                    {assets.filter((asset) => asset.is_downloadable !== false).map((asset) => (
                       <button
                         key={asset.id}
                         type="button"

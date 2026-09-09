@@ -19,9 +19,12 @@ const EMPTY = {
   body_ar: "",
   category: "general",
   status: "DRAFT",
-  access_mode: "PUBLIC",
+  access_mode: "LOGIN",
   price_amount: 0,
   price_currency: "AED",
+  validity_days: 2,
+  lifetime_access: false,
+  allow_download: true,
   featured_image_url: "",
   is_featured: false,
   seo_title: "",
@@ -119,6 +122,9 @@ export default function OwnerContentStudio() {
         slug: slugify(draft.slug),
         status: nextStatus,
         price_amount: Number(draft.price_amount || 0),
+        validity_days: draft.lifetime_access ? null : Math.max(1, Number(draft.validity_days || 2)),
+        lifetime_access: Boolean(draft.lifetime_access),
+        allow_download: draft.allow_download !== false,
         version: Number(draft.version || 1) + (selectedId ? 1 : 0),
       };
       if (nextStatus === "PUBLISHED") {
@@ -164,9 +170,16 @@ export default function OwnerContentStudio() {
     if (!file || !selectedId) return;
     setUploading(true);
     try {
+      const assetType = file.type === "application/pdf"
+        ? "PDF"
+        : file.type.startsWith("video/")
+          ? "VIDEO"
+          : file.type.startsWith("audio/")
+            ? "AUDIO"
+            : "IMAGE";
       await base44.uploadResourceAsset(selectedId, file, {
-        assetType: file.type === "application/pdf" ? "PDF" : "IMAGE",
-        isDownloadable: true,
+        assetType,
+        isDownloadable: draft.allow_download !== false,
       });
       setAssets(await base44.listResourceAssets(selectedId));
       toast({ title: "File uploaded", description: `${file.name} ഈ resource-ലേക്ക് ചേർത്തു.` });
@@ -268,17 +281,25 @@ export default function OwnerContentStudio() {
               <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                 <label><span className={labelClass}>Category</span><input className={inputClass} value={draft.category} onChange={(e) => change("category", e.target.value)} /></label>
                 <label><span className={labelClass}>Access</span><select className={inputClass} value={draft.access_mode} onChange={(e) => change("access_mode", e.target.value)}>
-                  <option value="PUBLIC">Public</option><option value="LOGIN">Login required</option><option value="PREMIUM">Premium / Redeem Code</option><option value="PAID">Paid / Redeem Code</option><option value="SELECTED_CUSTOMERS">Selected customers / Redeem Code</option>
+                  <option value="PUBLIC">Public — no login</option><option value="LOGIN">Free — email login required</option><option value="PREMIUM">Premium / Redeem Code</option><option value="PAID">Paid / Redeem Code</option><option value="SELECTED_CUSTOMERS">Selected customers / Redeem Code</option>
                 </select></label>
                 <label><span className={labelClass}>Status</span><select className={inputClass} value={draft.status} onChange={(e) => change("status", e.target.value)}><option value="DRAFT">Draft</option><option value="PUBLISHED">Published</option><option value="ARCHIVED">Archived</option></select></label>
               </div>
 
               {(draft.access_mode === "PAID" || draft.access_mode === "PREMIUM") && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <label><span className={labelClass}>Price</span><input type="number" min="0" step="0.01" className={inputClass} value={draft.price_amount} onChange={(e) => change("price_amount", e.target.value)} /></label>
                   <label><span className={labelClass}>Currency</span><input className={inputClass} value={draft.price_currency} onChange={(e) => change("price_currency", e.target.value.toUpperCase())} /></label>
+                  <label><span className={labelClass}>Access days</span><input type="number" min="1" step="1" className={inputClass} value={draft.validity_days} disabled={draft.lifetime_access} onChange={(e) => change("validity_days", e.target.value)} /></label>
                 </div>
               )}
+
+              <div className="grid gap-2 rounded-xl border border-white/10 bg-white/[0.02] p-3 sm:grid-cols-2">
+                {(draft.access_mode === "PAID" || draft.access_mode === "PREMIUM") && (
+                  <label className="flex items-center gap-2 text-xs text-white/70"><input type="checkbox" checked={Boolean(draft.lifetime_access)} onChange={(e) => change("lifetime_access", e.target.checked)} /> Lifetime access</label>
+                )}
+                <label className="flex items-center gap-2 text-xs text-white/70"><input type="checkbox" checked={draft.allow_download !== false} onChange={(e) => change("allow_download", e.target.checked)} /> Allow customer download / Save as PDF</label>
+              </div>
 
               <label><span className={labelClass}>Malayalam introduction</span><textarea rows={3} className={inputClass} value={draft.excerpt_ml} onChange={(e) => change("excerpt_ml", e.target.value)} /></label>
               <label><span className={labelClass}>Arabic introduction</span><textarea dir="rtl" rows={3} className={`${inputClass} font-amiri text-base`} value={draft.excerpt_ar} onChange={(e) => change("excerpt_ar", e.target.value)} /></label>
@@ -290,12 +311,12 @@ export default function OwnerContentStudio() {
               <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="text-xs font-semibold text-white/80">PDF & media files</p>
+                    <p className="text-xs font-semibold text-white/80">PDF, image, audio & video files</p>
                     <p className="mt-1 text-[10px] text-white/35">Page ആദ്യം save ചെയ്തശേഷം private files upload ചെയ്യാം.</p>
                   </div>
                   <label className={`flex cursor-pointer items-center gap-1.5 rounded-lg border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-200 ${(!selectedId || uploading) ? "pointer-events-none opacity-40" : ""}`}>
                     <Upload className="h-3.5 w-3.5" /> {uploading ? "Uploading…" : "Upload file"}
-                    <input type="file" accept="application/pdf,image/*,audio/*" className="hidden" disabled={!selectedId || uploading} onChange={uploadAsset} />
+                    <input type="file" accept="application/pdf,image/*,audio/*,video/*" className="hidden" disabled={!selectedId || uploading} onChange={uploadAsset} />
                   </label>
                 </div>
                 <div className="mt-3 space-y-2">

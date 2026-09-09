@@ -125,6 +125,7 @@ const toManagedPage = (row) => row ? ({
   version: Number(row.metadata?.version || 1),
   published_at: row.metadata?.published_at || null,
   last_published_by: row.metadata?.last_published_by || null,
+  allow_download: row.metadata?.allow_download !== false,
   created_date: row.created_at,
   updated_date: row.updated_at,
 }) : null;
@@ -151,6 +152,7 @@ const fromManagedPage = (page) => ({
     version: Number(page.version || 1),
     published_at: page.published_at || null,
     last_published_by: page.last_published_by || null,
+    allow_download: page.allow_download !== false,
   },
 });
 
