@@ -3,7 +3,6 @@ import { Link, useParams } from "react-router-dom";
 import { Download, FileText, LockKeyhole, LogIn, ShieldCheck } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
-import RedeemCodeModal from "@/components/RedeemCodeModal";
 import { useAuth } from "@/lib/AuthContext";
 import { checkLocalPermission, validateAndCleanPermissions } from "@/lib/sessionId";
 import { useI18n } from "@/i18n/I18nContext";
@@ -25,7 +24,7 @@ function isStillActive(record) {
   return Number.isFinite(expiry) ? expiry > Date.now() : true;
 }
 
-function AccessCard({ mode, page, isAuthenticated, onRedeem }) {
+function AccessCard({ mode, page, isAuthenticated }) {
   const isPaid = mode === "PAID" || mode === "PREMIUM";
   return (
     <div className="mx-auto max-w-xl rounded-2xl border border-yellow-500/20 bg-white/[0.025] p-6 text-center">
@@ -33,12 +32,12 @@ function AccessCard({ mode, page, isAuthenticated, onRedeem }) {
         {isAuthenticated ? <LockKeyhole className="h-5 w-5" /> : <LogIn className="h-5 w-5" />}
       </div>
       <h2 className="mt-4 text-lg font-bold text-white">
-        {!isAuthenticated ? "ലോഗിൻ ആവശ്യമാണ്" : "റീഡീം കോഡ് ആവശ്യമാണ്"}
+        {!isAuthenticated ? "ലോഗിൻ ആവശ്യമാണ്" : "ഈ പേജിന് access ആവശ്യമാണ്"}
       </h2>
       <p className="mt-2 text-sm leading-6 text-white/55">
         {!isAuthenticated
           ? "ഈ ഉള്ളടക്കം കാണാൻ ആദ്യം നിങ്ങളുടെ അക്കൗണ്ടിൽ ലോഗിൻ ചെയ്യുക."
-          : "WhatsApp വഴി payment സ്ഥിരീകരിച്ചതിന് ശേഷം Owner നൽകിയ Reading / Redeem Code ഇവിടെ നൽകുക. Code-ൽ അനുവദിച്ച page-ുകൾക്കും കാലാവധിക്കും അനുസരിച്ചാണ് access ലഭിക്കുക."}
+          : "Payment സ്ഥിരീകരിക്കുകയോ Owner access അനുവദിക്കുകയോ ചെയ്താൽ ഈ page നിങ്ങളുടെ login email-ലേക്ക് നേരിട്ട് ബന്ധിപ്പിക്കും."}
       </p>
       {isPaid && Number(page?.price_amount || 0) > 0 && (
         <div className="mt-4 rounded-xl border border-yellow-500/20 bg-yellow-500/[0.06] px-4 py-3 font-semibold text-yellow-100">
@@ -53,11 +52,7 @@ function AccessCard({ mode, page, isAuthenticated, onRedeem }) {
           <Link to={`/login?redirect=${encodeURIComponent(`/content/${page.slug}`)}`} className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-2 text-sm font-semibold text-yellow-100">
             Login
           </Link>
-        ) : (
-          <button onClick={onRedeem} className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-2 text-sm font-semibold text-yellow-100">
-            Redeem Code
-          </button>
-        )}
+        ) : <Link to="/support/whatsapp" className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-2 text-sm font-semibold text-yellow-100">Pay / Request Access</Link>}
         <Link to="/support/whatsapp" className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white/60">WhatsApp Support</Link>
         <Link to="/" className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white/60">Home</Link>
       </div>
@@ -73,7 +68,6 @@ export default function ManagedContentPage() {
   const [loading, setLoading] = useState(true);
   const [allowed, setAllowed] = useState(false);
   const [accessResolved, setAccessResolved] = useState(false);
-  const [showRedeem, setShowRedeem] = useState(false);
   const [assets, setAssets] = useState([]);
   const [downloadingId, setDownloadingId] = useState(null);
   const [downloadError, setDownloadError] = useState("");
@@ -213,7 +207,7 @@ export default function ManagedContentPage() {
         )}
 
         {!loading && page && accessResolved && !allowed && (
-          <AccessCard mode={page.access_mode} page={page} isAuthenticated={isAuthenticated} onRedeem={() => setShowRedeem(true)} />
+          <AccessCard mode={page.access_mode} page={page} isAuthenticated={isAuthenticated} />
         )}
 
         {!loading && page && accessResolved && allowed && (
@@ -272,7 +266,6 @@ export default function ManagedContentPage() {
           </article>
         )}
       </div>
-      {showRedeem && <RedeemCodeModal onClose={() => setShowRedeem(false)} />}
     </PageLayout>
   );
 }

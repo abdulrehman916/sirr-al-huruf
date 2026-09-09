@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Navigate } from "react-router-dom";
 import {
-  Users, UserCheck, Clock, Shield, KeyRound, Globe, TrendingUp,
-  RefreshCw, AlertCircle, Calendar, MessageSquare, CheckCircle2, XCircle,
+  Users, UserCheck, Clock, Shield, Globe, TrendingUp,
+  RefreshCw, AlertCircle, Calendar, MessageSquare,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
@@ -95,15 +95,6 @@ export default function AdminDashboard() {
           <StatCard label="Blocked" value={stats?.blocked_users} color="#ef4444" icon={Shield} />
         </div>
 
-        <SectionLabel>Reading Codes</SectionLabel>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2">
-          <StatCard label="Total Codes" value={stats?.total_codes} color="#F5D060" icon={KeyRound} />
-          <StatCard label="Active" value={stats?.active_codes} color="#22c55e" icon={CheckCircle2} />
-          <StatCard label="Expired" value={stats?.expired_codes} color="#f59e0b" icon={Clock} />
-          <StatCard label="Disabled" value={stats?.disabled_codes} color="#6b7280" icon={XCircle} />
-          <StatCard label="Lifetime" value={stats?.lifetime_codes} color="#3b82f6" icon={KeyRound} />
-        </div>
-
         <SectionLabel>Activity</SectionLabel>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2">
           <StatCard label="Renewals Today" value={stats?.renewals_today} color="#a855f7" icon={RefreshCw} />
@@ -117,7 +108,6 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2">
           <StatCard label="Pending Support" value={stats?.pending_support} color="#f97316" icon={MessageSquare} />
           <StatCard label="Pending Requests" value={pendingRequests} color="#f97316" icon={TrendingUp} sub="Access requests" />
-          <StatCard label="Recent Redeems" value={stats?.recent_redeems} color="#3b82f6" icon={KeyRound} sub="Last 7 days" />
           <StatCard label="Recent Renewals" value={stats?.recent_renewals} color="#a855f7" icon={RefreshCw} sub="Last 7 days" />
         </div>
 
@@ -126,8 +116,6 @@ export default function AdminDashboard() {
           {[
             { to: "/admin/content-studio", icon: "✍️", label: "Content Studio" },
             { to: "/admin/approved-users", icon: "👥", label: "Manage Users" },
-            { to: "/admin/access-codes", icon: "🔑", label: "Reading Codes" },
-            { to: "/admin/google-linked", icon: "🔗", label: "Google Linked" },
             { to: "/admin/page-permissions", icon: "🌐", label: "Page Access" },
             { to: "/admin/support", icon: "💬", label: "Support Messages" },
             { to: "/admin/access-logs", icon: "📋", label: "Access Logs" },

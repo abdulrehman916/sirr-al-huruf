@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Shield, LayoutDashboard, Users, KeyRound, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, ClipboardCheck, BarChart3, SlidersHorizontal, ShoppingBag, Store, ScrollText, Tags, LogOut, BookMarked, Library, ListChecks, Search, FilePlus2, BookOpen, LockKeyhole } from "lucide-react";
+import { Shield, LayoutDashboard, Users, Globe, MessageSquare, FileText, Settings, ChevronLeft, PanelLeftOpen, PanelLeftClose, Inbox, BarChart3, SlidersHorizontal, ShoppingBag, Store, ScrollText, Tags, LogOut, BookMarked, Library, ListChecks, Search, FilePlus2, BookOpen, LockKeyhole } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { filterAdminSections } from "@/lib/rbac";
 import { base44 } from "@/api/base44Client";
@@ -33,9 +33,7 @@ const SIDEBAR_SECTIONS = [
   {
     label: "Access Control",
     items: [
-      { path: "/admin/access-codes", label: "Reading Codes", icon: KeyRound },
       { path: "/admin/access-requests", label: "Access Requests", icon: Inbox },
-      { path: "/admin/redeem-approvals", label: "Redeem Approvals", icon: ClipboardCheck },
       { path: "/admin/page-permissions", label: "Page Access", icon: Globe },
     ]
   },
