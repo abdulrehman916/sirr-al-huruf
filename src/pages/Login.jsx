@@ -1,88 +1,55 @@
-import React, { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { ArrowLeft, KeyRound, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, ShieldCheck, Mail, Lock, ArrowLeft, KeyRound } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
-import { persistSet, persistRemove } from "@/lib/devModePersistence";
-
-// Inline Google "G" mark — no external dependency.
-const GoogleMark = ({ className = "w-5 h-5 mr-2" }) => (
-  <svg className={className} viewBox="0 0 48 48" aria-hidden="true">
-    <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.5 29.6 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5 43.5 34.8 43.5 24c0-1.2-.1-2.3-.4-3.5z"/>
-    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.5 29.6 4.5 24 4.5 16 4.5 9.1 9.1 6.3 14.7z"/>
-    <path fill="#4CAF50" d="M24 43.5c5.5 0 10.5-2 14.3-5.3l-6.6-5.5C29.6 34.6 26.9 36 24 36c-5.2 0-9.6-3.3-11.2-8l-6.6 5.1C9 38.9 16 43.5 24 43.5z"/>
-    <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.6 5.5c-.5.4 6.6-4.8 6.6-14.5 0-1.2-.1-2.3-.4-3.5z"/>
-  </svg>
-);
+import { persistSet } from "@/lib/devModePersistence";
+import { ADMIN_CONFIG } from "@/lib/adminConfig";
 
 export default function Login() {
   const [searchParams] = useSearchParams();
-  const requestedRedirect = searchParams.get("redirect") || "/";
-  const returnTo = requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//")
-    ? requestedRedirect
-    : "/";
+  const requested = searchParams.get("redirect") || "/";
+  const returnTo = requested.startsWith("/") && !requested.startsWith("//") ? requested : "/";
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [ownerMode, setOwnerMode] = useState(false);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [mode, setMode] = useState("otp");
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState("");
-  const googleEnabled = import.meta.env.VITE_GOOGLE_AUTH_ENABLED === "true";
 
-  const handleEmail = async (event) => {
-    event.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      await base44.auth.login({ email: email.trim(), password });
-      try { persistSet("sirr_admin_session", "true"); } catch { /* ignore */ }
-      window.location.assign(returnTo);
-    } catch (err) {
-      setError(err?.message || "Email or password is incorrect");
-      setLoading(false);
-    }
-  };
-
-  const handleGoogle = async () => {
-    setError("");
-    setLoading(true);
-    try {
-      // Mark this session as an explicit admin login so the session-gate in
-      // AuthContext allows role elevation after Google redirects back to "/".
-      // persistSet: localStorage (production) or localStorage+cookie (dev preview).
-      // Was sessionStorage — which didn't survive preview rebuilds and was
-      // inconsistent with AuthContext's localStorage read.
-      try { persistSet("sirr_admin_session", "true"); } catch { /* ignore */ }
-      // Redirects to Google consent, then back to "/". AuthContext resolves
-      // Owner / Admin / Guest from the authenticated email:
-      //   - Owner email == ADMIN_CONFIG.OWNER_EMAIL  → Owner
-      //   - Email exists in AdminProfile (enabled)   → Admin (assigned perms)
-      //   - Any other Google account                  → Guest
-      await base44.auth.loginWithProvider("google", "/");
-    } catch (err) {
-      setError(err?.response?.data?.error || err?.message || "Google sign-in failed");
-      setLoading(false);
-      try { persistRemove("sirr_admin_session"); } catch { /* ignore */ }
-    }
-  };
-
-  const handleOtp = async (event) => {
+  async function submit(event) {
     event.preventDefault();
     setError("");
     setLoading(true);
     try {
       const cleanEmail = email.trim().toLowerCase();
+      const isOwnerEmail = cleanEmail === ADMIN_CONFIG.OWNER_EMAIL.toLowerCase();
+      if (isOwnerEmail) {
+        if (!ownerMode) {
+          setOwnerMode(true);
+          return;
+        }
+        await base44.auth.login({ email: cleanEmail, password });
+        const account = await base44.auth.me();
+        if (account?.email?.toLowerCase() !== ADMIN_CONFIG.OWNER_EMAIL.toLowerCase()) {
+          await base44.auth.logout();
+          throw new Error("Owner verification failed.");
+        }
+        persistSet("sirr_admin_session", "true");
+        window.location.assign("/admin/access-dashboard");
+        return;
+      }
       if (!otpSent) {
         const callback = `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(returnTo)}`;
         await base44.auth.requestLoginOtp({ email: cleanEmail, redirectTo: callback });
         setOtpSent(true);
       } else {
         await base44.auth.verifyLoginOtp({ email: cleanEmail, token: otp.trim() });
-        try { persistSet("sirr_admin_session", "true"); } catch { /* ignore */ }
+        persistSet("sirr_admin_session", "true");
         window.location.assign(returnTo);
       }
     } catch (err) {
@@ -90,61 +57,53 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <AuthLayout
-      icon={ShieldCheck}
-      title="Sign in"
-      subtitle="Use your Sirr al-Huruf account"
-      footer={<span>New here? <Link to={`/register?redirect=${encodeURIComponent(returnTo)}`} className="text-primary font-medium hover:underline">Create an account</Link></span>}
-    >
-      {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-          {error}
-        </div>
-      )}
-
-      <div className="mb-5 grid grid-cols-2 gap-2 rounded-xl bg-muted/50 p-1">
-        <button type="button" onClick={() => { setMode("otp"); setError(""); }} className={`rounded-lg px-3 py-2 text-sm font-medium ${mode === "otp" ? "bg-background shadow-sm" : "text-muted-foreground"}`}>Customer login</button>
-        <button type="button" onClick={() => { setMode("owner"); setError(""); setOtpSent(false); }} className={`rounded-lg px-3 py-2 text-sm font-medium ${mode === "owner" ? "bg-background shadow-sm" : "text-muted-foreground"}`}>Owner login</button>
-      </div>
-
-      {mode === "otp" ? <form onSubmit={handleOtp} className="space-y-4">
+    <AuthLayout icon={ShieldCheck} title="Sirr al-Huruf"
+      subtitle="നിങ്ങളുടെ email ഉപയോഗിച്ച് സുരക്ഷിതമായി തുടരുക"
+      footer="പുതിയ email ആണെങ്കിൽ account സ്വയം സൃഷ്ടിക്കപ്പെടും. Password ഓർക്കേണ്ടതില്ല.">
+      {error && <div role="alert" className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+      <form onSubmit={submit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="login-email">Email</Label>
+          <Label htmlFor="login-email">Email address</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input id="login-email" type="email" autoComplete="email" value={email}
-              onChange={(e) => setEmail(e.target.value)} className="pl-10 h-12" required />
+            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <Input id="login-email" type="email" autoComplete="email" autoFocus value={email}
+              onChange={(event) => setEmail(event.target.value)} className="h-12 pl-10"
+              placeholder="name@example.com" disabled={otpSent || ownerMode || loading} required />
           </div>
         </div>
+        {ownerMode && <div className="space-y-2">
+          <Label htmlFor="owner-password">Password</Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <Input id="owner-password" type="password" autoComplete="current-password" value={password}
+              onChange={(event) => setPassword(event.target.value)} className="h-12 pl-10" required autoFocus />
+          </div>
+        </div>}
         {otpSent && <div className="space-y-2">
           <Label htmlFor="login-otp">Email verification code</Label>
           <div className="relative">
-            <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
             <Input id="login-otp" inputMode="numeric" autoComplete="one-time-code" value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 8))} className="pl-10 h-12 tracking-[0.25em]" required />
+              onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 8))}
+              className="h-12 pl-10 tracking-[0.25em]" placeholder="000000" required />
           </div>
-          <p className="text-xs text-muted-foreground">Email-ലേക്ക് വന്ന code നൽകുക. Magic Link ലഭിച്ചെങ്കിൽ അതിൽ touch ചെയ്യാം.</p>
+          <p className="text-xs leading-5 text-muted-foreground">Email-ൽ വന്ന code നൽകുക. Magic Link ലഭിച്ചെങ്കിൽ അതിൽ touch ചെയ്യാം.</p>
         </div>}
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
-          {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Please wait...</> : otpSent ? "Verify and continue" : "Send email code"}
+        <Button type="submit" className="h-12 w-full font-medium" disabled={loading}>
+          {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Please wait…</> : ownerMode ? "Open Owner Dashboard" : otpSent ? "Verify and continue" : "Continue with Email"}
         </Button>
-        {otpSent && <button type="button" onClick={() => { setOtpSent(false); setOtp(""); setError(""); }} className="flex w-full items-center justify-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" />Change email</button>}
-      </form> : <form onSubmit={handleEmail} className="space-y-4">
-        <div className="space-y-2"><Label htmlFor="owner-email">Owner email</Label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/><Input id="owner-email" type="email" autoComplete="username" value={email} onChange={(e)=>setEmail(e.target.value)} className="pl-10 h-12" required/></div></div>
-        <div className="space-y-2"><Label htmlFor="owner-password">Password</Label><div className="relative"><Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/><Input id="owner-password" type="password" autoComplete="current-password" value={password} onChange={(e)=>setPassword(e.target.value)} className="pl-10 h-12" required/></div></div>
-        <div className="text-right"><Link to="/forgot-password" className="text-sm text-primary hover:underline">Forgot password?</Link></div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>{loading?<><Loader2 className="w-4 h-4 mr-2 animate-spin"/>Signing in...</>:"Owner sign in"}</Button>
-      </form>}
-
-      {googleEnabled && <>
-        <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-3 text-muted-foreground">or</span></div></div>
-        <Button type="button" onClick={handleGoogle} variant="outline" className="w-full h-12 font-medium" disabled={loading}>
-          <GoogleMark />Sign in with Google
-        </Button>
-      </>}
+        {ownerMode && <button type="button" onClick={() => { setOwnerMode(false); setPassword(""); setEmail(""); setError(""); }}
+          className="flex w-full items-center justify-center gap-1 text-sm text-muted-foreground">
+          <ArrowLeft className="h-4 w-4" />Change email
+        </button>}
+        {otpSent && <button type="button" onClick={() => { setOtpSent(false); setOtp(""); setError(""); }}
+          className="flex w-full items-center justify-center gap-1 text-sm text-muted-foreground">
+          <ArrowLeft className="h-4 w-4" />Change email
+        </button>}
+      </form>
     </AuthLayout>
   );
 }

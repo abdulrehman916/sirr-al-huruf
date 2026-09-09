@@ -67,7 +67,7 @@ export default function AdminDashboard() {
     } catch {}
   };
 
-  if (authResolved && !adminProfileLoading && !isAdminRole(role)) return <Navigate to="/login?redirect=%2Fadmin%2Faccess-dashboard" replace />;
+  if (authResolved && !adminProfileLoading && !isAdminRole(role)) return <Navigate to="/owner-login?redirect=%2Fadmin%2Faccess-dashboard" replace />;
 
   if (!authResolved || adminProfileLoading) {
     return (

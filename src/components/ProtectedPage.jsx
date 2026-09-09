@@ -258,7 +258,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
           </div>
           <h2 className="font-inter font-bold text-white text-lg">{t("admin_access_required", "Admin Access Required")}</h2>
           <p className="font-inter text-sm text-white/40">{t("admin_restricted", "This page is restricted to administrators only.")}</p>
-          <a href="/login"
+          <a href={`/owner-login?redirect=${encodeURIComponent(routePath)}`}
             className="block w-full py-3 rounded-xl font-inter font-bold text-sm text-center"
             style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}>
             {t("admin_login", "Admin Login")}

@@ -24,6 +24,7 @@ const PAGE_IMPORTS = {
   Home:                     () => import('./pages/Home'),
   Onboarding:               () => import('./pages/Onboarding'),
   Login:                    () => import('./pages/Login'),
+  OwnerLogin:               () => import('./pages/OwnerLogin'),
   Register:                 () => import('./pages/Register'),
   ForgotPassword:           () => import('./pages/ForgotPassword'),
   ResetPassword:            () => import('./pages/ResetPassword'),

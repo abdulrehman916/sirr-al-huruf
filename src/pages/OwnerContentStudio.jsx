@@ -72,7 +72,7 @@ export default function OwnerContentStudio() {
   if (!authResolved || adminProfileLoading) {
     return <AdminLayout title="Content Studio"><div className="flex min-h-[60vh] items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-yellow-400/25 border-t-yellow-400" /></div></AdminLayout>;
   }
-  if (role !== "owner") return <Navigate to="/login?redirect=%2Fadmin%2Fcontent-studio" replace />;
+  if (role !== "owner") return <Navigate to="/owner-login?redirect=%2Fadmin%2Fcontent-studio" replace />;
 
   async function loadPages() {
     setLoading(true);

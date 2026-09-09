@@ -20,7 +20,7 @@ export default function OwnerBooksStudio() {
   useEffect(()=>{ if(role==="owner") load(); },[role]);
   useEffect(()=>{ if(selected) setDraft({...EMPTY,...selected}); },[selected]);
   if(!authResolved||adminProfileLoading) return <AdminLayout title="Books Studio"><div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-yellow-200"/></div></AdminLayout>;
-  if(role!=="owner") return <Navigate to="/login?redirect=%2Fadmin%2Fbooks-studio" replace />;
+  if(role!=="owner") return <Navigate to="/owner-login?redirect=%2Fadmin%2Fbooks-studio" replace />;
   const change=(key,value)=>setDraft(prev=>({...prev,[key]:value,...(key==="title_en"&&!prev.slug?{slug:slugify(value)}:{})}));
 
   async function save(status=draft.status){

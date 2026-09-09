@@ -9,6 +9,7 @@ const ROUTE_MANIFEST = [
   { path: '/', component: 'Home', chunk: 'Home', flags: ['public'] },
   { path: '/onboarding', component: 'Onboarding', chunk: 'Onboarding', flags: ['noauth'] },
   { path: '/login', component: 'Login', chunk: 'Login', flags: ['noauth'] },
+  { path: '/owner-login', component: 'OwnerLogin', chunk: 'OwnerLogin', flags: ['noauth'] },
   { path: '/register', component: 'Register', chunk: 'Register', flags: ['noauth'] },
   { path: '/forgot-password', component: 'ForgotPassword', chunk: 'ForgotPassword', flags: ['noauth'] },
   { path: '/reset-password', component: 'ResetPassword', chunk: 'ResetPassword', flags: ['noauth'] },
