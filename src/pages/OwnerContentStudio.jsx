@@ -43,12 +43,17 @@ function slugify(value) {
     .replace(/^-+|-+$/g, "");
 }
 
+function createAutoSlug() {
+  const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+  return `story-${date}-${crypto.randomUUID().slice(0, 8)}`;
+}
+
 export default function OwnerContentStudio() {
   const { role, user, authResolved, adminProfileLoading } = useAuth();
   const { toast } = useToast();
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-  const [draft, setDraft] = useState(EMPTY);
+  const [draft, setDraft] = useState(() => ({ ...EMPTY, slug: createAutoSlug() }));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState(true);
@@ -91,7 +96,7 @@ export default function OwnerContentStudio() {
 
   function newPage() {
     setSelectedId(null);
-    setDraft(EMPTY);
+    setDraft({ ...EMPTY, slug: createAutoSlug() });
   }
 
   function change(field, value) {
@@ -270,6 +275,19 @@ export default function OwnerContentStudio() {
               )}
             </div>
           </div>
+
+          {draft.slug.trim() && (
+            <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.06] p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-cyan-200/60">Share link</p>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                <code className="min-w-0 flex-1 overflow-x-auto rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs text-cyan-100">{`${window.location.origin}/content/${slugify(draft.slug)}`}</code>
+                <button type="button" onClick={copyLiveLink} className="flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-200">
+                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} {copied ? "Copied" : "Copy link"}
+                </button>
+              </div>
+              <p className="mt-2 text-[10px] text-white/40">ഈ link Facebook, Instagram അല്ലെങ്കിൽ YouTube-ൽ share ചെയ്യാം. Customer login കഴിഞ്ഞാൽ ഇതേ page-ലേക്ക് മടങ്ങും.</p>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-4 2xl:grid-cols-2">
             <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
