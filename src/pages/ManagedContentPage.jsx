@@ -174,7 +174,12 @@ export default function ManagedContentPage() {
     }
     let cancelled = false;
     base44.listResourceAssets(page.id)
-      .then((rows) => { if (!cancelled) setAssets(Array.isArray(rows) ? rows : []); })
+      .then(async (rows) => Promise.all((Array.isArray(rows) ? rows : []).map(async (asset) => {
+        if (!["IMAGE", "VIDEO", "AUDIO", "EXTERNAL_VIDEO"].includes(asset.asset_type)) return asset;
+        try { return { ...asset, view_url: await base44.createResourceAssetView(asset) }; }
+        catch { return asset; }
+      })))
+      .then((rows) => { if (!cancelled) setAssets(rows); })
       .catch(() => { if (!cancelled) setAssets([]); });
     return () => { cancelled = true; };
   }, [allowed, page?.id]);
@@ -230,6 +235,24 @@ export default function ManagedContentPage() {
               <h1 dir={language === "ar" ? "rtl" : "ltr"} className={`${language === "ar" ? "font-amiri leading-relaxed" : "font-bold leading-tight"} mt-2 text-3xl text-white sm:text-4xl`}>{title}</h1>
               {excerpt && <p dir={language === "ar" ? "rtl" : "ltr"} className={`${language === "ar" ? "font-amiri text-lg" : "text-base"} mt-7 leading-8 text-white/65`}>{excerpt}</p>}
               {body && <section dir={language === "ar" ? "rtl" : "ltr"} className={`${language === "ar" ? "font-amiri text-xl leading-10 sm:text-2xl" : "text-base leading-8 sm:text-lg sm:leading-9"} mt-8 whitespace-pre-wrap text-white/85`}>{body}</section>}
+
+              {assets.some((asset) => asset.view_url) && (
+                <section className="mt-8 grid gap-4 sm:grid-cols-2 print:block">
+                  {assets.filter((asset) => asset.view_url).map((asset) => (
+                    <div key={`media-${asset.id}`} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20 print:mb-4">
+                      {asset.asset_type === "IMAGE" && <img src={asset.view_url} alt={asset.title?.[language] || asset.title?.en || title} className="max-h-[620px] w-full object-contain" />}
+                      {(asset.asset_type === "VIDEO" || asset.asset_type === "EXTERNAL_VIDEO") && <video src={asset.view_url} controls preload="metadata" className="w-full" />}
+                      {asset.asset_type === "AUDIO" && <audio src={asset.view_url} controls preload="metadata" className="w-full p-3" />}
+                    </div>
+                  ))}
+                </section>
+              )}
+
+              {page.access_mode === "PAID" && !page.lifetime_access && (
+                <div className="mt-8 rounded-xl border border-amber-400/25 bg-amber-400/[0.07] p-4 text-sm leading-6 text-amber-100/80 print:hidden">
+                  ഈ content-ന്റെ access {Math.max(1, Number(page.validity_days || 2))} ദിവസം മാത്രമാണ്. കാലാവധി കഴിയുന്നതിന് മുമ്പ് അനുവദിച്ച files download ചെയ്യുകയോ “Save this page as PDF” ഉപയോഗിക്കുകയോ ചെയ്യുക.
+                </div>
+              )}
 
               {page.allow_download !== false && (
                 <div className="mt-8 print:hidden">

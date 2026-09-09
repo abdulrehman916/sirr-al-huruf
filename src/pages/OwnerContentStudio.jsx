@@ -165,24 +165,26 @@ export default function OwnerContentStudio() {
   }
 
   async function uploadAsset(event) {
-    const file = event.target.files?.[0];
+    const files = Array.from(event.target.files || []);
     event.target.value = "";
-    if (!file || !selectedId) return;
+    if (!files.length || !selectedId) return;
     setUploading(true);
     try {
-      const assetType = file.type === "application/pdf"
-        ? "PDF"
-        : file.type.startsWith("video/")
-          ? "VIDEO"
-          : file.type.startsWith("audio/")
-            ? "AUDIO"
-            : "IMAGE";
-      await base44.uploadResourceAsset(selectedId, file, {
-        assetType,
-        isDownloadable: draft.allow_download !== false,
-      });
+      for (const file of files) {
+        const assetType = file.type === "application/pdf"
+          ? "PDF"
+          : file.type.startsWith("video/")
+            ? "VIDEO"
+            : file.type.startsWith("audio/")
+              ? "AUDIO"
+              : "IMAGE";
+        await base44.uploadResourceAsset(selectedId, file, {
+          assetType,
+          isDownloadable: draft.allow_download !== false,
+        });
+      }
       setAssets(await base44.listResourceAssets(selectedId));
-      toast({ title: "File uploaded", description: `${file.name} ഈ resource-ലേക്ക് ചേർത്തു.` });
+      toast({ title: "Files uploaded", description: `${files.length} file(s) ഈ page-ലേക്ക് ചേർത്തു.` });
     } catch (error) {
       toast({ title: "Upload failed", description: error?.message || "File upload ചെയ്യാൻ കഴിഞ്ഞില്ല.", variant: "destructive" });
     } finally {
@@ -316,7 +318,7 @@ export default function OwnerContentStudio() {
                   </div>
                   <label className={`flex cursor-pointer items-center gap-1.5 rounded-lg border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-200 ${(!selectedId || uploading) ? "pointer-events-none opacity-40" : ""}`}>
                     <Upload className="h-3.5 w-3.5" /> {uploading ? "Uploading…" : "Upload file"}
-                    <input type="file" accept="application/pdf,image/*,audio/*,video/*" className="hidden" disabled={!selectedId || uploading} onChange={uploadAsset} />
+                    <input type="file" multiple accept="application/pdf,image/*,audio/*,video/*" className="hidden" disabled={!selectedId || uploading} onChange={uploadAsset} />
                   </label>
                 </div>
                 <div className="mt-3 space-y-2">

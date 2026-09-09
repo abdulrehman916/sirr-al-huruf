@@ -369,6 +369,12 @@ export const platform = {
     const data = unwrap(await client().storage.from(asset.bucket).createSignedUrl(asset.object_path, expiresIn, { download: true }));
     return data.signedUrl;
   },
+  async createResourceAssetView(asset, expiresIn = 3600) {
+    if (asset?.external_url) return asset.external_url;
+    if (!asset?.bucket || !asset?.object_path) throw new Error('Media file is not configured.');
+    const data = unwrap(await client().storage.from(asset.bucket).createSignedUrl(asset.object_path, expiresIn));
+    return data.signedUrl;
+  },
   async listMyEntitlements() {
     const user = await auth.me();
     if (!user) return [];
