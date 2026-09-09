@@ -3,11 +3,11 @@ import { Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag, Plus, Search, X, Edit3, Trash2, Eye, EyeOff, ChevronUp, ChevronDown,
-  Star, ExternalLink, Upload, Save, Flame, Sparkles, PackageX, Play, TrendingUp, Copy
+  Star, Flame, Sparkles, PackageX, TrendingUp, Copy
 } from "lucide-react";
-import { MARKETPLACE_OPTIONS } from "@/lib/countryProfiles";
 import ProductEditor from "@/components/admin/ProductEditor";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import AdminLayout from "@/components/admin/AdminLayout";
 
@@ -73,6 +73,7 @@ const EMPTY_FORM = {
 
 export default function AdminProducts() {
   const { toast } = useToast();
+  const { role, authResolved } = useAuth();
   const [isAdmin, setIsAdmin] = useState(null);
   const [products, setProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -95,23 +96,16 @@ export default function AdminProducts() {
   const [bulkBrand, setBulkBrand] = useState("");
 
   useEffect(() => {
-    checkAdmin();
-  }, []);
-
-  const checkAdmin = async () => {
-    try {
-      const user = await base44.auth.me();
-      if (!user || user.role !== "admin") {
-        setIsAdmin(false);
-        return;
-      }
-      setIsAdmin(true);
+    if (!authResolved) return;
+    const canManageProducts = role === "owner" || role === "admin";
+    setIsAdmin(canManageProducts);
+    if (canManageProducts) {
       loadProducts();
       loadReviews();
-    } catch {
-      setIsAdmin(false);
+    } else {
+      setLoading(false);
     }
-  };
+  }, [authResolved, role]);
 
   const loadProducts = async () => {
     try {
@@ -213,6 +207,7 @@ export default function AdminProducts() {
         pdf_url: form.pdf_url,
         category: form.category,
         affiliate_links: form.affiliate_links,
+        amazon_url: form.amazon_url,
         price_display: form.price_display,
         compare_price_display: form.compare_price_display,
         rating_display: form.rating_display,
