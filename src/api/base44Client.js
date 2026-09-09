@@ -240,8 +240,10 @@ const auth = {
       photo_url: meta.avatar_url || meta.picture || '', role: meta.role || 'user', ...meta };
   },
   async isAuthenticated() { return Boolean(await this.me()); },
-  async loginWithProvider(provider = 'google') {
-    return unwrap(await client().auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}/auth/callback` } }));
+  async loginWithProvider(provider = 'google', returnTo = '/') {
+    const safeReturn = String(returnTo || '/').startsWith('/') && !String(returnTo).startsWith('//') ? returnTo : '/';
+    const redirectTo = `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(safeReturn)}`;
+    return unwrap(await client().auth.signInWithOAuth({ provider, options: { redirectTo } }));
   },
   async login({ email, password }) {
     return unwrap(await client().auth.signInWithPassword({ email, password }));
