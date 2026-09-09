@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { LockKeyhole, LogIn, ShieldCheck } from "lucide-react";
+import { Download, FileText, LockKeyhole, LogIn, ShieldCheck } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PageLayout from "@/components/PageLayout";
 import RedeemCodeModal from "@/components/RedeemCodeModal";
@@ -71,6 +71,9 @@ export default function ManagedContentPage() {
   const [allowed, setAllowed] = useState(false);
   const [accessResolved, setAccessResolved] = useState(false);
   const [showRedeem, setShowRedeem] = useState(false);
+  const [assets, setAssets] = useState([]);
+  const [downloadingId, setDownloadingId] = useState(null);
+  const [downloadError, setDownloadError] = useState("");
 
   const pagePath = useMemo(() => `/content/${slug || ""}`, [slug]);
   const title = localized(page, "title", language);
@@ -123,6 +126,22 @@ export default function ManagedContentPage() {
           return;
         }
 
+        // Normalized resource entitlements are the primary access source for
+        // purchases, coupons and owner grants. The database also enforces
+        // expiry and revocation, so a stale browser session cannot bypass it.
+        try {
+          const hasResourceAccess = await base44.canAccessResource(found.id);
+          if (cancelled) return;
+          if (hasResourceAccess) {
+            setAllowed(true);
+            setAccessResolved(true);
+            return;
+          }
+        } catch {
+          // During staged migration, continue to the verified legacy fallback
+          // below so existing customers do not lose previously granted access.
+        }
+
         // Backward-compatible fallbacks for manually-created subscriptions and
         // page permissions. Existing records continue to work unchanged.
         const [subscriptions, permissions] = await Promise.all([
@@ -150,6 +169,32 @@ export default function ManagedContentPage() {
     load();
     return () => { cancelled = true; };
   }, [slug, pagePath, role, isAuthenticated, user?.id]);
+
+  useEffect(() => {
+    if (!allowed || !page?.id) {
+      setAssets([]);
+      return;
+    }
+    let cancelled = false;
+    base44.listResourceAssets(page.id)
+      .then((rows) => { if (!cancelled) setAssets(Array.isArray(rows) ? rows : []); })
+      .catch(() => { if (!cancelled) setAssets([]); });
+    return () => { cancelled = true; };
+  }, [allowed, page?.id]);
+
+  async function downloadAsset(asset) {
+    if (downloadingId) return;
+    setDownloadError("");
+    setDownloadingId(asset.id);
+    try {
+      const url = await base44.createResourceAssetDownload(asset);
+      window.location.assign(url);
+    } catch (error) {
+      setDownloadError(error?.message || "Download തയ്യാറാക്കാൻ കഴിഞ്ഞില്ല. വീണ്ടും ശ്രമിക്കുക.");
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   return (
     <PageLayout>
@@ -188,6 +233,30 @@ export default function ManagedContentPage() {
               <h1 dir={language === "ar" ? "rtl" : "ltr"} className={`${language === "ar" ? "font-amiri leading-relaxed" : "font-bold leading-tight"} mt-2 text-3xl text-white sm:text-4xl`}>{title}</h1>
               {excerpt && <p dir={language === "ar" ? "rtl" : "ltr"} className={`${language === "ar" ? "font-amiri text-lg" : "text-base"} mt-7 leading-8 text-white/65`}>{excerpt}</p>}
               {body && <section dir={language === "ar" ? "rtl" : "ltr"} className={`${language === "ar" ? "font-amiri text-xl leading-10 sm:text-2xl" : "text-base leading-8 sm:text-lg sm:leading-9"} mt-8 whitespace-pre-wrap text-white/85`}>{body}</section>}
+
+              {assets.length > 0 && (
+                <section className="mt-9 border-t border-white/10 pt-6">
+                  <h2 className="text-sm font-semibold text-white/80">Files & downloads</h2>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {assets.map((asset) => (
+                      <button
+                        key={asset.id}
+                        type="button"
+                        disabled={Boolean(downloadingId)}
+                        onClick={() => downloadAsset(asset)}
+                        className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.025] px-4 py-3 text-left transition hover:border-yellow-400/30 disabled:opacity-50"
+                      >
+                        <span className="flex min-w-0 items-center gap-2">
+                          <FileText className="h-4 w-4 shrink-0 text-yellow-200" />
+                          <span className="truncate text-xs text-white/70">{asset.title?.[language] || asset.title?.en || asset.object_path?.split("/").pop() || asset.asset_type}</span>
+                        </span>
+                        <Download className={`h-4 w-4 shrink-0 text-yellow-200 ${downloadingId === asset.id ? "animate-pulse" : ""}`} />
+                      </button>
+                    ))}
+                  </div>
+                  {downloadError && <p className="mt-3 text-xs text-red-300" role="alert">{downloadError}</p>}
+                </section>
+              )}
             </div>
           </article>
         )}

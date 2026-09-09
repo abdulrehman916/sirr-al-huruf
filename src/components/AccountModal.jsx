@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
-import { LogOut } from "lucide-react";
+import { BookOpen, LogOut } from "lucide-react";
 import { useTranslation } from "@/i18n/useTranslation";
 
 export default function AccountModal({ user, onClose }) {
@@ -99,6 +99,12 @@ export default function AccountModal({ user, onClose }) {
 
           {/* Actions */}
           <div className="space-y-2">
+            <button
+              onClick={() => { onClose(); navigate('/my-library'); }}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-400/25 bg-cyan-400/10 px-4 py-3 font-inter text-sm font-semibold text-cyan-100"
+            >
+              <BookOpen className="h-4 w-4" /> My Library
+            </button>
             {(role === 'owner' || role === 'admin') && (
               <button
                 onClick={() => { onClose(); navigate('/admin/access-dashboard'); }}

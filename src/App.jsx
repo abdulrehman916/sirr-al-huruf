@@ -60,6 +60,7 @@ const PAGE_IMPORTS = {
   SubscriptionPending:      () => import('./pages/SubscriptionPending'),
   PremiumAccessRequest:     () => import('./pages/PremiumAccessRequest'),
   MySubscription:           () => import('./pages/MySubscription'),
+  MyLibrary:                () => import('./pages/MyLibrary'),
   MyRequests:               () => import('./pages/MyRequests'),
   RedeemCodeApproval:       () => import('./pages/RedeemCodeApproval'),
   AdminDashboard:           () => import('./pages/AdminDashboard'),

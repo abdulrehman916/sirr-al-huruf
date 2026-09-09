@@ -83,6 +83,114 @@ const entityApi = (entity) => ({
   },
 });
 
+const ACCESS_TO_DB = {
+  PUBLIC: 'FREE',
+  LOGIN: 'LOGIN',
+  PREMIUM: 'PAID',
+  PAID: 'PAID',
+  SELECTED_CUSTOMERS: 'SELECTED',
+};
+const ACCESS_FROM_DB = {
+  FREE: 'PUBLIC',
+  LOGIN: 'LOGIN',
+  PAID: 'PAID',
+  COUPON: 'PREMIUM',
+  SELECTED: 'SELECTED_CUSTOMERS',
+};
+
+const toManagedPage = (row) => row ? ({
+  id: row.id,
+  slug: row.slug,
+  title_ml: row.title?.ml || '',
+  title_en: row.title?.en || '',
+  title_ar: row.title?.ar || '',
+  excerpt_ml: row.summary?.ml || '',
+  excerpt_en: row.summary?.en || '',
+  excerpt_ar: row.summary?.ar || '',
+  body_ml: row.body?.ml || '',
+  body_en: row.body?.en || '',
+  body_ar: row.body?.ar || '',
+  status: row.status,
+  access_mode: ACCESS_FROM_DB[row.access_mode] || 'PUBLIC',
+  price_amount: Number(row.price_minor || 0) / 100,
+  price_currency: row.currency || 'AED',
+  validity_days: row.validity_days,
+  lifetime_access: row.lifetime_access,
+  featured_image_url: row.cover_url || '',
+  attachment_url: row.asset_path || '',
+  category: row.metadata?.category || 'general',
+  is_featured: Boolean(row.metadata?.is_featured),
+  seo_title: row.metadata?.seo_title || '',
+  seo_description: row.metadata?.seo_description || '',
+  version: Number(row.metadata?.version || 1),
+  published_at: row.metadata?.published_at || null,
+  last_published_by: row.metadata?.last_published_by || null,
+  created_date: row.created_at,
+  updated_date: row.updated_at,
+}) : null;
+
+const fromManagedPage = (page) => ({
+  slug: page.slug,
+  resource_type: 'PAGE',
+  title: { ml: page.title_ml || '', en: page.title_en || '', ar: page.title_ar || '' },
+  summary: { ml: page.excerpt_ml || '', en: page.excerpt_en || '', ar: page.excerpt_ar || '' },
+  body: { ml: page.body_ml || '', en: page.body_en || '', ar: page.body_ar || '' },
+  status: page.status || 'DRAFT',
+  access_mode: ACCESS_TO_DB[page.access_mode] || 'FREE',
+  price_minor: Math.max(0, Math.round(Number(page.price_amount || 0) * 100)),
+  currency: page.price_currency || 'AED',
+  validity_days: page.validity_days || null,
+  lifetime_access: Boolean(page.lifetime_access),
+  asset_path: page.attachment_url || null,
+  cover_url: page.featured_image_url || null,
+  metadata: {
+    category: page.category || 'general',
+    is_featured: Boolean(page.is_featured),
+    seo_title: page.seo_title || '',
+    seo_description: page.seo_description || '',
+    version: Number(page.version || 1),
+    published_at: page.published_at || null,
+    last_published_by: page.last_published_by || null,
+  },
+});
+
+const managedPageApi = {
+  async list(sort = '-updated_date', limit = 100, skip = 0) {
+    const ascending = !String(sort || '').startsWith('-');
+    const field = String(sort || 'updated_date').replace(/^-/, '');
+    const column = field === 'created_date' ? 'created_at' : field === 'published_at' ? 'updated_at' : 'updated_at';
+    const rows = unwrap(await client().from('resources').select('*').eq('resource_type', 'PAGE')
+      .order(column, { ascending }).range(skip || 0, (skip || 0) + (limit || 100) - 1));
+    return rows.map(toManagedPage);
+  },
+  async filter(filters = {}, sort = '-updated_date', limit = 100, skip = 0) {
+    let query = client().from('resources').select('*').eq('resource_type', 'PAGE');
+    if (filters.slug) query = query.eq('slug', filters.slug);
+    if (filters.status) query = query.eq('status', filters.status);
+    if (filters.access_mode) query = query.eq('access_mode', ACCESS_TO_DB[filters.access_mode] || filters.access_mode);
+    const ascending = !String(sort || '').startsWith('-');
+    const field = String(sort || 'updated_date').replace(/^-/, '');
+    const column = field === 'created_date' ? 'created_at' : field === 'published_at' ? 'updated_at' : 'updated_at';
+    const rows = unwrap(await query.order(column, { ascending }).range(skip || 0, (skip || 0) + (limit || 100) - 1));
+    return rows.map(toManagedPage);
+  },
+  async get(id) {
+    return toManagedPage(unwrap(await client().from('resources').select('*').eq('id', id).maybeSingle()));
+  },
+  async create(data) {
+    return toManagedPage(unwrap(await client().from('resources').insert(fromManagedPage(data)).select().single()));
+  },
+  async update(id, data) {
+    const current = await this.get(id);
+    return toManagedPage(unwrap(await client().from('resources').update(fromManagedPage({ ...current, ...data }))
+      .eq('id', id).select().single()));
+  },
+  async delete(id) {
+    unwrap(await client().from('resources').delete().eq('id', id));
+    return { success: true };
+  },
+};
+
 const auth = {
   async me() {
     if (!configured) return null;
@@ -154,7 +262,68 @@ export const platform = {
     if (error) throw error;
     return { data };
   } },
-  entities: new Proxy({}, { get: (_target, entity) => entityApi(String(entity)) }),
+  entities: new Proxy({}, { get: (_target, entity) => String(entity) === 'ManagedPage' ? managedPageApi : entityApi(String(entity)) }),
+  async canAccessResource(resourceId) {
+    if (!resourceId) return false;
+    return Boolean(unwrap(await client().rpc('can_access_resource', { target: resourceId })));
+  },
+  async listResourceAssets(resourceId) {
+    if (!resourceId) return [];
+    return unwrap(await client().from('resource_assets').select('*')
+      .eq('resource_id', resourceId).order('sort_order', { ascending: true }));
+  },
+  async uploadResourceAsset(resourceId, file, options = {}) {
+    const user = await auth.me();
+    if (!user) throw new Error('Owner sign-in is required to upload files.');
+    if (!resourceId || !file) throw new Error('A saved resource and file are required.');
+    const bucket = options.bucket || 'private-documents';
+    const safeName = String(file.name || 'upload').replace(/[^a-zA-Z0-9._-]/g, '-');
+    const objectPath = `${user.id}/resources/${resourceId}/${crypto.randomUUID()}-${safeName}`;
+    unwrap(await client().storage.from(bucket).upload(objectPath, file, { upsert: false, contentType: file.type || undefined }));
+    try {
+      return unwrap(await client().from('resource_assets').insert({
+        resource_id: resourceId,
+        asset_type: options.assetType || (file.type === 'application/pdf' ? 'PDF' : 'IMAGE'),
+        bucket,
+        object_path: objectPath,
+        title: options.title || {},
+        mime_type: file.type || null,
+        byte_size: Number(file.size || 0),
+        is_preview: Boolean(options.isPreview),
+        is_downloadable: options.isDownloadable !== false,
+        sort_order: Number(options.sortOrder || 0),
+      }).select().single());
+    } catch (error) {
+      await client().storage.from(bucket).remove([objectPath]);
+      throw error;
+    }
+  },
+  async deleteResourceAsset(asset) {
+    if (!asset?.id) return { success: true };
+    if (asset.bucket && asset.object_path) {
+      unwrap(await client().storage.from(asset.bucket).remove([asset.object_path]));
+    }
+    unwrap(await client().from('resource_assets').delete().eq('id', asset.id));
+    return { success: true };
+  },
+  async createResourceAssetDownload(asset, expiresIn = 120) {
+    if (asset?.external_url) return asset.external_url;
+    if (!asset?.bucket || !asset?.object_path) throw new Error('Download file is not configured.');
+    const data = unwrap(await client().storage.from(asset.bucket).createSignedUrl(asset.object_path, expiresIn, { download: true }));
+    return data.signedUrl;
+  },
+  async listMyEntitlements() {
+    const user = await auth.me();
+    if (!user) return [];
+    return unwrap(await client().from('entitlements')
+      .select('id, starts_at, expires_at, revoked_at, source, resource:resources(*)')
+      .eq('user_id', user.id).is('revoked_at', null).order('created_at', { ascending: false }));
+  },
+  async listFreeResources(limit = 100) {
+    return unwrap(await client().from('resources').select('*')
+      .eq('status', 'PUBLISHED').eq('access_mode', 'FREE')
+      .order('sort_order', { ascending: true }).limit(limit));
+  },
   isConfigured: configured,
 };
 

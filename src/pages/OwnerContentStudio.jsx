@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Check, Copy, ExternalLink, Eye, FilePlus2, Save, Send, Trash2 } from "lucide-react";
+import { Check, Copy, ExternalLink, Eye, FilePlus2, Paperclip, Save, Send, Trash2, Upload } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -50,6 +50,8 @@ export default function OwnerContentStudio() {
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [assets, setAssets] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   const selected = useMemo(() => items.find((x) => x.id === selectedId) || null, [items, selectedId]);
 
@@ -59,7 +61,12 @@ export default function OwnerContentStudio() {
   }, [role]);
 
   useEffect(() => {
-    if (selected) setDraft({ ...EMPTY, ...selected });
+    if (selected) {
+      setDraft({ ...EMPTY, ...selected });
+      base44.listResourceAssets(selected.id).then(setAssets).catch(() => setAssets([]));
+    } else {
+      setAssets([]);
+    }
   }, [selected]);
 
   if (role !== "owner") return <Navigate to="/" replace />;
@@ -145,6 +152,36 @@ export default function OwnerContentStudio() {
       toast({ title: "Deleted", description: "Managed page removed." });
     } catch (error) {
       toast({ title: "Delete failed", description: error?.message || "Could not delete this page.", variant: "destructive" });
+    }
+  }
+
+  async function uploadAsset(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !selectedId) return;
+    setUploading(true);
+    try {
+      await base44.uploadResourceAsset(selectedId, file, {
+        assetType: file.type === "application/pdf" ? "PDF" : "IMAGE",
+        isDownloadable: true,
+      });
+      setAssets(await base44.listResourceAssets(selectedId));
+      toast({ title: "File uploaded", description: `${file.name} ഈ resource-ലേക്ക് ചേർത്തു.` });
+    } catch (error) {
+      toast({ title: "Upload failed", description: error?.message || "File upload ചെയ്യാൻ കഴിഞ്ഞില്ല.", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function removeAsset(asset) {
+    if (!window.confirm("Delete this file from the resource?")) return;
+    try {
+      await base44.deleteResourceAsset(asset);
+      setAssets((current) => current.filter((item) => item.id !== asset.id));
+      toast({ title: "File deleted" });
+    } catch (error) {
+      toast({ title: "Delete failed", description: error?.message || "File delete ചെയ്യാൻ കഴിഞ്ഞില്ല.", variant: "destructive" });
     }
   }
 
@@ -246,6 +283,31 @@ export default function OwnerContentStudio() {
               <label><span className={labelClass}>Malayalam content</span><textarea rows={10} className={inputClass} value={draft.body_ml} onChange={(e) => change("body_ml", e.target.value)} /></label>
               <label><span className={labelClass}>Arabic content</span><textarea dir="rtl" rows={8} className={`${inputClass} font-amiri text-base`} value={draft.body_ar} onChange={(e) => change("body_ar", e.target.value)} /></label>
               <label><span className={labelClass}>English content</span><textarea rows={7} className={inputClass} value={draft.body_en} onChange={(e) => change("body_en", e.target.value)} /></label>
+
+              <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-semibold text-white/80">PDF & media files</p>
+                    <p className="mt-1 text-[10px] text-white/35">Page ആദ്യം save ചെയ്തശേഷം private files upload ചെയ്യാം.</p>
+                  </div>
+                  <label className={`flex cursor-pointer items-center gap-1.5 rounded-lg border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-200 ${(!selectedId || uploading) ? "pointer-events-none opacity-40" : ""}`}>
+                    <Upload className="h-3.5 w-3.5" /> {uploading ? "Uploading…" : "Upload file"}
+                    <input type="file" accept="application/pdf,image/*,audio/*" className="hidden" disabled={!selectedId || uploading} onChange={uploadAsset} />
+                  </label>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {assets.length === 0 && <p className="text-xs text-white/30">Files ചേർത്തിട്ടില്ല.</p>}
+                  {assets.map((asset) => (
+                    <div key={asset.id} className="flex items-center justify-between gap-3 rounded-lg border border-white/8 px-3 py-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Paperclip className="h-3.5 w-3.5 shrink-0 text-cyan-300" />
+                        <span className="truncate text-xs text-white/65">{asset.title?.en || asset.object_path?.split("/").pop() || asset.asset_type}</span>
+                      </div>
+                      <button onClick={() => removeAsset(asset)} className="rounded p-1 text-red-300/70 hover:bg-red-400/10" title="Delete file"><Trash2 className="h-3.5 w-3.5" /></button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {preview && (
