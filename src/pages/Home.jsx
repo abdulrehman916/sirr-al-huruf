@@ -4,7 +4,6 @@ import { ScrollText } from "lucide-react";
 import { useTranslation } from "@/i18n/useTranslation";
 import MysticalBackground from "../components/MysticalBackground";
 import HeroSection from "../components/HeroSection";
-import WebsiteHomeShell from "../components/WebsiteHomeShell";
 import CardsSection from "../components/CardsSection";
 import PageLayout from "../components/PageLayout";
 import PullToRefresh from "../components/PullToRefresh";
@@ -37,8 +36,6 @@ export default function Home() {
             <HeroSection mouse={mouse} />
           </div>
 
-          <WebsiteHomeShell />
-
           <div style={{ width: "100%", margin: 0, padding: 0 }}>
             <CardsSection />
           </div>
@@ -54,9 +51,6 @@ export default function Home() {
                   Sirr Al-Huruf Knowledge Website
                 </p>
               </div>
-              <p className="font-inter text-[11px]" style={{ color: "rgba(148,163,184,0.42)" }}>
-                Calculation systems remain independent and method-specific.
-              </p>
             </div>
           </footer>
         </div>

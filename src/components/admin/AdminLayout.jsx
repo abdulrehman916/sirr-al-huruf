@@ -167,7 +167,7 @@ function SidebarContent({ location, onNavigate }) {
         ))}
       </nav>
 
-      {/* ── Sidebar footer: Back to App, then Log Out pinned to bottom ── */}
+      {/* ── Sidebar footer: Back to Website, then Log Out pinned to bottom ── */}
       <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${G.border}` }}>
         <Link
           to="/"
@@ -185,7 +185,7 @@ function SidebarContent({ location, onNavigate }) {
         >
           <ChevronLeft style={{ width: 14, height: 14, color: "rgba(255,255,255,0.35)" }} />
           <span style={{ fontFamily: "Inter, sans-serif", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.40)" }}>
-            Back to App
+            Back to Website
           </span>
         </Link>
         <button
