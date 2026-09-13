@@ -174,8 +174,10 @@ export default function ManagedContentPage() {
     }
     let cancelled = false;
     base44.listResourceAssets(page.id)
-      .then(async (rows) => Promise.all((Array.isArray(rows) ? rows : []).map(async (asset) => {
-        if (!["IMAGE", "VIDEO", "AUDIO", "EXTERNAL_VIDEO"].includes(asset.asset_type)) return asset;
+      .then(async (rows) => Promise.all((Array.isArray(rows) ? rows : [])
+        .filter((asset) => ["COVER", "IMAGE", "PDF", "PREVIEW_PDF", "DOWNLOAD"].includes(asset.asset_type))
+        .map(async (asset) => {
+        if (!["COVER", "IMAGE"].includes(asset.asset_type)) return asset;
         try { return { ...asset, view_url: await base44.createResourceAssetView(asset) }; }
         catch { return asset; }
       })))
@@ -236,13 +238,11 @@ export default function ManagedContentPage() {
               {excerpt && <p dir={language === "ar" ? "rtl" : "ltr"} className={`${language === "ar" ? "font-amiri text-lg" : "text-base"} mt-7 leading-8 text-white/65`}>{excerpt}</p>}
               {body && <section dir={language === "ar" ? "rtl" : "ltr"} className={`${language === "ar" ? "font-amiri text-xl leading-10 sm:text-2xl" : "text-base leading-8 sm:text-lg sm:leading-9"} mt-8 whitespace-pre-wrap text-white/85`}>{body}</section>}
 
-              {assets.some((asset) => asset.view_url) && (
+              {assets.some((asset) => asset.view_url && ["COVER", "IMAGE"].includes(asset.asset_type)) && (
                 <section className="mt-8 grid gap-4 sm:grid-cols-2 print:block">
-                  {assets.filter((asset) => asset.view_url).map((asset) => (
+                  {assets.filter((asset) => asset.view_url && ["COVER", "IMAGE"].includes(asset.asset_type)).map((asset) => (
                     <div key={`media-${asset.id}`} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20 print:mb-4">
-                      {asset.asset_type === "IMAGE" && <img src={asset.view_url} alt={asset.title?.[language] || asset.title?.en || title} className="max-h-[620px] w-full object-contain" />}
-                      {(asset.asset_type === "VIDEO" || asset.asset_type === "EXTERNAL_VIDEO") && <video src={asset.view_url} controls preload="metadata" className="w-full" />}
-                      {asset.asset_type === "AUDIO" && <audio src={asset.view_url} controls preload="metadata" className="w-full p-3" />}
+                      <img src={asset.view_url} alt={asset.title?.[language] || asset.title?.en || title} className="max-h-[620px] w-full object-contain" />
                     </div>
                   ))}
                 </section>
@@ -257,7 +257,7 @@ export default function ManagedContentPage() {
               {page.allow_download !== false && (
                 <div className="mt-8 print:hidden">
                   <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-2 text-sm font-semibold text-yellow-100">
-                    <Download className="h-4 w-4" /> Save this page as PDF
+                    <Download className="h-4 w-4" /> Download / Save page as PDF
                   </button>
                 </div>
               )}
