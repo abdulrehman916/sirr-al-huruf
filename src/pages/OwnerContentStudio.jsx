@@ -35,6 +35,12 @@ const EMPTY = {
 const inputClass = "w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none focus:border-yellow-400/50";
 const labelClass = "mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/40";
 
+function createAutomaticSlug() {
+  const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+  const random = crypto.randomUUID().slice(0, 8);
+  return `story-${date}-${random}`;
+}
+
 function slugify(value) {
   return String(value || "")
     .trim()
@@ -43,17 +49,12 @@ function slugify(value) {
     .replace(/^-+|-+$/g, "");
 }
 
-function createAutoSlug() {
-  const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
-  return `story-${date}-${crypto.randomUUID().slice(0, 8)}`;
-}
-
 export default function OwnerContentStudio() {
   const { role, user, authResolved, adminProfileLoading } = useAuth();
   const { toast } = useToast();
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-  const [draft, setDraft] = useState(() => ({ ...EMPTY, slug: createAutoSlug() }));
+  const [draft, setDraft] = useState(() => ({ ...EMPTY, slug: createAutomaticSlug() }));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState(true);
@@ -96,7 +97,7 @@ export default function OwnerContentStudio() {
 
   function newPage() {
     setSelectedId(null);
-    setDraft({ ...EMPTY, slug: createAutoSlug() });
+    setDraft({ ...EMPTY, slug: createAutomaticSlug() });
   }
 
   function change(field, value) {
@@ -176,13 +177,12 @@ export default function OwnerContentStudio() {
     setUploading(true);
     try {
       for (const file of files) {
-        const assetType = file.type === "application/pdf"
-          ? "PDF"
-          : file.type.startsWith("video/")
-            ? "VIDEO"
-            : file.type.startsWith("audio/")
-              ? "AUDIO"
-              : "IMAGE";
+        const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+        const isImage = file.type.startsWith("image/");
+        if (!isPdf && !isImage) {
+          throw new Error(`${file.name}: Photos and PDF documents only.`);
+        }
+        const assetType = isPdf ? "PDF" : "IMAGE";
         await base44.uploadResourceAsset(selectedId, file, {
           assetType,
           isDownloadable: draft.allow_download !== false,
@@ -246,7 +246,7 @@ export default function OwnerContentStudio() {
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-yellow-500/20 bg-white/[0.025] p-3">
             <div>
               <p className="text-xs font-semibold text-white/80">{selectedId ? "Edit managed page" : "Create managed page"}</p>
-              <p className="text-[10px] text-white/35">Calculation modules are not editable from this studio. Paid access is granted through Reading / Redeem Codes.</p>
+              <p className="text-[10px] text-white/35">Stories and information pages only. Calculation modules remain separate and unchanged.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {draft.slug.trim() && (
@@ -276,19 +276,6 @@ export default function OwnerContentStudio() {
             </div>
           </div>
 
-          {draft.slug.trim() && (
-            <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.06] p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-cyan-200/60">Share link</p>
-              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
-                <code className="min-w-0 flex-1 overflow-x-auto rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs text-cyan-100">{`${window.location.origin}/content/${slugify(draft.slug)}`}</code>
-                <button type="button" onClick={copyLiveLink} className="flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-200">
-                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} {copied ? "Copied" : "Copy link"}
-                </button>
-              </div>
-              <p className="mt-2 text-[10px] text-white/40">ഈ link Facebook, Instagram അല്ലെങ്കിൽ YouTube-ൽ share ചെയ്യാം. Customer login കഴിഞ്ഞാൽ ഇതേ page-ലേക്ക് മടങ്ങും.</p>
-            </div>
-          )}
-
           <div className="grid grid-cols-1 gap-4 2xl:grid-cols-2">
             <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -301,7 +288,7 @@ export default function OwnerContentStudio() {
               <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                 <label><span className={labelClass}>Category</span><input className={inputClass} value={draft.category} onChange={(e) => change("category", e.target.value)} /></label>
                 <label><span className={labelClass}>Access</span><select className={inputClass} value={draft.access_mode} onChange={(e) => change("access_mode", e.target.value)}>
-                  <option value="PUBLIC">Public — no login</option><option value="LOGIN">Free — email login required</option><option value="PREMIUM">Premium / Redeem Code</option><option value="PAID">Paid / Redeem Code</option><option value="SELECTED_CUSTOMERS">Selected customers / Redeem Code</option>
+                  <option value="PUBLIC">Public — no login</option><option value="LOGIN">Free — email login required</option><option value="PAID">Paid — payment or owner access</option><option value="SELECTED_CUSTOMERS">Selected customers — owner access</option>
                 </select></label>
                 <label><span className={labelClass}>Status</span><select className={inputClass} value={draft.status} onChange={(e) => change("status", e.target.value)}><option value="DRAFT">Draft</option><option value="PUBLISHED">Published</option><option value="ARCHIVED">Archived</option></select></label>
               </div>
@@ -331,12 +318,12 @@ export default function OwnerContentStudio() {
               <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="text-xs font-semibold text-white/80">PDF, image, audio & video files</p>
-                    <p className="mt-1 text-[10px] text-white/35">Page ആദ്യം save ചെയ്തശേഷം private files upload ചെയ്യാം.</p>
+                    <p className="text-xs font-semibold text-white/80">Photos & PDF documents</p>
+                    <p className="mt-1 text-[10px] text-white/35">Page ആദ്യം Save Draft ചെയ്തശേഷം നിരവധി photos, downloadable PDF എന്നിവ ചേർക്കാം. Video upload ഇല്ല.</p>
                   </div>
                   <label className={`flex cursor-pointer items-center gap-1.5 rounded-lg border border-cyan-400/25 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-200 ${(!selectedId || uploading) ? "pointer-events-none opacity-40" : ""}`}>
                     <Upload className="h-3.5 w-3.5" /> {uploading ? "Uploading…" : "Upload file"}
-                    <input type="file" multiple accept="application/pdf,image/*,audio/*,video/*" className="hidden" disabled={!selectedId || uploading} onChange={uploadAsset} />
+                    <input type="file" multiple accept="application/pdf,image/*" className="hidden" disabled={!selectedId || uploading} onChange={uploadAsset} />
                   </label>
                 </div>
                 <div className="mt-3 space-y-2">
