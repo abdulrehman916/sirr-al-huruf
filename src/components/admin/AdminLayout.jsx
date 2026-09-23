@@ -220,7 +220,7 @@ function SidebarContent({ location, onNavigate }) {
   );
 }
 
-export default function AdminLayout({ children, title, subtitle, showBackButton = false }) {
+export default function AdminLayout({ children, title, subtitle, showBackButton = false, backPath = null }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -349,7 +349,7 @@ export default function AdminLayout({ children, title, subtitle, showBackButton 
           {/* Back button when showBackButton */}
           {showBackButton && (
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => backPath ? navigate(backPath) : navigate(-1)}
               style={{
                 display: "flex", alignItems: "center", gap: 5,
                 padding: "5px 12px", borderRadius: 7,

@@ -37,7 +37,10 @@ const G = {
 };
 
 const DURATION_OPTIONS = [
-  { value: "1_MONTH",    label: "1 Month",    days: 30 },
+  { value: "1_HOUR",    label: "1 Hour",     duration_ms: 3600000 },
+  { value: "1_DAY",     label: "1 Day",      duration_ms: 86400000 },
+  { value: "7_DAYS",    label: "7 Days",     duration_ms: 604800000 },
+  { value: "1_MONTH",   label: "1 Month",    days: 30 },
   { value: "3_MONTHS",   label: "3 Months",   days: 90 },
   { value: "6_MONTHS",   label: "6 Months",   days: 180 },
   { value: "12_MONTHS",  label: "12 Months",  days: 365 },
@@ -97,13 +100,13 @@ function GrantAccessModal({ user, existingPaths, onClose, onGranted }) {
     setProcessing(true);
     const dur = DURATION_OPTIONS.find(d => d.value === duration);
     const now = new Date();
-    const expiry = new Date(now.getTime() + dur.days * 86400000).toISOString();
+    const expiry = dur.value === "LIFETIME" ? null : new Date(now.getTime() + (dur.duration_ms ?? dur.days * 86400000)).toISOString();
     let granted = 0;
     for (const path of selectedPages) {
       const page = getContentPageList().find(p => p.path === path);
       if (!page) continue;
       try {
-        await base44.functions.invoke("grantPagePermission", {
+        const result = await base44.functions.invoke("grantPagePermission", {
           user_id: user.id,
           page_path: page.path,
           page_name: page.name,
@@ -111,12 +114,17 @@ function GrantAccessModal({ user, existingPaths, onClose, onGranted }) {
           start_date: now.toISOString(),
           expiry_date: expiry,
         });
+        if (!result.data?.success) throw new Error("Grant was not saved");
         granted++;
-      } catch {}
+      } catch (error) {
+        toast({ title: `Could not grant ${page.name}`, description: error.message, variant: "destructive" });
+      }
     }
     setProcessing(false);
-    toast({ title: `✓ Granted ${granted} page(s) to ${user.full_name || user.email}` });
-    onGranted(); onClose();
+    if (granted > 0) {
+      toast({ title: `✓ Granted ${granted} page(s) to ${user.full_name || user.email}` });
+      onGranted(); onClose();
+    }
   };
 
   return (
@@ -211,7 +219,7 @@ function ExtendAccessModal({ permission, onClose, onExtended }) {
   const handleExtend = async () => {
     setProcessing(true);
     const dur = DURATION_OPTIONS.find(d => d.value === duration);
-    const newExpiry = new Date(Date.now() + dur.days * 86400000).toISOString();
+    const newExpiry = dur.value === "LIFETIME" ? null : new Date(Date.now() + (dur.duration_ms ?? dur.days * 86400000)).toISOString();
     try {
       await base44.functions.invoke("extendPermissionExpiry", {
         permission_id: permission.permission_id,
@@ -1159,7 +1167,10 @@ export default function OwnerAccessDashboard() {
   const { toast } = useToast();
   const { role } = useAuth();
   const [isAdmin, setIsAdmin] = useState(null);
-  const [tab, setTab] = useState("users");
+  const [tab, setTab] = useState(() => {
+    const requested = new URLSearchParams(window.location.search).get("tab");
+    return TABS.some((item) => item.id === requested) ? requested : "users";
+  });
   const [loading, setLoading] = useState(true);
 
   const [users, setUsers] = useState([]);

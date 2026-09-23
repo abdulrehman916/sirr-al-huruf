@@ -35,8 +35,8 @@ const ACTION_CFG = {
 
 const ACTION_NOTICES = {
   remove: { color: "rgba(245,158,11,0.80)", bg: "rgba(245,158,11,0.07)", border: "rgba(245,158,11,0.30)", icon: UserMinus, text: "Removed users are hidden from the Active list but can still log in, use subscriptions, and access their pages. They can be restored at any time." },
-  block:  { color: "rgba(239,68,68,0.80)",  bg: "rgba(239,68,68,0.07)",  border: "rgba(239,68,68,0.30)",  icon: Ban,       text: "Blocked users cannot log in, receive OTP, access pages, use subscriptions, or redeem codes." },
-  archive:{ color: "rgba(168,85,247,0.80)", bg: "rgba(168,85,247,0.07)", border: "rgba(168,85,247,0.30)", icon: Archive,   text: "Archived users cannot log in. All historical data is preserved and they can be restored at any time." },
+  block:  { color: "rgba(239,68,68,0.80)",  bg: "rgba(239,68,68,0.07)",  border: "rgba(239,68,68,0.30)",  icon: Ban,       text: "Blocked customers cannot use protected pages, subscriptions, or linked codes." },
+  archive:{ color: "rgba(168,85,247,0.80)", bg: "rgba(168,85,247,0.07)", border: "rgba(168,85,247,0.30)", icon: Archive,   text: "Archived customers lose protected access. Historical data is kept for restoration." },
 };
 
 // ── Status Action Modal ───────────────────────────────────────────────────────
@@ -53,7 +53,6 @@ function StatusModal({ user, profile, action, onClose, onDone }) {
     try {
       const me = await base44.auth.me();
       const existing = await base44.entities.UserAccessProfile.filter({ user_id: user.id }, null, 1);
-      if (existing.length === 0) { toast({ title: "Profile not found", variant: "destructive" }); setProcessing(false); return; }
 
       const now = new Date().toISOString();
       const cleanFields = { removed_at: null, removed_by: null, remove_reason: null, blocked_at: null, blocked_by: null, block_reason: null, archived_at: null, archived_by: null, archive_reason: null };
@@ -66,7 +65,24 @@ function StatusModal({ user, profile, action, onClose, onDone }) {
       if (action === "archive")   update = { ...cleanFields, account_status: "ARCHIVED", archived_at: now, archived_by: me.id,  archive_reason: reason || "Archived by admin" };
       if (action === "unarchive") update = { ...cleanFields, account_status: "ACTIVE" };
 
-      await base44.entities.UserAccessProfile.update(existing[0].id, update);
+      // Enforce a block at the authenticated account level as well as the
+      // dashboard display record. The server rejects changes to owner accounts.
+      if (["block", "archive", "unblock", "unarchive", "restore"].includes(action)) {
+        const { supabase } = await import("@/api/base44Client");
+        const { error } = await supabase.rpc("set_customer_status", {
+          p_user_id: user.id,
+          p_status: ["block", "archive"].includes(action) ? "disabled" : "active",
+        });
+        if (error) throw error;
+      }
+      if (existing.length > 0) {
+        await base44.entities.UserAccessProfile.update(existing[0].id, update);
+      } else {
+        await base44.entities.UserAccessProfile.create({
+          user_id: user.id, email: user.email, full_name: user.full_name || "",
+          ...update,
+        });
+      }
       toast({ title: `✓ ${user.full_name || user.email} — ${cfg.btn}` });
       onDone();
       onClose();

@@ -376,7 +376,7 @@ export default function AdminUserPermissions() {
   const init = async () => {
     try {
       const me = await base44.auth.me();
-      if (!me || me.role !== "admin") {
+      if (!me || !["owner", "admin"].includes(me.role)) {
         setIsAdmin(false);
         return;
       }

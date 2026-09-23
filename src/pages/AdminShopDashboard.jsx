@@ -58,7 +58,7 @@ export default function AdminShopDashboard() {
 
   useEffect(() => {
     base44.auth.me().then(user => {
-      if (!user || user.role !== "admin") setIsAdmin(false);
+      if (!user || !["owner", "admin"].includes(user.role)) setIsAdmin(false);
       else setIsAdmin(true);
     }).catch(() => setIsAdmin(false));
   }, []);

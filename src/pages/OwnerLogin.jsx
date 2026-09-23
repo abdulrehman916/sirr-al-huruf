@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Crown, Loader2 } from "lucide-react";
+import { ShieldCheck, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import GoogleIcon from "@/components/GoogleIcon";
@@ -27,14 +27,11 @@ export default function OwnerLogin() {
     }
   }
 
-  return <AuthLayout icon={Crown} title="Secure Owner Access" subtitle="Owner Google account ഉപയോഗിച്ച് തുടരുക">
+  return <AuthLayout icon={ShieldCheck} title="Sirr al-Huruf" subtitle="Google അക്കൗണ്ട് ഉപയോഗിച്ച് സുരക്ഷിതമായി തുടരുക">
     {error && <div role="alert" className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
     <Button type="button" onClick={continueWithGoogle}
       className="h-12 w-full bg-white font-semibold text-slate-900 hover:bg-white/90" disabled={loading}>
       {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Opening Google…</> : <><GoogleIcon className="mr-2 h-5 w-5"/>Continue with Google</>}
     </Button>
-    <p className="mt-4 text-center text-xs leading-5 text-muted-foreground">
-      Owner email ഉള്ള Google account മാത്രം Owner Panel തുറക്കും.
-    </p>
   </AuthLayout>;
 }

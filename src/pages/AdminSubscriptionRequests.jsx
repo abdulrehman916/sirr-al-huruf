@@ -37,7 +37,7 @@ export default function AdminSubscriptionRequests() {
   const checkAuth = async () => {
     try {
       const currentUser = await base44.auth.me();
-      if (!currentUser || currentUser.role !== "admin") {
+      if (!currentUser || !["owner", "admin"].includes(currentUser.role)) {
         toast({
           title: "Access Denied",
           description: "Admin access required",

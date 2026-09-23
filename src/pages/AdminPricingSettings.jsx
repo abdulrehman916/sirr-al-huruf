@@ -49,7 +49,7 @@ export default function AdminPricingSettings() {
   useEffect(() => {
     base44.auth.me().then((u) => {
       setUser(u);
-      if (u.role !== 'admin') {
+      if (!["owner", "admin"].includes(u.role)) {
         window.location.href = '/';
       }
     }).catch(() => window.location.href = '/login');

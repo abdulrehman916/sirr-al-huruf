@@ -142,7 +142,7 @@ export default function AdminHolyNamesTranslator() {
   const [currentIdx, setCurrentIdx] = useState(null);
 
   useState(() => {
-    base44.auth.me().then(u => setIsAdmin(u?.role === 'admin')).catch(() => setIsAdmin(false));
+    base44.auth.me().then(u => setIsAdmin(["owner", "admin"].includes(u?.role))).catch(() => setIsAdmin(false));
   });
 
   const translateOne = async (nameData, idx) => {

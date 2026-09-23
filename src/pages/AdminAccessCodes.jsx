@@ -28,7 +28,7 @@ export default function AdminAccessCodes() {
   const checkAdminAccess = async () => {
     try {
       const user = await base44.auth.me();
-      if (!user || user.role !== 'admin') {
+      if (!user || !["owner", "admin"].includes(user.role)) {
         setIsAdmin(false);
         toast({
           title: "Access Denied",
@@ -66,7 +66,7 @@ export default function AdminAccessCodes() {
   }
 
   return (
-    <AdminLayout title="Access Codes" subtitle="إدارة رموز الوصول">
+    <AdminLayout title="Access Codes" subtitle="إدارة رموز الوصول" showBackButton backPath="/admin/access-dashboard?tab=codes">
       <div className="max-w-6xl mx-auto">
         <AccessCodesTab />
       </div>

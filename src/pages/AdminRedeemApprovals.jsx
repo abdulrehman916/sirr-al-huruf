@@ -57,7 +57,7 @@ export default function AdminRedeemApprovals() {
   const checkAdminAccess = async () => {
     try {
       const user = await base44.auth.me();
-      if (!user || user.role !== "admin") {
+      if (!user || !["owner", "admin"].includes(user.role)) {
         setIsAdmin(false);
         toast({
           title: "Access Denied",

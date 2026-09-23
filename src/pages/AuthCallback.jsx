@@ -20,6 +20,18 @@ export default function AuthCallback() {
       const { data } = await supabase.auth.getSession();
       if (data?.session) {
         try { persistSet("sirr_admin_session", "true"); } catch { /* ignore */ }
+        if (returnTo.startsWith("/admin/")) {
+          const { data: profile, error } = await supabase.from("profiles")
+            .select("role,status").eq("id", data.session.user.id).single();
+          if (error || !profile || profile.status !== "active") {
+            if (active) setMessage("Account access is unavailable. Please contact support.");
+            return;
+          }
+          if (!["owner", "admin"].includes(profile.role)) {
+            window.location.replace("/");
+            return;
+          }
+        }
         window.location.replace(returnTo);
         return;
       }

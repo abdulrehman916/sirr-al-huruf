@@ -53,7 +53,7 @@ export default function AdminSupportCenter() {
   const checkAdmin = async () => {
     try {
       const user = await base44.auth.me();
-      if (user?.role !== "admin") { setIsAdmin(false); return; }
+      if (!["owner", "admin"].includes(user?.role)) { setIsAdmin(false); return; }
       setIsAdmin(true);
       loadConversations();
     } catch (e) {

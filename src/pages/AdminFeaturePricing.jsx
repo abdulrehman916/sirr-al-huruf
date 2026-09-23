@@ -38,7 +38,7 @@ export default function AdminFeaturePricing() {
   const checkAdmin = async () => {
     try {
       const user = await base44.auth.me();
-      if (!user || user.role !== "admin") { setIsAdmin(false); return; }
+      if (!user || !["owner", "admin"].includes(user.role)) { setIsAdmin(false); return; }
       setIsAdmin(true);
       loadData();
     } catch {
