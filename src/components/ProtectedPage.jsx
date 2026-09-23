@@ -35,7 +35,7 @@ const GoogleMark = ({ className = "w-4 h-4" }) => (
 );
 
 export default function ProtectedPage({ routePath, children, requiresPermission }) {
-  const { role, adminProfile, adminProfileLoading, isAuthenticated } = useAuth();
+  const { role, adminProfile, adminProfileLoading, authResolved, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [accessStatus, setAccessStatus] = useState("checking");
@@ -62,6 +62,15 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
   const checkAccess = useCallback(async () => {
     // Reset admin flag at start — will be set to true if admin is detected below
     setAdminFlag(false);
+
+    // Wait until the returning OAuth session has been checked before deciding
+    // whether an admin route is forbidden. An early guest check can otherwise
+    // finish after the owner check and overwrite its granted state.
+    const isAdminRoute = routePath.startsWith("/admin/") || getPageConfig(routePath)?.adminOnly;
+    if (isAdminRoute && !authResolved) {
+      setAccessStatus("checking");
+      return;
+    }
 
     // 0. Owner universal bypass — the Owner never sees any lock, premium
     //    screen, reading-code page, or access restriction anywhere in the app.
@@ -231,7 +240,7 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
 
     // Background validation — removes permissions for revoked/disabled/expired codes
     validateAndCleanPermissions();
-  }, [routePath, requiresPermission, role, adminProfile, adminProfileLoading, isAuthenticated]);
+  }, [routePath, requiresPermission, role, adminProfile, adminProfileLoading, authResolved, isAuthenticated]);
 
   useEffect(() => {
     const config = getPageConfig(routePath);
