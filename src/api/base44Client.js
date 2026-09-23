@@ -360,11 +360,22 @@ export const platform = {
         (code.page_paths || []).map((path, index) => ({
           page_path: path,
           page_name: (code.page_names || [])[index] || path,
-          expiry_date: code.page_grants?.[path]?.expires_at ?? code.expiry_date ?? null,
+          expiry_date: code.page_grants?.[path]
+            ? code.page_grants[path].expires_at : code.expiry_date ?? null,
           granted_at: code.page_grants?.[path]?.granted_at || null,
           code: code.code,
         })));
       return { data: { success: true, permissions } };
+    }
+    const codeDetailActions = {
+      updateAccessCode: 'update', renewAccessCode: 'renew',
+      deleteAccessCodeSecure: 'delete', resetCodeDevice: 'reset_device',
+    };
+    if (codeDetailActions[name]) {
+      const { data, error } = await client().rpc('manage_access_code_detail',
+        { p_action: codeDetailActions[name], p_payload: body });
+      if (error) throw error;
+      return { data };
     }
     if (name === 'updatePageVisibility') {
       const { data, error } = await client().rpc('set_page_visibility', {
