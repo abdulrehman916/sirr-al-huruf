@@ -377,6 +377,15 @@ export const platform = {
       if (error) throw error;
       return { data };
     }
+    if (name === 'approveAccessRequest') {
+      const { data, error } = await client().rpc('decide_access_request', {
+        p_request_id: body.request_id,
+        p_reject: body.reject === true,
+        p_duration: body.access_duration || '1_MONTH',
+      });
+      if (error) throw error;
+      return { data };
+    }
     if (name === 'updatePageVisibility') {
       const { data, error } = await client().rpc('set_page_visibility', {
         p_path: body.page_path, p_name: body.page_name,
