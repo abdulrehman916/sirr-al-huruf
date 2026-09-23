@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { Lock, MessageCircle, KeyRound, Loader2, CheckCircle, AlertCircle, Shield, Construction } from "lucide-react";
 import { getPageConfig, isPublicPage } from "@/lib/pageRegistry";
 import { getCached, setCached, visibilityKey } from "@/lib/permissionCache";
-import { checkLocalPermission, getSessionId, mergeGrantedPermissions, validateAndCleanPermissions, addRedeemedCode } from "@/lib/sessionId";
+import { validateAndCleanPermissions } from "@/lib/sessionId";
 import { setAdminFlag } from "@/lib/featurePermission";
 import { useAuth } from "@/lib/AuthContext";
 import { ROLES, isAdminRole, canAccessAdminRoute, getAdminHomePath } from "@/lib/rbac";
@@ -332,21 +332,16 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
       pageName={pageName}
       routePath={routePath}
       resource={unifiedResource}
-      onUnlocked={() => setAccessStatus("granted")}
     />
   );
 }
 
 // ── Premium locked screen ──────────────────────────────────────────────────────
-function PremiumLockedScreen({ pageName, routePath, resource, onUnlocked }) {
+function PremiumLockedScreen({ pageName, routePath, resource }) {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [showCodeEntry, setShowCodeEntry] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
-  const [code, setCode] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [codeResult, setCodeResult] = useState(null);
   const [googleLoading, setGoogleLoading] = useState(false);
 
   // Google Sign-In for Guests — identity + return to this exact page.
@@ -365,34 +360,6 @@ function PremiumLockedScreen({ pageName, routePath, resource, onUnlocked }) {
       setGoogleLoading(false);
       try { persistRemove("sirr_admin_session"); } catch { /* ignore */ }
       try { sessionStorage.removeItem("sirr_locked_signin_redirect"); } catch { /* ignore */ }
-    }
-  };
-
-  const handleRedeem = async () => {
-    const trimmed = code.trim().toUpperCase();
-    if (!trimmed) return;
-    setLoading(true);
-    setCodeResult(null);
-    try {
-      const sessionId = getSessionId();
-      const res = await base44.functions.invoke("redeemCodeLinked", {
-        code: trimmed,
-        session_id: sessionId,
-      });
-      const data = res.data;
-      if (data?.success && data?.permissions) {
-        addRedeemedCode(trimmed);
-        mergeGrantedPermissions(data.permissions);
-        setCodeResult({ success: true, message: data.message });
-        // Re-check permissions and open the originally requested page.
-        setTimeout(() => onUnlocked(), 1000);
-      } else {
-        setCodeResult({ success: false, message: data?.message || t("invalid_code", "Invalid code.") });
-      }
-    } catch (e) {
-      setCodeResult({ success: false, message: e.message || t("redemption_failed", "Redemption failed.") });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -465,12 +432,7 @@ function PremiumLockedScreen({ pageName, routePath, resource, onUnlocked }) {
             </div>
           )}
 
-          <button onClick={() => setShowCodeEntry(v => !v)}
-            className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 mb-3"
-            style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}>
-            <KeyRound className="w-4 h-4" />
-            {t("enter_reading_code", "Enter Reading Access Code")}
-          </button>
+          <p className="mb-4 text-xs text-white/45">Access is linked to your signed-in account after approval.</p>
 
           {/* ── Request access: WhatsApp + in-app form (original workflow) ── */}
           <div className="mb-3">
@@ -491,64 +453,6 @@ function PremiumLockedScreen({ pageName, routePath, resource, onUnlocked }) {
           </button>
         </div>
 
-        {/* Code entry panel */}
-        <AnimatePresence>
-          {showCodeEntry && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              style={{ overflow: "hidden" }}
-            >
-              <div className="rounded-2xl border p-5 space-y-4" style={{
-                background: "linear-gradient(145deg, #0c1630 0%, #060c1c 100%)",
-                borderColor: G.borderHi,
-              }}>
-                <h3 className="font-inter font-bold text-white text-sm flex items-center gap-2">
-                  <KeyRound className="w-4 h-4" style={{ color: G.text }} />
-                  {t("enter_access_code", "Enter Access Code")}
-                                   </h3>
-
-                {codeResult && (
-                  <div className="rounded-xl border p-3 flex items-start gap-2"
-                    style={{
-                      background: codeResult.success ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
-                      borderColor: codeResult.success ? "rgba(34,197,94,0.35)" : "rgba(239,68,68,0.35)",
-                    }}>
-                    {codeResult.success
-                      ? <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
-                      : <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />}
-                    <p className={`text-xs ${codeResult.success ? "text-green-300" : "text-red-300"}`}>
-                      {codeResult.message}
-                    </p>
-                  </div>
-                )}
-
-                <input
-                  value={code}
-                  onChange={e => { setCode(e.target.value.toUpperCase()); setCodeResult(null); }}
-                  onKeyDown={e => e.key === "Enter" && !loading && handleRedeem()}
-                  placeholder={t("code_placeholder", "e.g. ACCESS-1234")}
-                  className="w-full px-4 py-3 rounded-xl text-white font-bold text-base text-center tracking-[0.15em] outline-none placeholder-white/20"
-                  style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${G.border}`, fontSize: "16px" }}
-                  autoCapitalize="characters"
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-
-                <button
-                  onClick={handleRedeem}
-                  disabled={loading || !code.trim()}
-                  className="w-full py-3.5 rounded-xl font-inter font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                  style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}
-                >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
-                  {loading ? t("verifying", "Verifying…") : t("activate_code", "Activate Code")}
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
 
       {/* In-app access request modal (original workflow → submitAccessRequest) */}
