@@ -232,14 +232,41 @@ const managedPageApi = {
   },
 };
 
+const toDirectoryUser = (profile) => ({
+  id: profile.id, email: profile.email, full_name: profile.full_name || '',
+  photo_url: profile.avatar_url || '', role: profile.role,
+  account_status: profile.status === 'disabled' ? 'BLOCKED' : 'ACTIVE',
+  created_date: profile.created_at,
+});
+const userDirectoryApi = {
+  async list(_sort = null, limit = 100, skip = 0) {
+    const { data, error } = await client().from('profiles').select(
+      'id,email,full_name,avatar_url,role,status,created_at'
+    ).order('created_at', { ascending: false }).range(skip || 0, (skip || 0) + (limit || 100) - 1);
+    if (error) throw error;
+    return (data || []).map(toDirectoryUser);
+  },
+  async get(id) {
+    const { data, error } = await client().from('profiles').select(
+      'id,email,full_name,avatar_url,role,status,created_at'
+    ).eq('id', id).maybeSingle();
+    if (error) throw error;
+    return data ? toDirectoryUser(data) : null;
+  },
+};
 const auth = {
   async me() {
     if (!configured) return null;
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) return null;
     const meta = data.user.user_metadata || {};
-    return { id: data.user.id, email: data.user.email, full_name: meta.full_name || meta.name || '',
-      photo_url: meta.avatar_url || meta.picture || '', role: meta.role || 'user', ...meta };
+    const { data: profile, error: profileError } = await supabase.from('profiles')
+      .select('role,status,full_name,avatar_url').eq('id', data.user.id).single();
+    if (profileError || !profile || profile.status !== 'active') return null;
+    return { ...meta, id: data.user.id, email: data.user.email,
+      full_name: profile.full_name || meta.full_name || meta.name || '',
+      photo_url: profile.avatar_url || meta.avatar_url || meta.picture || '',
+      role: profile.role };
   },
   async isAuthenticated() { return Boolean(await this.me()); },
   async loginWithProvider(provider = 'google', returnTo = '/') {
@@ -315,11 +342,58 @@ export const platform = {
   auth,
   integrations,
   functions: { async invoke(name, body = {}) {
+    const codeActions = {
+      createAccessCode: 'create', linkAccessCode: 'link',
+      transferAccessCode: 'transfer', unlinkAccessCode: 'unlink',
+      setAccessCodeDisabled: 'disable',
+    };
+    if (codeActions[name]) {
+      const { data, error } = await client().rpc('manage_access_code',
+        { p_action: codeActions[name], p_payload: body });
+      if (error) throw error;
+      return { data };
+    }
+    if (name === 'loadLinkedPermissions') {
+      const { data: linked, error } = await client().rpc('linked_code_permissions');
+      if (error) throw error;
+      const permissions = (linked || []).flatMap((code) =>
+        (code.page_paths || []).map((path, index) => ({
+          page_path: path,
+          page_name: (code.page_names || [])[index] || path,
+          expiry_date: code.page_grants?.[path]?.expires_at ?? code.expiry_date ?? null,
+          granted_at: code.page_grants?.[path]?.granted_at || null,
+          code: code.code,
+        })));
+      return { data: { success: true, permissions } };
+    }
+    if (name === 'updatePageVisibility') {
+      const { data, error } = await client().rpc('set_page_visibility', {
+        p_path: body.page_path, p_name: body.page_name,
+        p_requires_permission: body.requires_permission,
+      });
+      if (error) throw error;
+      return { data };
+    }
+    const permissionActions = {
+      grantPagePermission: 'grant', extendPermissionExpiry: 'extend',
+      revokePagePermission: 'revoke',
+    };
+    if (permissionActions[name]) {
+      const { data, error } = await client().rpc('manage_page_permission',
+        { p_action: permissionActions[name], p_payload: body });
+      if (error) throw error;
+      return { data };
+    }
     const { data, error } = await client().functions.invoke(name, { body });
     if (error) throw error;
     return { data };
   } },
-  entities: new Proxy({}, { get: (_target, entity) => String(entity) === 'ManagedPage' ? managedPageApi : entityApi(String(entity)) }),
+  entities: new Proxy({}, { get: (_target, entity) => String(entity) === 'ManagedPage'
+    ? managedPageApi : String(entity) === 'User' ? userDirectoryApi : entityApi(String(entity)) }),
+  async canAccessLegacyPage(pagePath) {
+    if (!pagePath) return false;
+    return Boolean(unwrap(await client().rpc('can_access_legacy_page', { p_path: pagePath })));
+  },
   async canAccessResource(resourceId) {
     if (!resourceId) return false;
     return Boolean(unwrap(await client().rpc('can_access_resource', { target: resourceId })));
