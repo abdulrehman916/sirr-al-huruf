@@ -101,23 +101,23 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
     //     access/request/purchase options are hidden. Existing config
     //     beneath is preserved untouched and resumes automatically when
     //     disabled. Read from PageVisibilityConfig.permanent_lock (cached).
-    const plockKey = `plock:${routePath}`;
-    let plockData = getCached(plockKey);
-    if (plockData === null || plockData === undefined) {
+    let plockData = { locked: false, reason: "", custom_message: "" };
+    let pageVisibility = null;
+    if (!isAdminRoute) {
       try {
-        const plockConfigs = await base44.entities.PageVisibilityConfig.filter(
-          { page_path: routePath, archived: false }, null, 1
-        );
-        const rec = plockConfigs[0];
+        const { supabase } = await import("@/api/base44Client");
+        if (!supabase) throw new Error("Access service unavailable");
+        const { data, error } = await supabase.rpc("page_visibility", { p_path: routePath });
+        if (error) throw error;
+        pageVisibility = data || {};
         plockData = {
-          locked: rec?.permanent_lock === true,
-          reason: rec?.permanent_lock_reason || "",
-          custom_message: rec?.permanent_lock_custom_message || "",
+          locked: pageVisibility.permanent_lock === true,
+          reason: pageVisibility.permanent_lock_reason || "",
+          custom_message: pageVisibility.permanent_lock_custom_message || "",
         };
-        setCached(plockKey, plockData);
       } catch {
-        plockData = { locked: false, reason: "", custom_message: "" };
-        setCached(plockKey, plockData, 30000);
+        setAccessStatus("locked");
+        return;
       }
     }
     if (plockData.locked) {
@@ -173,24 +173,8 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
     //    static public flags below — otherwise a statically-public page (e.g.
     //    /shop) stays accessible even after the admin locks it in the DB, and
     //    the lock is only visual. dbState: 'locked' | 'public' | 'none'.
-    const visKey = visibilityKey(routePath);
-    let dbState = getCached(visKey);
-    if (dbState === null || dbState === undefined) {
-      try {
-        const dbConfigs = await base44.entities.PageVisibilityConfig.filter(
-          { page_path: routePath, archived: false }, null, 1
-        );
-        if (dbConfigs.length > 0) {
-          dbState = dbConfigs[0].requires_permission ? 'locked' : 'public';
-        } else {
-          dbState = 'none';
-        }
-        setCached(visKey, dbState);
-      } catch {
-        dbState = 'none';
-        setCached(visKey, 'none', 30000);
-      }
-    }
+    const dbState = pageVisibility?.requires_permission === true
+      ? 'locked' : pageVisibility?.requires_permission === false ? 'public' : 'none';
     const dbLocked = dbState === 'locked';
 
     // 3. DB explicitly says public → grant
@@ -214,7 +198,8 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
     //    code) — otherwise the locked screen is shown (enforce the lock).
     if (hasSubFeatures(routePath)) {
       await preloadPageFeatureConfigs(routePath);
-      if (!dbLocked || checkLocalPermission(routePath).granted) {
+      const remoteGrant = isAuthenticated && await base44.canAccessLegacyPage(routePath);
+      if (!dbLocked || remoteGrant) {
         setAccessStatus("granted");
         validateAndCleanPermissions();
         return;
@@ -229,10 +214,15 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
       return;
     }
 
-    // 7. Local permission check (localStorage — reading code, no auth needed)
-    const localCheck = checkLocalPermission(routePath);
-    if (localCheck.granted) {
-      setAccessStatus("granted");
+    // Linked codes and manual permissions are verified against live backend state.
+    // A copied code or stale browser storage cannot restore revoked access.
+    try {
+      if (isAuthenticated && await base44.canAccessLegacyPage(routePath)) {
+        setAccessStatus("granted");
+        return;
+      }
+    } catch {
+      setAccessStatus("locked");
       return;
     }
 
@@ -265,13 +255,13 @@ export default function ProtectedPage({ routePath, children, requiresPermission 
             style={{ background: G.bg, border: `1px solid ${G.border}` }}>
             <Shield className="w-8 h-8" style={{ color: G.text }} />
           </div>
-          <h2 className="font-inter font-bold text-white text-lg">{t("admin_access_required", "Admin Access Required")}</h2>
-          <p className="font-inter text-sm text-white/40">{t("admin_restricted", "This page is restricted to administrators only.")}</p>
-          <a href={`/owner-login?redirect=${encodeURIComponent(routePath)}`}
+          <h2 className="font-inter font-bold text-white text-lg">{isAuthenticated ? "Page unavailable" : "Sign in to continue"}</h2>
+          <p className="font-inter text-sm text-white/40">{isAuthenticated ? "Return to your account to view available pages." : "Use your Google account to continue."}</p>
+          {!isAuthenticated && <a href={`/login?redirect=${encodeURIComponent(routePath)}`}
             className="block w-full py-3 rounded-xl font-inter font-bold text-sm text-center"
             style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}>
-            {t("admin_login", "Admin Login")}
-          </a>
+            Continue with Google
+          </a>}
           <button onClick={() => window.location.href = "/"}
             className="w-full py-2.5 rounded-xl font-inter font-semibold text-xs"
             style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.10)`, color: "rgba(255,255,255,0.35)" }}>
@@ -367,13 +357,13 @@ function PremiumLockedScreen({ pageName, routePath, resource, onUnlocked }) {
     setGoogleLoading(true);
     // Dev mode: persistSet writes localStorage + cookie so the session flag
     // survives preview iframe rebuilds. Production: sessionStorage (unchanged).
-    try { isDevMode ? persistSet("sirr_admin_session", "true") : sessionStorage.setItem("sirr_admin_session", "true"); } catch { /* ignore */ }
+    try { persistSet("sirr_admin_session", "true"); } catch { /* ignore */ }
     try { sessionStorage.setItem("sirr_locked_signin_redirect", routePath); } catch { /* ignore */ }
     try {
       await base44.auth.loginWithProvider("google", routePath);
     } catch {
       setGoogleLoading(false);
-      try { isDevMode ? persistRemove("sirr_admin_session") : sessionStorage.removeItem("sirr_admin_session"); } catch { /* ignore */ }
+      try { persistRemove("sirr_admin_session"); } catch { /* ignore */ }
       try { sessionStorage.removeItem("sirr_locked_signin_redirect"); } catch { /* ignore */ }
     }
   };
