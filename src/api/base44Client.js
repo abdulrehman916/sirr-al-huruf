@@ -377,6 +377,15 @@ export const platform = {
       if (error) throw error;
       return { data };
     }
+    if (name === 'adminManageSubscription') {
+      const { data, error } = await client().rpc('manage_legacy_subscription', {
+        p_subscription_id: body.subscription_id,
+        p_action: body.action,
+        p_extend_days: body.extend_days || null,
+      });
+      if (error) throw error;
+      return { data };
+    }
     if (name === 'submitAccessRequest') {
       const { data, error } = await client().rpc('request_page_access',
         { p_payload: body });
