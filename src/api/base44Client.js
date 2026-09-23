@@ -377,6 +377,12 @@ export const platform = {
       if (error) throw error;
       return { data };
     }
+    if (name === 'submitAccessRequest') {
+      const { data, error } = await client().rpc('request_page_access',
+        { p_payload: body });
+      if (error) throw error;
+      return { data };
+    }
     if (name === 'approveAccessRequest') {
       const { data, error } = await client().rpc('decide_access_request', {
         p_request_id: body.request_id,
