@@ -92,7 +92,7 @@ export default function RequestAccessModal({ pagePath, pageName, onClose }) {
             </div>
             <h3 className="font-inter font-bold text-white text-lg mb-2">Request Submitted!</h3>
             <p className="text-white/60 text-sm mb-6">
-              Your request has been sent to the owner. You'll be notified when it's reviewed.
+              Your request has been sent to the owner. Check your account for access after approval.
             </p>
             <button
               onClick={onClose}
