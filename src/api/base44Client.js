@@ -367,6 +367,11 @@ export const platform = {
         })));
       return { data: { success: true, permissions } };
     }
+    if (name === 'getUserStats') {
+      const { data, error } = await client().rpc('owner_dashboard_stats');
+      if (error) throw error;
+      return { data: { success: true, stats: data || {} } };
+    }
     const codeDetailActions = {
       updateAccessCode: 'update', renewAccessCode: 'renew',
       deleteAccessCodeSecure: 'delete', resetCodeDevice: 'reset_device',
