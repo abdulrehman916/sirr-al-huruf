@@ -76,8 +76,14 @@ export default function AccessCodesTab() {
   const load = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.AccessCode.list("-created_date", 500);
-      setCodes(data);
+      const pageSize = 500;
+      const all = [];
+      for (let skip = 0; ; skip += pageSize) {
+        const page = await base44.entities.AccessCode.list("-created_date", pageSize, skip);
+        all.push(...page);
+        if (page.length < pageSize) break;
+      }
+      setCodes(all);
     } catch (e) {
       toast({ title: "Failed to load codes", description: e.message, variant: "destructive" });
     } finally {
