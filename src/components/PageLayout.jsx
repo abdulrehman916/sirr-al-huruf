@@ -6,6 +6,7 @@ import { useNavigation } from "../context/NavigationContext";
 import { useTranslation } from "@/i18n/useTranslation";
 import AtmosphericBackground from "./AtmosphericBackground";
 import AccountModal from "./AccountModal";
+import RedeemCodeButton from "./RedeemCodeButton";
 import { useAuth } from "@/lib/AuthContext";
 import { isAdminRole, isNavTabVisible, getAdminHomePath } from "@/lib/rbac";
 
@@ -350,6 +351,7 @@ export default function PageLayout({ children }) {
         </div>
       </div>
 
+      {isAuthenticated && !isAdminRole(role) && !location.pathname.startsWith("/admin/") && <RedeemCodeButton />}
       <AnimatePresence>
         {showAccount && <AccountModal user={user} onClose={() => setShowAccount(false)} />}
       </AnimatePresence>
