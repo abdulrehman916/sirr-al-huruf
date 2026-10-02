@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { X, KeyRound, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -18,15 +18,18 @@ function fmt(d) {
 }
 
 export default function RedeemCodeModal({ onClose }) {
+  const submitting = useRef(false);
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
 
   const handleRedeem = async () => {
+    if (submitting.current) return;
     const trimmed = code.trim().toUpperCase();
-    if (!trimmed) { setError("Please enter a code."); return; }
+    if (!trimmed) { setError("Code നൽകുക."); return; }
     setError("");
+    submitting.current = true;
     setLoading(true);
     try {
       const sessionId = getSessionId();
@@ -42,7 +45,8 @@ export default function RedeemCodeModal({ onClose }) {
         signedInUser = null;
       }
 
-      const functionName = signedInUser?.id ? "redeemCodeLinked" : "redeemCodeGuest";
+      if (!signedInUser?.id) throw new Error("ആദ്യം നിങ്ങളുടെ email ഉപയോഗിച്ച് login ചെയ്യുക.");
+      const functionName = "redeemCodeLinked";
       const res = await base44.functions.invoke(functionName, {
         code: trimmed,
         session_id: sessionId,
@@ -56,6 +60,7 @@ export default function RedeemCodeModal({ onClose }) {
     } catch (e) {
       setResult({ success: false, message: e.message || "Redemption failed. Please try again." });
     } finally {
+      submitting.current = false;
       setLoading(false);
     }
   };
@@ -86,8 +91,8 @@ export default function RedeemCodeModal({ onClose }) {
               <KeyRound className="w-4 h-4" style={{ color: G.text }} />
             </div>
             <div>
-              <h3 className="font-inter font-bold text-white text-sm">Redeem Reading Code</h3>
-              <p className="text-xs text-white/40">Enter your code to unlock pages</p>
+              <h3 className="font-inter font-bold text-white text-sm">Access code ഉപയോഗിക്കുക</h3>
+              <p className="text-xs text-white/40">നിങ്ങൾക്ക് ലഭിച്ച code നൽകി pages തുറക്കുക</p>
             </div>
           </div>
           <button
@@ -118,7 +123,7 @@ export default function RedeemCodeModal({ onClose }) {
               </div>
               {result.permissions?.[0] && (
                 <p className="text-xs text-white/40 pt-1">
-                  Access until:{" "}
+                  കാലാവധി:{" "}
                   <span className="text-white/70 font-semibold">
                     {result.permissions.every(p => !p.expiry_date) ? "♾ Lifetime" : fmt(result.permissions[0].expiry_date)}
                   </span>
@@ -130,7 +135,7 @@ export default function RedeemCodeModal({ onClose }) {
               className="w-full py-3 rounded-xl font-inter font-bold text-sm"
               style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}
             >
-              Continue →
+              തുടരുക →
             </button>
           </div>
         ) : (
@@ -145,7 +150,7 @@ export default function RedeemCodeModal({ onClose }) {
 
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-widest" style={{ color: G.text }}>
-                Reading Code
+                Access Code
               </label>
               <input
                 value={code}
@@ -169,7 +174,7 @@ export default function RedeemCodeModal({ onClose }) {
               style={{ background: "linear-gradient(135deg, #f6d860 0%, #c98a14 100%)", color: "#0d1b2a" }}
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
-              {loading ? "Validating…" : "Redeem Code"}
+              {loading ? "പരിശോധിക്കുന്നു…" : "Code ഉപയോഗിക്കുക"}
             </button>
           </>
         )}
