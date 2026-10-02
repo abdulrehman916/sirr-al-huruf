@@ -342,6 +342,11 @@ export const platform = {
   auth,
   integrations,
   functions: { async invoke(name, body = {}) {
+    if (name === 'redeemCodeLinked' || name === 'redeemCodeGuest') {
+      const { data, error } = await client().rpc('redeem_access_code', { p_code: body.code });
+      if (error) throw error;
+      return { data };
+    }
     const codeActions = {
       createAccessCode: 'create', linkAccessCode: 'link',
       transferAccessCode: 'transfer', unlinkAccessCode: 'unlink',
