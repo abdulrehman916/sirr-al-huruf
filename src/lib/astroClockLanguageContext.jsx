@@ -133,7 +133,7 @@ const SUPPORTED_LANGUAGES = new Set(["ml", "en", "ar"]);
 export function AstroClockLanguageProvider({ children }) {
   const [language, setLang] = useState(() => {
     const saved = localStorage.getItem("astroClockLanguage");
-    return SUPPORTED_LANGUAGES.has(saved) ? saved : "ml";
+    return "en";
   });
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export function AstroClockLanguageProvider({ children }) {
   const isArabic = language === "ar";
 
   const setLanguage = useCallback((lang) => {
-    setLang(SUPPORTED_LANGUAGES.has(lang) ? lang : "ml");
+    setLang(SUPPORTED_LANGUAGES.has(lang) ? lang : "en");
   }, []);
 
   // Custom date override — persisted to localStorage so Historical Date Mode survives reloads.
