@@ -14,8 +14,8 @@ import SirrEntryCard from "./SirrEntryCard";
 const G = { text: "#D4AF37", dim: "rgba(212,175,55,0.55)", faint: "rgba(212,175,55,0.18)" };
 const PAGE_SIZE = 10;
 const LANGS = [
-  { key: "ar", label: "العربية" },
-  { key: "ml", label: "മലയാളം" },
+  { key: "ar", label: "Arabic" },
+  { key: "ml", label: "Malayalam" },
   { key: "en", label: "English" },
 ];
 
