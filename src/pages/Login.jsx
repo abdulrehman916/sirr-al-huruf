@@ -55,8 +55,8 @@ export default function Login() {
 
   return (
     <AuthLayout icon={ShieldCheck} title="Sirr al-Huruf"
-      subtitle="നിങ്ങളുടെ email ഉപയോഗിച്ച് സുരക്ഷിതമായി തുടരുക"
-      footer="പുതിയ email ആണെങ്കിൽ account സ്വയം സൃഷ്ടിക്കപ്പെടും. Password ഓർക്കേണ്ടതില്ല.">
+      subtitle="Continue securely with your email."
+      footer="New email? Your account will be created automatically. No password is required.">
       {error && <div role="alert" className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
       <>
         <Button type="button" variant="outline" onClick={continueWithGoogle}
@@ -84,7 +84,7 @@ export default function Login() {
               onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 8))}
               className="h-12 border-white/25 bg-white/[0.04] pl-10 text-base text-white caret-yellow-300 placeholder:text-white/30 tracking-[0.25em]" placeholder="000000" required />
           </div>
-          <p className="text-xs leading-5 text-muted-foreground">Email-ൽ വന്ന code നൽകുക. Magic Link ലഭിച്ചെങ്കിൽ അതിൽ touch ചെയ്യാം.</p>
+          <p className="text-xs leading-5 text-muted-foreground">Enter the code sent to your email. If you received a Magic Link, open it to sign in.</p>
         </div>}
         <Button type="submit" className="h-12 w-full font-medium" disabled={loading}>
           {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Please wait…</> : otpSent ? "Verify and continue" : "Continue with Email"}
