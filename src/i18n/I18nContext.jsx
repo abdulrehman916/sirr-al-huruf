@@ -1,15 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-const SUPPORTED_LANGUAGES = ['ml', 'en', 'ar'];
+const SUPPORTED_LANGUAGES = ['en'];
 const STORAGE_KEY = 'sirr_al_huruf_language';
 const LANGUAGE_SET_KEY = 'sirr_al_huruf_language_set';
 
 function getInitialLanguage() {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && SUPPORTED_LANGUAGES.includes(stored)) return stored;
-  } catch {}
-  // Use English by default; only follow another language after the user selects it.
+  // Keep all interface controls in English, regardless of a legacy saved language.
   return 'en';
 }
 
