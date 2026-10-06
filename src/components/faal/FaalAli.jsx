@@ -109,7 +109,7 @@ export default function FaalAli() {
     >
       {/* Language Toggle */}
       <SectionCard>
-        <SectionLabel>🌐 Language — ഭാഷ — اللغة</SectionLabel>
+        <SectionLabel>🌐 Language</SectionLabel>
         <div className="grid grid-cols-2 gap-2">
           <motion.button
             onClick={() => setLang('ml')}
@@ -125,7 +125,7 @@ export default function FaalAli() {
               boxShadow: lang === 'ml' ? `0 0 18px ${G.glow}, inset 0 1px 0 rgba(212,175,55,0.15)` : "none",
             }}>
             {lang === 'ml' && <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(212,175,55,0.45), transparent)` }} />}
-            മലയാളം
+            Malayalam
           </motion.button>
           <motion.button
             onClick={() => setLang('en')}
