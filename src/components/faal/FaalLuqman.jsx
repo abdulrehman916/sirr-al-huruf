@@ -31,13 +31,13 @@ export default function FaalLuqman() {
   
   const initialShuffled = useMemo(() => createShuffled(), []);
   const initialState = getPageState(PAGE_KEY, {
-    lang: "ml",
+    lang: "en",
     shuffled: initialShuffled,
     selectedCell: null,
     hasShuffledOnce: false,
   });
   
-  const [lang, setLang] = useState(initialState.lang);
+  const [lang, setLang] = useState("en");
   const [shuffled, setShuffled] = useState(initialState.shuffled);
   const [selectedCell, setSelectedCell] = useState(initialState.selectedCell);
   const [hasShuffledOnce, setHasShuffledOnce] = useState(initialState.hasShuffledOnce);
@@ -84,7 +84,7 @@ export default function FaalLuqman() {
 
   const handleClear = () => {
     clearPageState(PAGE_KEY);
-    setLang("ml");
+    setLang("en");
     setShuffled(createShuffled());
     setSelectedCell(null);
     setHasShuffledOnce(false);
