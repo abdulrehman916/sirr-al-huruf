@@ -211,6 +211,22 @@ export default function PageLayout({ children }) {
                   </Link>
                 )}
 
+                {!isAuthenticated && (
+                  <Link
+                    to={`/login?redirect=${encodeURIComponent(location.pathname + location.search + location.hash)}`}
+                    onClick={startNav}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold"
+                    style={{
+                      color: "#E8C84A",
+                      border: "1px solid rgba(212,175,55,0.30)",
+                      background: "rgba(212,175,55,0.07)",
+                    }}
+                  >
+                    <User className="w-4 h-4" />
+                    <span>ലോഗിൻ</span>
+                  </Link>
+                )}
+
                 {isAuthenticated && (
                   <button
                     onClick={() => setShowAccount(true)}
@@ -305,7 +321,7 @@ export default function PageLayout({ children }) {
         {isChildPage && (
           <div className="relative z-20 px-3 sm:px-5 pt-3 max-w-[1500px] w-full mx-auto">
             <button
-              onClick={() => { startNav(); navigate(-1); }}
+              onClick={() => { startNav(); if (location.key === "default") navigate("/plants"); else navigate(-1); }}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl"
               style={{
                 color: "#D4AF37",
