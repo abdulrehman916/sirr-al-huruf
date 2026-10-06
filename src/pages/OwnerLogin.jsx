@@ -27,7 +27,7 @@ export default function OwnerLogin() {
     }
   }
 
-  return <AuthLayout icon={ShieldCheck} title="Sirr al-Huruf" subtitle="Google അക്കൗണ്ട് ഉപയോഗിച്ച് സുരക്ഷിതമായി തുടരുക">
+  return <AuthLayout icon={ShieldCheck} title="Sirr al-Huruf" subtitle="Continue securely with your Google account.">
     {error && <div role="alert" className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
     <Button type="button" onClick={continueWithGoogle}
       className="h-12 w-full bg-white font-semibold text-slate-900 hover:bg-white/90" disabled={loading}>
