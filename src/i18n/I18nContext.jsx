@@ -4,21 +4,13 @@ const SUPPORTED_LANGUAGES = ['ml', 'en', 'ar'];
 const STORAGE_KEY = 'sirr_al_huruf_language';
 const LANGUAGE_SET_KEY = 'sirr_al_huruf_language_set';
 
-function detectDeviceLanguage() {
-  try {
-    const lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
-    if (lang.startsWith('ml')) return 'ml';
-    if (lang.startsWith('ar')) return 'ar';
-    return 'en';
-  } catch { return 'en'; }
-}
-
 function getInitialLanguage() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored && SUPPORTED_LANGUAGES.includes(stored)) return stored;
   } catch {}
-  return detectDeviceLanguage();
+  // Use English by default; only follow another language after the user selects it.
+  return 'en';
 }
 
 function isLanguageSet() {
