@@ -17,19 +17,19 @@ const G = {
 };
 
 const TABS = [
-  { key: 'ar', label: 'العربية', dir: 'rtl' },
-  { key: 'ml', label: 'മലയാളം', dir: 'ltr' },
+  { key: 'ar', label: 'Arabic', dir: 'rtl' },
+  { key: 'ml', label: 'Malayalam', dir: 'ltr' },
   { key: 'en', label: 'English', dir: 'ltr' },
 ];
 
 const UI_STRINGS = {
-  ar: { agree: "لقد قرأت وأوافق على الشروط والأحكام.", continue: "متابعة", back: "العودة للرئيسية" },
-  ml: { agree: "ഞാൻ വായിച്ച് നിബന്ധനകളും വ്യവസ്ഥകളും അംഗീകരിക്കുന്നു.", continue: "തുടരുക", back: "ഹോമിലേക്ക് തിരികെ" },
+  ar: { agree: "I have read and agree to the Rules & Conditions.", continue: "Continue", back: "Back to Home" },
+  ml: { agree: "I have read and agree to the Rules & Conditions.", continue: "Continue", back: "Back to Home" },
   en: { agree: "I have read and agree to the Rules & Conditions.", continue: "Continue", back: "Back to Home" },
 };
 
 export default function RulesConditions({ mode = 'view', onAccept }) {
-  const [activeTab, setActiveTab] = useState('ar');
+  const [activeTab, setActiveTab] = useState('en');
   const [agreed, setAgreed] = useState(false);
 
   const data = RULES_DATA[activeTab];
