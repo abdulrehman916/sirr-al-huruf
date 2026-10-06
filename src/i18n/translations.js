@@ -284,7 +284,7 @@ const translations = {
   back_to_home: { ml: "← ഹോമിലേക്ക് തിരികെ", en: "← Back to Home", ar: "← العودة للرئيسية" },
   access_restricted_title: { ml: "പ്രവേശനം നിയന്ത്രിതം", en: "Access Restricted", ar: "وصول مقيد" },
   access_restricted_desc: { ml: "നിങ്ങളുടെ റോളിന് ഈ വിഭാഗത്തിലേക്ക് പ്രവേശനമില്ല.", en: "Your role does not have access to this section.", ar: "دورك لا يملك صلاحية الوصول إلى هذا القسم." },
-  premium_account_required: { ml: "ഈ പേജിന് അക്കൗണ്ട് ആവശ്യമാണ്. തുടരാൻ Google വഴി സൈൻ ഇൻ ചെയ്യുക.", en: "This page requires an account. Please sign in with Google to continue.", ar: "تتطلب هذه الصفحة حساباً. يرجى تسجيل الدخول عبر Google للمتابعة." },
+  premium_account_required: { ml: "ഈ പേജിന് അക്കൗണ്ട് ആവശ്യമാണ്. ഇമെയിൽ വഴിയോ Google വഴിയോ സൈൻ ഇൻ ചെയ്ത് തുടരുക.", en: "This page requires an account. Continue with email or Google to proceed.", ar: "تتطلب هذه الصفحة حساباً. تابع باستخدام البريد الإلكتروني أو Google." },
   premium_no_access: { ml: "ഈ പ്രീമിയം ഉള്ളടക്കത്തിലേക്ക് നിങ്ങൾക്ക് പ്രവേശനമില്ല.", en: "You don't have access to this premium content.", ar: "ليس لديك وصول إلى هذا المحتوى المميز." },
   enter_reading_code: { ml: "റീഡിംഗ് ആക്സസ് കോഡ് നൽകുക", en: "Enter Reading Access Code", ar: "أدخل رمز الوصول" },
   request_access_form: { ml: "പ്രവേശനം അഭ്യർത്ഥിക്കുക (ഇൻ-ആപ്പ് ഫോം)", en: "Request Access (In-App Form)", ar: "طلب وصول (نموذج داخل التطبيق)" },

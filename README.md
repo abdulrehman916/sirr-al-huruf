@@ -1,39 +1,54 @@
-**Welcome to your Base44 project** 
+# Sirr al-Huruf — Independent Premium Website
 
-**About**
+Sirr al-Huruf is an independent React/Vite website hosted on Vercel and backed by Supabase (Auth, Postgres, Storage, and RPC). The production site is deployed from the `premium-website` branch.
 
-View and Edit  your app on [Base44.com](http://Base44.com) 
+## Independence boundary
 
-This project contains everything you need to run your app locally.
+- Runtime authentication and application data use Supabase.
+- The project does not include the Base44 SDK or call Base44 as its application backend.
+- `src/api/base44Client.js` keeps a temporary compatibility facade for older page modules; its implementation is backed by Supabase. Do not add Base44 service credentials or restore Base44 runtime calls.
+- The `base44/` directory and legacy-ID fields are retained as import/reference data while migrated records and customer access are verified. They are not a live backend dependency.
 
-**Edit the code in your local development environment**
+## Requirements
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+- Node.js 20 or newer
+- npm
+- A Supabase project with the migrations in `supabase/migrations` applied
+- The public Supabase URL and anon/publishable key
 
-**Prerequisites:** 
+Create `.env.local` with browser-safe values:
 
-1. Clone the repository using the project's Git URL 
-2. Navigate to the project directory
-3. Install dependencies: `npm install`
-4. Create an `.env.local` file and set the right environment variables
-
-```
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=your_backend_url
-
-e.g.
-VITE_BASE44_APP_ID=cbef744a8545c389ef439ea6
-VITE_BASE44_APP_BASE_URL=https://my-to-do-list-81bfaad7.base44.app
+```env
+VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_KEY
 ```
 
-Run the app: `npm run dev`
+Never put the Supabase service-role key, database password, payment secret, or email-provider secret in a `VITE_*` variable. Keep server-only credentials in the hosting provider's encrypted environment settings.
 
-**Publish your changes**
+## Run locally
 
-Open [Base44.com](http://Base44.com) and click on Publish.
+```bash
+npm ci
+npm run dev
+```
 
-**Docs & Support**
+## Verify before deployment
 
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
+```bash
+npm run verify:calculations
+npm run build
+npm run lint
+npm run typecheck
+```
 
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+The calculation verification is a release gate. Keep the locked calculation core and its expected outputs unchanged unless the owner explicitly authorizes a formula change.
+
+## Deployment and scale
+
+Vercel currently deploys production from `premium-website`; the repository's `main` branch is a separate legacy snapshot and is not the production website. Confirm the branch setting before changing defaults or moving deployments.
+
+The live deployment and a successful build do not prove capacity for one million concurrent users. Before making that capacity claim, run staged load tests against a production-like Supabase plan, validate authentication and database connection limits, monitor query latency and error rates, and check Vercel function/runtime quotas. Keep large imports paginated and avoid loading whole collections into a browser request.
+
+## Migration history
+
+The Supabase migration ledger and the checked-in SQL files currently contain historical mismatches. Do not rerun old migrations blindly. Compare the live schema and migration history, restore/record the original applied SQL where available, and apply only forward, idempotent migrations after review.
