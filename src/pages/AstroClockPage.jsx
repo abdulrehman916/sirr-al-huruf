@@ -36,9 +36,9 @@ import SourceBookPanel from "@/components/astroclock/dashboard/SourceBookPanel";
 function LangSelector() {
   const { language, setLanguage, txt } = useAstroClockLanguage();
   const langs = [
-    { key: "ml", label: "മലയാളം" },
+    { key: "ml", label: "Malayalam" },
     { key: "en", label: "English" },
-    { key: "ar", label: "العربية" },
+    { key: "ar", label: "Arabic" },
   ];
   return (
     <div className="flex rounded-xl overflow-hidden" style={{ border: "1px solid rgba(212,175,55,0.30)" }}>
