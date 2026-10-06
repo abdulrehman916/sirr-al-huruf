@@ -235,7 +235,7 @@ export default function PlantsPage() {
             inputMode="search"
             value={query}
             onChange={(e) => { setQuery(e.target.value); setLetter(null); }}
-            placeholder="Search: English / عربي / മലയാളം / scientific…"
+            placeholder="Search in English, Arabic, Malayalam, or by scientific name…"
             className="flex-1 bg-transparent outline-none font-inter text-sm placeholder:text-[rgba(134,239,172,0.28)]"
             style={{ color: "rgba(255,255,255,0.85)", minWidth: 0 }}
             dir="auto"
