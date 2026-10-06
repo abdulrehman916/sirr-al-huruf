@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState, lazy, Suspense, useMemo } from 'react';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -19,6 +19,9 @@ import RulesGate from './components/RulesGate';
 import GoogleSignInPrompt from './components/GoogleSignInPrompt';
 import PreviewStateRestore from './components/PreviewStateRestore';
 import { persistGet, isDevMode } from '@/lib/devModePersistence';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from '@/i18n/useTranslation';
+import { useNavigation } from './context/NavigationContext';
 
 const PAGE_IMPORTS = {
   Home:                     () => import('./pages/Home'),
@@ -136,6 +139,45 @@ const PageFallback = () => (
   <div style={{ minHeight: "60vh", background: "transparent" }} />
 );
 
+function GlobalBackButton() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { t, language } = useTranslation();
+  const { startNav } = useNavigation();
+
+  if (location.pathname === '/') return null;
+
+  const goBack = () => {
+    startNav();
+    const historyIndex = window.history.state?.idx;
+    if (Number.isInteger(historyIndex) && historyIndex > 0) navigate(-1);
+    else navigate('/');
+  };
+
+  const BackIcon = language === 'ar' ? ChevronRight : ChevronLeft;
+
+  return (
+    <button
+      type="button"
+      onClick={goBack}
+      aria-label={t('btn_back', 'Back')}
+      className="fixed left-4 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-lg"
+      style={{
+        bottom: 'calc(16px + env(safe-area-inset-bottom))',
+        zIndex: 80,
+        color: '#F0D56A',
+        background: 'rgba(3, 9, 22, 0.94)',
+        border: '1px solid rgba(212,175,55,0.42)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      }}
+    >
+      <BackIcon className="h-4 w-4" aria-hidden="true" />
+      <span>{t('btn_back', 'Back')}</span>
+    </button>
+  );
+}
+
 const AuthenticatedApp = () => {
   const { isLoadingPublicSettings, isAuthenticated } = useAuth();
   const location = useLocation();
@@ -180,6 +222,7 @@ const AuthenticatedApp = () => {
               <Route path="*" element={<PageNotFound />} />
             </Routes>
           </Suspense>
+          <GlobalBackButton />
         </motion.div>
       </AnimatePresence>
     </>
