@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, Check } from 'lucide-react';
 
 const LANGUAGES = [
-  { code: 'ml', labelKey: 'lang_malayalam', native: 'മലയാളം' },
+  { code: 'ml', labelKey: 'lang_malayalam', native: 'Malayalam' },
   { code: 'en', labelKey: 'lang_english', native: 'English' },
-  { code: 'ar', labelKey: 'lang_arabic', native: 'العربية' },
+  { code: 'ar', labelKey: 'lang_arabic', native: 'Arabic' },
 ];
 
 export default function LanguageSelector({ showTitle = true, onSelect, compact = false }) {
