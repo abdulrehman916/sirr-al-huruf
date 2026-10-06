@@ -6,9 +6,9 @@ import { motion } from 'framer-motion';
 import AtmosphericBackground from '@/components/AtmosphericBackground';
 
 const LANGUAGES = [
-  { code: 'ml', labelKey: 'lang_malayalam', native: 'മലയാളം' },
+  { code: 'ml', labelKey: 'lang_malayalam', native: 'Malayalam' },
   { code: 'en', labelKey: 'lang_english', native: 'English' },
-  { code: 'ar', labelKey: 'lang_arabic', native: 'العربية' },
+  { code: 'ar', labelKey: 'lang_arabic', native: 'Arabic' },
 ];
 
 export default function LanguageSetup({ onComplete }) {
