@@ -11,24 +11,24 @@ import { useAuth } from "@/lib/AuthContext";
 import { isAdminRole, isNavTabVisible, getAdminHomePath } from "@/lib/rbac";
 
 const TAB_KEYS = [
-  { id: "home", arabicTitle: "Home", englishSubtitle: "HOME", path: "/" },
-  { id: "abjad-kabir", arabicTitle: "Abjad", englishSubtitle: "ABJAD", path: "/abjad" },
-  { id: "anasir", arabicTitle: "Elements", englishSubtitle: "ANASIR", path: "/anasir" },
-  { id: "hadim", arabicTitle: "Hadim", englishSubtitle: "HADIM", path: "/hadim" },
-  { id: "mizaan9", arabicTitle: "Mizan", englishSubtitle: "MIZAN", path: "/mizaan9" },
-  { id: "magic-sqayer", arabicTitle: "Sqayer", englishSubtitle: "SQAYER", path: "/magic-sqayer" },
-  { id: "vefkin-yapilisi", arabicTitle: "Vefk", englishSubtitle: "VEFK", path: "/vefkin-yapilisi" },
-  { id: "basthul-huroof-2", arabicTitle: "Bast al-Huruf", englishSubtitle: "BAST", path: "/basthul-huroof-2" },
-  { id: "faal-hasrath", arabicTitle: "Faal Hasrath", englishSubtitle: "FAAL", path: "/faal-hasrath" },
-  { id: "plants", arabicTitle: "Plants", englishSubtitle: "PLANTS", path: "/plants" },
-  { id: "evil-jinn", arabicTitle: "Jinn", englishSubtitle: "JINN", path: "/evil-jinn" },
-  { id: "holy-names", arabicTitle: "Names", englishSubtitle: "NAMES", path: "/holy-names" },
-  { id: "sirr", arabicTitle: "Sirr", englishSubtitle: "SIRR", path: "/sirr" },
-  { id: "astro-clock", arabicTitle: "Astro Clock", englishSubtitle: "ASTRO", path: "/astro-clock" },
-  { id: "shop", arabicTitle: "Shop", englishSubtitle: "SHOP", path: "/shop" },
-  { id: "books", arabicTitle: "Books", englishSubtitle: "BOOKS", path: "/books" },
-  { id: "admin-shop", arabicTitle: "Shop Admin", englishSubtitle: "SHOP ADMIN", path: "/admin/shop" },
-  { id: "support", arabicTitle: "Support", englishSubtitle: "SUPPORT", path: "/support" },
+  { id: "home", arabicTitle: "الرئيسية", englishSubtitle: "HOME", path: "/" },
+  { id: "abjad-kabir", arabicTitle: "الأبجد", englishSubtitle: "ABJAD", path: "/abjad" },
+  { id: "anasir", arabicTitle: "العناصر", englishSubtitle: "ANASIR", path: "/anasir" },
+  { id: "hadim", arabicTitle: "الخادم", englishSubtitle: "HADIM", path: "/hadim" },
+  { id: "mizaan9", arabicTitle: "الميزان", englishSubtitle: "MIZAN", path: "/mizaan9" },
+  { id: "magic-sqayer", arabicTitle: "السقاير", englishSubtitle: "SQAYER", path: "/magic-sqayer" },
+  { id: "vefkin-yapilisi", arabicTitle: "وفقین", englishSubtitle: "VEFK", path: "/vefkin-yapilisi" },
+  { id: "basthul-huroof-2", arabicTitle: "بسط الحروف", englishSubtitle: "BAST", path: "/basthul-huroof-2" },
+  { id: "faal-hasrath", arabicTitle: "فال الحسرات", englishSubtitle: "FAAL", path: "/faal-hasrath" },
+  { id: "plants", arabicTitle: "النباتات", englishSubtitle: "PLANTS", path: "/plants" },
+  { id: "evil-jinn", arabicTitle: "الجن", englishSubtitle: "JINN", path: "/evil-jinn" },
+  { id: "holy-names", arabicTitle: "الأسماء", englishSubtitle: "NAMES", path: "/holy-names" },
+  { id: "sirr", arabicTitle: "السر", englishSubtitle: "SIRR", path: "/sirr" },
+  { id: "astro-clock", arabicTitle: "الساعة", englishSubtitle: "ASTRO", path: "/astro-clock" },
+  { id: "shop", arabicTitle: "المتجر", englishSubtitle: "SHOP", path: "/shop" },
+  { id: "books", arabicTitle: "الكتب", englishSubtitle: "BOOKS", path: "/books" },
+  { id: "admin-shop", arabicTitle: "إدارة المتجر", englishSubtitle: "SHOP ADMIN", path: "/admin/shop" },
+  { id: "support", arabicTitle: "الدعم", englishSubtitle: "SUPPORT", path: "/support" },
 ];
 
 const pageVariants = {
@@ -55,7 +55,7 @@ const NavTab = memo(function NavTab({ tab, isActive, onClick }) {
       }}
     >
       <span
-        className="font-inter font-bold text-xs leading-tight"
+        className="font-amiri font-bold text-[14px] leading-tight"
         style={{ color: isActive ? "#F0D56A" : "rgba(255,255,255,0.62)" }}
       >
         {tab.arabicTitle}
@@ -287,7 +287,7 @@ export default function PageLayout({ children }) {
                             background: active ? "rgba(212,175,55,0.10)" : "rgba(255,255,255,0.025)",
                           }}
                         >
-                          <div className="font-inter font-bold text-sm" style={{ color: active ? "#F0D56A" : "rgba(255,255,255,0.72)" }}>
+                          <div className="font-amiri font-bold text-[16px]" style={{ color: active ? "#F0D56A" : "rgba(255,255,255,0.72)" }}>
                             {tab.arabicTitle}
                           </div>
                           <div className="text-[8px] font-semibold tracking-[0.15em] mt-1" style={{ color: active ? "rgba(240,213,106,0.65)" : "rgba(255,255,255,0.30)" }}>
