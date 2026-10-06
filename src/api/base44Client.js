@@ -29,6 +29,12 @@ const sortQuery = (query, sort) => {
   return query.order(column, { ascending });
 };
 
+// Imported relationships retain their source ID; new records use UUIDs.
+const byRecordId = (query, id) => query.eq(
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id))
+    ? 'id' : 'data->>_base44_legacy_id',
+  String(id)
+);
 const entityApi = (entity) => ({
   async list(sort = null, limit = 100, skip = 0) {
     let query = client().from('platform_records').select('*').eq('entity', entity);
@@ -38,25 +44,25 @@ const entityApi = (entity) => ({
   async filter(filters = {}, sort = null, limit = 100, skip = 0) {
     let query = client().from('platform_records').select('*').eq('entity', entity);
     Object.entries(filters || {}).forEach(([key, value]) => {
-      query = key === 'id' ? query.eq('id', value) : query.eq(`data->>${key}`, String(value));
+      query = key === 'id' ? byRecordId(query, value) : query.eq(`data->>${key}`, String(value));
     });
     query = sortQuery(query, sort).range(skip || 0, (skip || 0) + (limit || 100) - 1);
     return unwrap(await query).map(toRecord);
   },
   async get(id) {
-    return toRecord(unwrap(await client().from('platform_records').select('*').eq('entity', entity).eq('id', id).maybeSingle()));
+    return toRecord(unwrap(await byRecordId(client().from('platform_records').select('*').eq('entity', entity), id).maybeSingle()));
   },
   async create(data) {
     return toRecord(unwrap(await client().from('platform_records').insert({ entity, data }).select().single()));
   },
   async update(id, data) {
-    const current = unwrap(await client().from('platform_records').select('data').eq('entity', entity).eq('id', id).single());
+    const current = unwrap(await byRecordId(client().from('platform_records').select('id,data').eq('entity', entity), id).single());
     const row = unwrap(await client().from('platform_records').update({ data: { ...(current?.data || {}), ...data } })
-      .eq('entity', entity).eq('id', id).select().single());
+      .eq('entity', entity).eq('id', current.id).select().single());
     return toRecord(row);
   },
   async delete(id) {
-    unwrap(await client().from('platform_records').delete().eq('entity', entity).eq('id', id));
+    unwrap(await byRecordId(client().from('platform_records').delete().eq('entity', entity), id));
     return { success: true };
   },
   async bulkCreate(rows = []) {
@@ -69,7 +75,7 @@ const entityApi = (entity) => ({
   async deleteMany(filters = {}) {
     let query = client().from('platform_records').delete().eq('entity', entity);
     Object.entries(filters || {}).forEach(([key, value]) => {
-      query = key === 'id' ? query.eq('id', value) : query.eq(`data->>${key}`, String(value));
+      query = key === 'id' ? byRecordId(query, value) : query.eq(`data->>${key}`, String(value));
     });
     unwrap(await query);
     return { success: true };
@@ -346,6 +352,11 @@ export const platform = {
       const { data, error } = await client().rpc('redeem_access_code', { p_code: body.code });
       if (error) throw error;
       return { data };
+    }
+    if (name === 'validateCodeStatus') {
+      const { data, error } = await client().rpc('linked_code_permissions');
+      if (error) throw error;
+      return { data: { success: true, codes: (data || []).map(code => ({ ...code, status: 'active' })) } };
     }
     const codeActions = {
       createAccessCode: 'create', linkAccessCode: 'link',
