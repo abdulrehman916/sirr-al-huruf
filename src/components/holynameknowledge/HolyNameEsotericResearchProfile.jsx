@@ -106,6 +106,7 @@ function Block({ title, titleML, icon: Icon, children, accent, defaultOpen = tru
 
 function AdvancedBlock({ label, ml, entries }) {
   const list = Array.isArray(entries) ? entries : [];
+  const isOwner = useIsOwner();
   const isArabic = (t) => /[\u0600-\u06FF]/.test(t || "");
   return (
     <div className="rounded-lg px-3 py-2.5" style={{ background: "rgba(8,16,38,0.4)", border: `1px solid ${P.faint}` }}>
@@ -116,18 +117,11 @@ function AdvancedBlock({ label, ml, entries }) {
         <p className="font-malayalam text-[11px] mt-1 leading-relaxed" style={{ color: "rgba(148,163,184,0.55)" }}>{AWAITING}</p>
       ) : (
         <div className="mt-2 space-y-2">
-          {list.some(e => e.shared === true || e.is_shared === true || e.scope === "shared") && (
-            <p className="font-malayalam text-[10px] italic leading-relaxed" style={{ color: "rgba(212,175,55,0.62)" }}>{SHARED_MARKER}</p>
-          )}
+          <p className="font-malayalam text-[10px] italic leading-relaxed" style={{ color: "rgba(212,175,55,0.62)" }}>{SHARED_MARKER}</p>
           {list.map((e, i) => (
             <div key={i} className="rounded-md px-2 py-1.5" style={{ background: "rgba(8,16,38,0.55)", border: `1px solid ${P.faint}` }}>
               <p className={`selectable leading-relaxed ${isArabic(e.text) ? "font-amiri text-base" : "font-inter text-[11px]"}`} style={{ color: "rgba(255,255,255,0.85)" }} dir={isArabic(e.text) ? "rtl" : "auto"}>{e.text}</p>
-              {(e.source_reference || e.source_page || e.url) && (
-                <p className="font-malayalam text-[10px] mt-1 break-words" style={{ color: "rgba(212,175,55,0.68)" }}>
-                  {e.source_reference || "സ്രോതസ്സ് വ്യക്തമാക്കിയിട്ടില്ല"}{e.source_page ? ` · പേജ് ${e.source_page}` : ""}
-                  {e.url && /^https:\/\//.test(e.url) && <> · <a href={e.url} target="_blank" rel="noopener noreferrer" className="underline">സ്രോതസ്സ് തുറക്കുക</a></>}
-                </p>
-              )}
+              {isOwner && <p className="font-malayalam text-[10px] mt-1" style={{ color: "rgba(212,175,55,0.45)" }}>{e.source_reference}{e.source_page ? ` · പേജ് ${e.source_page}` : ""}</p>}
             </div>
           ))}
         </div>
